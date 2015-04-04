@@ -1,0 +1,1625 @@
+%% This is file `elsarticle-template-1-num.tex',
+%%
+%% Copyright 2009 Elsevier Ltd
+%%
+%% This file is part of the 'Elsarticle Bundle'.
+%% ---------------------------------------------
+%%
+%% It may be distributed under the conditions of the LaTeX Project Public
+%% License, either version 1.2 of this license or (at your option) any
+%% later version.  The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.2 or later is part of all distributions of LaTeX
+%% version 1999/12/01 or later.
+%%
+%% The list of all files belonging to the 'Elsarticle Bundle' is
+%% given in the file `manifest.txt'.
+%%
+%% Template article for Elsevier's document class `elsarticle'
+%% with numbered style bibliographic references
+%%
+%% $Id: elsarticle-template-1-num.tex 149 2009-10-08 05:01:15Z rishi $
+%% $URL: http://lenova.river-valley.com/svn/elsbst/trunk/elsarticle-template-1-num.tex $
+%%
+\documentclass[preprint,12pt]{elsarticle}
+
+%% Use the option review to obtain double line spacing
+%% \documentclass[preprint,review,12pt]{elsarticle}
+
+%% Use the options 1p,twocolumn; 3p; 3p,twocolumn; 5p; or 5p,twocolumn
+%% for a journal layout:
+%% \documentclass[final,1p,times]{elsarticle}
+%% \documentclass[final,1p,times,twocolumn]{elsarticle}
+%% \documentclass[final,3p,times]{elsarticle}
+%% \documentclass[final,3p,times,twocolumn]{elsarticle}
+%% \documentclass[final,5p,times]{elsarticle}
+%% \documentclass[final,5p,times,twocolumn]{elsarticle}
+
+%% if you use PostScript figures in your article
+%% use the graphics package for simple commands
+%% \usepackage{graphics}
+%% or use the graphicx package for more complicated commands
+%% \usepackage{graphicx}
+%% or use the epsfig package if you prefer to use the old commands
+%% \usepackage{epsfig}
+
+%% The amssymb package provides various useful mathematical symbols
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{color}
+
+%% The amsthm package provides extended theorem environments
+%% \usepackage{amsthm}
+
+%% The lineno packages adds line numbers. Start line numbering with
+%% \begin{linenumbers}, end it with \end{linenumbers}. Or switch it on
+%% for the whole article with \linenumbers after \end{frontmatter}.
+%% \usepackage{lineno}
+
+%% natbib.sty is loaded by default. However, natbib options can be
+%% provided with \biboptions{...} command. Following options are
+%% valid:
+
+%%   round  -  round parentheses are used (default)
+%%   square -  square brackets are used   [option]
+%%   curly  -  curly braces are used      {option}
+%%   angle  -  angle brackets are used    <option>
+%%   semicolon  -  multiple citations separated by semi-colon
+%%   colon  - same as semicolon, an earlier confusion
+%%   comma  -  separated by comma
+%%   numbers-  selects numerical citations
+%%   super  -  numerical citations as superscripts
+%%   sort   -  sorts multiple citations according to order in ref. list
+%%   sort&compress   -  like sort, but also compresses numerical citations
+%%   compress - compresses without sorting
+%%
+%% \biboptions{comma,round}
+
+% \biboptions{}
+%%---------------------------------------------------------------------------%%
+%% DEFINE SPECIFIC ENVIRONMENTS HERE
+%%---------------------------------------------------------------------------%%
+% Mark URL's
+\newcommand{\URL}[1]{{\textcolor{blue}{#1}}}
+
+%\newcommand{\elfit}{\ensuremath{\operatorname{Im}(-1/\epsilon(\vq,\omega)}}
+%\msection{}-->section commands
+%\tradem{}  -->add TM subscript to entry
+%\ucatm{}   -->add trademark footnote about entry
+%
+% Ways of grouping things
+%
+\newcommand{\bracket}[1]{\left[ #1 \right]}
+\newcommand{\bracet}[1]{\left\{ #1 \right\}}
+\newcommand{\fn}[1]{\left( #1 \right)}
+\newcommand{\ave}[1]{\left\langle #1 \right\rangle}
+\newcommand{\norm}[1]{\Arrowvert #1 \Arrowvert}
+\newcommand{\abs}[1]{\arrowvert #1 \arrowvert}
+
+%
+% Derivative forms
+%
+\newcommand{\dx}[1]{\,d#1}
+\newcommand{\dxdy}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\dxy}[2]{\frac{d #1}{d #2}}
+\newcommand{\dxdt}[1]{\frac{\partial #1}{\partial t}}
+\newcommand{\dxdz}[1]{\frac{\partial #1}{\partial z}}
+\newcommand{\dfdt}[1]{\frac{\partial}{\partial t} \fn{#1}}
+\newcommand{\dfdz}[1]{\frac{\partial}{\partial z} \fn{#1}}
+\newcommand{\ddt}[1]{\frac{\partial}{\partial t} #1}
+\newcommand{\ddz}[1]{\frac{\partial}{\partial z} #1}
+\newcommand{\dd}[2]{\frac{\partial}{\partial #1} #2}
+\newcommand{\ddx}[1]{\frac{\partial}{\partial x} #1}
+\newcommand{\ddy}[1]{\frac{\partial}{\partial y} #1}
+\newcommand{\dxdyn}[3]{\frac{\partial ^{#3} #1 }{\partial #2 ^{#3}}}
+\newcommand{\Dxdy}[2]{\frac{D #1}{D #2}}
+\newcommand{\Dxy}[2]{\frac{D #1}{D #2}}
+%
+% Vector forms
+%
+\renewcommand{\vec}[1]{\mbox{$\stackrel{\longrightarrow}{#1}$}}
+\renewcommand{\div}{\mbox{$\vec{\nabla} \cdot$}}
+\newcommand{\grad}{\mbox{$\vec{\nabla}$}}
+\newcommand{\bb}[1]{\bar{\bar{#1}}}
+%
+% Equation beginnings and endings
+%
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\beas}{\begin{eqnarray*}}
+\newcommand{\eeas}{\end{eqnarray*}}
+\newcommand{\bdm}{\begin{displaymath}}
+\newcommand{\edm}{\end{displaymath}}
+%
+% Equation punctuation
+%
+\newcommand{\pec}{\, ,}
+\newcommand{\pep}{\, .} 
+\newcommand{\pev}{\hspace{0.25in}}
+%
+% Equation labels and references, figure references, table references
+%
+\newcommand{\LEQ}[1]{\label{eq:#1}}
+\newcommand{\EQ}[1]{Eq.~(\ref{eq:#1})}
+\newcommand{\REQ}[1]{\ref{eq:#1}}
+\newcommand{\LFI}[1]{\label{fi:#1}}
+\newcommand{\FI}[1]{Fig.~\ref{fi:#1}}
+\newcommand{\RFI}[1]{\ref{fi:#1}}
+\newcommand{\LTA}[1]{\label{ta:#1}}
+\newcommand{\TA}[1]{Table~\ref{ta:#1}}
+\newcommand{\RTA}[1]{\ref{ta:#1}}
+\newcommand{\lequ}[1]{\label{eq:#1}}
+\newcommand{\equ}[1]{Eq.~(\ref{eq:#1})}
+\newcommand{\equs}[1]{Eqs.~(\ref{eq:#1})}
+\newcommand{\requ}[1]{(\ref{eq:#1})}
+\newcommand{\lfig}[1]{\label{fi:#1}}
+\newcommand{\fig}[1]{Fig.~\ref{fi:#1}}
+\newcommand{\figs}[1]{Figs.~\ref{fi:#1}}
+\newcommand{\rfig}[1]{\ref{fi:#1}}
+\newcommand{\lta}[1]{\label{ta:#1}}
+\newcommand{\ta}[1]{Table~\ref{ta:#1}}
+\newcommand{\rta}[1]{\ref{ta:#1}}
+%
+% Superscript and subscript in text
+%
+\newcommand{\supertext}[1]{\ensuremath{^{\textrm{#1}}}}
+\newcommand{\subtext}[1]{\ensuremath{_{\textrm{#1}}}}
+%
+%
+% List beginnings and endings
+%
+\newcommand{\bl}{\bss\begin{itemize}}
+\newcommand{\el}{\vspace{-.5\baselineskip}\end{itemize}\ess}
+\newcommand{\ben}{\bss\begin{enumerate}}
+\newcommand{\een}{\vspace{-.5\baselineskip}\end{enumerate}\ess}
+%
+% Figure and table beginnings and endings
+%
+\newcommand{\bfg}{\begin{figure}}
+\newcommand{\efg}{\end{figure}}
+\newcommand{\bt}{\begin{table}}
+\newcommand{\et}{\end{table}}
+%
+% Tabular and center beginnings and endings
+%
+\newcommand{\bc}{\begin{center}}
+\newcommand{\ec}{\end{center}}
+\newcommand{\btb}{\begin{center}\begin{tabular}}
+\newcommand{\etb}{\end{tabular}\end{center}}
+%
+% Single space command
+%
+\newcommand{\bss}{\begin{singlespace}}
+\newcommand{\ess}{\end{singlespace}}
+%
+%---New environment "arbspace". (modeled after singlespace environment
+%                                in Doublespace.sty)
+%   The baselinestretch only takes effect at a size change, so do one.
+%
+\def\arbspace#1{\def\baselinestretch{#1}\@normalsize}
+\def\endarbspace{}
+\newcommand{\bas}{\begin{arbspace}}
+\newcommand{\eas}{\end{arbspace}}
+%
+% An explanation for a function
+%
+\newcommand{\explain}[1]{\mbox{\hspace{2em} #1}}
+%
+% Quick commands for symbols
+%
+\newcommand{\half}{\frac{1}{2}}
+\newcommand{\third}{\frac{1}{3}}
+\newcommand{\twothird}{\frac{2}{3}}
+\newcommand{\fourth}{\frac{1}{4}}
+\newcommand{\mdot}{\dot{m}}
+%\newcommand{\ten}[1]{\times 10^{#1}\,}
+\newcommand{\cL}{{\cal L}}
+\newcommand{\cD}{{\cal D}}
+\newcommand{\cF}{{\cal F}}
+\newcommand{\cE}{{\cal E}}
+\renewcommand{\Re}{\mbox{Re}}
+\newcommand{\Ma}{\mbox{Ma}}
+\newcommand{\mA}{\mathbf{A}}
+\newcommand{\mB}{\mathbf{B}}
+\newcommand{\mC}{\mathbf{C}}
+
+%
+% Inclusion of Graphics Data
+%
+%\input{psfig}
+%\psfiginit
+%
+% More Quick Commands
+%
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\newcommand{\dxi}{\Delta x_i}
+\newcommand{\dyj}{\Delta y_j}
+\newcommand{\ts}[1]{\textstyle #1}
+
+
+\journal{Journal of Computational Physics}
+
+\begin{document}
+
+\begin{frontmatter}
+
+%% Title, authors and addresses
+
+%% use the tnoteref command within \title for footnotes;
+%% use the tnotetext command for the associated footnote;
+%% use the fnref command within \author or \address for footnotes;
+%% use the fntext command for the associated footnote;
+%% use the corref command within \author for corresponding author footnotes;
+%% use the cortext command for the associated footnote;
+%% use the ead command for the email address,
+%% and the form \ead[url] for the home page:
+%%
+%% \title{Title\tnoteref{label1}}
+%% \tnotetext[label1]{}
+%% \author{Name\corref{cor1}\fnref{label2}}
+%% \ead{email address}
+%% \ead[url]{home page}
+%% \fntext[label2]{}
+%% \cortext[cor1]{}
+%% \address{Address\fnref{label3}}
+%% \fntext[label3]{}
+
+\title{Second-Order Discretization in Space and Time for Radiation-Hydrodynamics}
+
+%% use optional labels to link authors explicitly to addresses:
+%% \author[label1,label2]{<author name>}
+%% \address[label1]{<address>}
+%% \address[label2]{<address>}
+
+\author[tamu_address]{Simon Bolding}
+\author[tamu_address]{Joshua Hansel}
+\author[sandia_address]{Jarrod D. Edwards}
+\author[tamu_address]{Jim E. Morel}
+\author[lanl_address]{Robert B. Lowrie}
+
+
+\address[tamu_address]{Department of Nuclear Engineering, 337 Zachry Engineering Center, TAMU 3133, Texas A\&M University, College Station, Texas, 77843}
+\address[sandia_address]{Phenomenology and Sensor Science Department, Sandia National Laboratory, Albuquerque, NM}
+\address[lanl_address]{Computational Physics Group CCS-2, Los Alamos National Laboratory, P.O. Box 1663, MS D413, Los Alamos, NM 87545}
+
+\end{frontmatter}
+
+%% ---------------------------------------------
+%% ---------------------------------------------
+\section{Introduction}
+
+In this work, we derive, implement, and test a new IMEX scheme for solving the equations of radiation hydrodynamics that is second-order accurate in both space and time.  We consider a RH system that combines a 1-D slab model of compressible fluid dynamics with a grey radiation S$_2$ model, given by:
+\begin{subequations}
+\lequ{radhydro_system}
+\be
+\dxdy{\rho}{t}+\dxdy{}{x}\fn{\rho u} = 0 \pec
+\lequ{cons_mass}
+\ee 
+\be
+\dxdy{}{t}\fn{\rho u} + \dxdy{}{x}\fn{\rho u^2} + \dxdy{}{x}\fn{p}= \frac{\sigma_t}{c} F_{r,0} \pec
+\lequ{cons_mom}
+\ee
+\be
+\dxdy{E}{t} + \dxdy{}{x}\bracket{\fn{E+p}u}=-\sigma_a c \fn{aT^4 - E_r}+\frac{\sigma_t u}{c} F_{r,0} \pec
+\lequ{cons_energy}
+\ee
+\be
+\frac{1}{c}\dxdy{\psi^+}{t} + \frac{1}{\sqrt{3}}\dxdy{\psi^+}{x} + \sigma_t \psi^+ = 
+\frac{\sigma_s}{4\pi} cE_r + \frac{\sigma_a}{4\pi} acT^4  - \frac{\sigma_t u}{4\pi c} F_{r,0} + 
+\frac{\sigma_t}{\sqrt{3}\pi}Eu
+\pec
+\lequ{intp}
+\ee
+
+\be
+\frac{1}{c}\dxdy{\psi^-}{t} - \frac{1}{\sqrt{3}}\dxdy{\psi^-}{x} + \sigma_t \psi^- = 
+\frac{\sigma_s}{4\pi} cE_r + \frac{\sigma_a}{4\pi} acT^4  - \frac{\sigma_t u}{4\pi c} F_{r,0} - 
+\frac{\sigma_t}{\sqrt{3}\pi}Eu
+\pec
+\lequ{intm}
+\ee
+\end{subequations}
+where $\rho$ is the density, $u$ is the velocity, $E=\frac{\rho u^2}{2} + \rho e$ is the total material energy density, $e$ is the specific internal energy density, $T$ is the material temperature, $E_r$ is the radiation energy density, 
+\be
+E_r = \frac{2\pi}{c}\fn{\psi^{+}+\psi^{-}} \pec
+\lequ{Erad}
+\ee
+$F_r$ is the radiation energy flux, 
+\be
+F_r = \frac{2\pi}{\sqrt{3}}\fn{\psi^{+}-\psi^{-}}
+\lequ{flux}
+\ee
+and $F_{r,0}$ is an approximation to the comoving-frame flux,
+\be
+\lequ{F_nu_0}
+F_{r,0} = F_r-\frac{4}{3} E_r u \pep
+\ee
+Note that if we multiply Eqs.~(\requ{intp}) and (\requ{intm} by $2\pi$ and sum them, we obtain the radiation energy equation:
+\begin{subequations}
+\be
+\dxdy{E_r}{t} + \dxdy{F_r}{x} = \sigma_a c(aT^4 - E_r) - \frac{\sigma_t u}{c}F_{r,0} \pec
+\LEQ{erad}
+\ee
+and if we multiply \equ{intp} by $\frac{2\pi}{c\sqrt{3}}$, multiply \equ{intm} by $-\frac{2\pi}{c\sqrt{3}}$ and sum them, 
+we get the radiation momentum equation: 
+\be
+\frac{1}{c^2}\dxdy{F_r}{t} + \frac{1}{3}\dxdy{E_r}{x} = -\frac{\sigma_t}{c}F_{r,0} \pep
+\ee
+\end{subequations}
+
+Equations \requ{cons_mass} through \requ{intm} are closed in our calculations by assuming an ideal equation of state (EOS):
+\begin{subequations}
+\be
+p=\rho e (\gamma -1)
+\lequ{pressure}
+\pec
+\ee
+\be
+T = \frac{e}{C_v} \pec
+\lequ{matemp}
+\ee
+\end{subequations}
+where $\gamma$ is the adiabatic index, and $C_v$ is the specific heat.  However, our method is compatible with any valid EOS. 
+
+
+One of the most common methods for solving the radiation diffusion equation in time is the Crank-Nicholson method, also known as the Trapezoid Rule.  This is a well-known, implicit method that is second-order accurate; however, its principal drawback is that it can become highly oscillatory for stiff systems.  An alternative to this is a linear-discontinuous Galerkin method in time.  Despite the fact that this scheme is more accurate than the Crank-Nicholson method and damps oscillations quickly, it has a much higher computational cost that is roughly equivalent to that of solving two Crank-Nicholson systems simultaneously over each time step \cite{wareing}.  In this work, we use the TR/BDF2 scheme for discretizing the radiation S$_2$ and energy exchange terms in time.  The TR/BDF2 scheme is a one-step, two-stage \footnote{Here we use the term ``stage'' to refer to an implicit equation that must be solved within each time step in a discretization scheme.} implicit method that was first derived in \cite{bank}.   There is actually a family of such schemes, but one member of the family can be shown to be optimal in a certain sense.  A simple version of this method that is near-optimal was applied to the equations of radiative transfer in \cite{me}, where it is shown to be both L-stable, accurate, and efficient.  In \cite{me}, the near-optimal TR/BDF2 scheme is used to solve the equations of radiative transfer. It consists of a Crank-Nicholson step over half the time step and, using that solution, a BDF2 step over the remainder of the time step.  The TR/BDF2 method has a computational cost that is roughly equivalent to that of solving two Crank-Nicholson systems sequentially over each time step.
+
+  
+A critical issue for radiation transport spatial discretizations is the preservation of the diffusion limit.  
+Radiation-hydrodynamics problems often contain highly diffusive regions.  In any type of calculation it is generally expected that accurate solutions will be obtained whenever the spatial variation of the solution is well-resolved by the mesh.  However, use of a consistent transport discretization scheme in a highly diffusive problem will not guarantee such behavior.  To ensure this behavior, a consistent discretization scheme must ``preserve'' the diffusion limit 
+or ``be asymptotic preserving'' \cite{larsenmorel}.  A consistent discretization that does not preserve the diffusion limit will only yield accurate results in highly diffusive problems if the spatial cells are small with respect to a mean-free-path.  Since the diffusion length can a arbitarily large with respect to a mean-free-path, discretization schemes that are not asymptotic preserving can be prohibitively expensive to use in problems with highly diffusive regions. Thus preservation of the radiation diffusion limit is an essential property of any radiation-hydrodynamics scheme.  Although we only use an S$_2$ radiation treatment, our overall coupling and solution scheme is applicable with an S$_n$ treatment of arbitrary order.  The only 
+caveat is that a higher order S$_n$ model will require a standard iterative solution technique for the S$_n$ 
+equations themselves. Thus we are able to investigate preservation of the diffusion limit assuming an LDFEM spatial discretization for a S$_2$ treatment that 
+will be valid for an S$_n$ treatment of arbitrary order.  
+
+
+The MHM includes spatial differencing for the advection equations and incorporates a linear interpolation from cell-averaged values to compute the slopes.  However, Lowrie and Morel show in \cite{lowriemorel} that interpolation schemes which only depend on the mesh geometry and do not incorporate additional physical data, e.g. cross-section values, fail to have the diffusion limit.  Furthermore, the differences in spatial discretization between the advection and S$_2$ equations present considerable complications due to the fact that, in the MHM, the slopes are determined from interpolations of the cell-centered unknowns; whereas, in the LDFEM, the slopes are computed as part of the solution to the discretized spatial moment equations.  To add to these complications, the internal energy of the material represents an unknown in both the material advection and radiation diffusion equations.  The easy solution to this problem is to recompute the internal energy and radiation slopes at the beginning of each time step using the MHM limiter.  Doing this, we were able to show that our method maintained the diffusion limit in 1D and reproduced shock solutions accurately.  However, standard 2D and 3D hydrodynamics limiters use a spatial representation that will not maintain the radiation diffusion limit \cite{zjwang}.  In particular, a simple linear dependence for the solution is assumed but a bilinear (2D) or a trilinear dependence (3D) is required \cite{adams}.  Thus, to overcome this limitation, the method we present here preserves the slopes computed by the LDFEM from one time step to the next.  We use reconstructed slopes as determined in the MUSCL-Hancock method only to compute the advection fluxes, and we use the preserved LDFEM slopes to initialize the implicit calculations for the radiation energy density and flux and for the material temperature update.  This allows our method to reduce to its standard constituent methods when the contributions from coupled physics are negligible, and we believe it will also allow us to preserve the diffusion limit in the future extension of our method to 2D and 3D. Of course, this remains to be demonstrated.
+
+
+The remainder of this paper is structured as follows.  In Section \ref{sec:Method}, we describe our second-order accurate radiation-hydrodynamics method in detail.  In Section \ref{sec:OrderAccuracy}, we use the method of manufactured solutions to show that our method is second-order accurate in both space and time in the equilibrium diffusion limit as well as in the streaming limit.  Then, in Section \ref{sec:ShockSolutions}, we demonstrate the capability of our method to accurately compute radiation-hydrodynamic shocks by reproducing semi-analytic shock solutions.  Finally, in Section \ref{sec:Conclusions}, we summarize our results and present our conclusions and recommendations for future work.
+
+\section{Radiation-Hydrodynamics Method}
+\label{sec:Method}
+
+%This scheme consists of two cycles, each of which includes a full MHM step to compute the material advection components, an explicit update for radiation momentum deposition to the fluid, and an implicit solve to compute the radiation diffusion and material energy exchange.  In the first cycle, the radiation solve is computed using the Crank-Nicholson scheme, and in the second cycle, the radiation solve is computed using the BDF2 scheme. 
+
+This scheme consists of two predictor-corrector cycles, each of which includes a full MHM step to compute the material advection components.  The predictor step of each cycle generates radiation-updated hydrodynamic unknowns, which are used to compute the advection fluxes in the corrector step, and in the first cycle, the predicted radiation quantities are used to update the corrector step material momentum.  In addition to the MHM Godunov step, each corrector includes an explicit update for radiation momentum deposition to the fluid, and an implicit solve to compute the radiation diffusion and material energy exchange.  In the first cycle, the radiation solve is computed using the Crank-Nicholson scheme, and in the second cycle, the radiation solve is computed using the BDF2 scheme. 
+
+One advantage to applying the full MHM over each half time step is that, if the time step size is being determined by the Courant limit, we can take twice the usual time step.  In this case, the cost of two diffusion solves per time step is mitigated.  Furthermore, the scheme is designed in such a way that, if the radiation contributions to the hydrodynamics are negligible, the standard MHM solution is obtained over each half time step, and if the hydrodynamics contributions to the radiation diffusion are negligible, the standard TR/BDF2 solution for radiative transfer is \URL{obtained} over the full time step.  An outline of our two-cycle system is given as follows:
+
+%\textit{Cycle 1}
+%\begin{enumerate}
+%\item Reconstruct hydro unknowns at $t^n$ from cell averages.
+%\item Evolve fluid by 1/4 $\Delta t$.
+%\item Update 1/4 step momentum using explicit radiation quantities at $t^{n}$.
+%\item Iterate until 1/4 step values are converged.
+%\begin{enumerate}
+%\item Crank-Nicholson calculation to compute $E_r^{n+1/4}$ and $F_r^{n+1/4}$.
+%\item Crank-Nicholson calculation to update $E^{n+1/4}$ to include effects of radiation/material energy exchange.
+%\end{enumerate}
+%\item Reconstruct hydro unknowns at $t^n+1/4$ from cell averages.
+%\item Compute advection fluxes at $t^n+1/4$ using a Riemann solver and $t^{n+1/4}$ hydro unknowns.
+%\item Advect density, momentum, and material energy from $t^n$ by 1/2 $\Delta t$ using $t^n+1/4$ fluxes.
+%\item Update 1/2 step momentum using explicit radiation quantities at $t^{n+1/4}$.
+%\item Restore LD slopes to internal energy. 
+%\item Iterate until 1/2 step values are converged.
+%\begin{enumerate}
+%\item Crank-Nicholson calculation to compute $E_r^{n+1/2}$ and $F_r^{n+1/2}$ 
+%\item Crank-Nicholson calculation to update $E^{n+1/2}$ to include effects of radiation momentum deposition and energy exchange.
+%\end{enumerate} 
+%\end{enumerate}
+
+%\textit{Cycle 2}
+%\begin{enumerate}
+%\item Reconstruct hydro unknowns at $t^n+1/2$ from cell averages.
+%\item Evolve fluid by 1/4 $\Delta t$.
+%\item Update 3/4 step momentum using explicit radiation quantities at $t^{n+1/2}$.
+%\item Iterate until 3/4 step values are converged.
+%\begin{enumerate}
+%\item Crank-Nicholson calculation to compute $E_r^{n+3/4}$ and $F_r^{n+3/4}$.
+%\item Crank-Nicholson calculation to update $E^{n+3/4}$ to include effects of radiation kinetic energy deposition and radiation energy exchange.
+%\end{enumerate}
+%\item Reconstruct hydro unknowns at $t^n+3/4$ from cell averages.
+%\item Compute advection fluxes at $t^n+3/4$ using a Riemann solver and $t^{n+3/4}$ hydro unknowns.
+%\item Advect density, momentum, and material energy from $t^n+1/2$ by 1/2 $\Delta t$ using $t^n+3/4$ fluxes.
+%\item Compute full step momentum using explicit radiation quantities at $t^{n+1/2}$ and fluid fluxes at $t^{n+1/4}$ and $t^{n+3/4}$.
+%\item Restore LD slopes to internal energy. 
+%\item Iterate until full step values are converged.
+%\begin{enumerate}
+%\item BDF2 calculation to compute $E_r^{n+1}$ and $F_r^{n+1}$ 
+%\item BDF2 calculation to update $E^{n+1}$ to include effects of radiation momentum deposition and energy exchange.
+%\end{enumerate} 
+%\end{enumerate}
+
+%% ---------------------------------------------
+\subsection{Cycle 1}
+In this section, we define the first cycle of our hybrid MUSCL-Hancock TR/BDF2 scheme in further detail.  We begin our IMEX scheme by linearly reconstructing the hydro unknowns, $U_i^n$: 
+
+\be
+U_{L,i}^n = U_i^n - \frac{\Delta^n_i}{2};\quad U_{R,i}^n = U_i^n + \frac{\Delta^n_i}{2} \pec
+\lequ{reconstructed}
+\ee
+
+\noindent where 
+
+\be
+U_i = \begin{bmatrix}
+\displaystyle \rho_i \\ 
+\displaystyle \fn{\rho u}_i \\
+\displaystyle E_i 
+\end{bmatrix}  \pec
+\lequ{define_U}
+\ee
+
+\noindent and $\Delta_i$ is some slope constructed from the cell-centered data.  Next, we evolve the hydro unknowns over a quarter time-step:
+
+\be
+U_{i}^{*} = U_{i}^n + \frac{\Delta t}{4\Delta x}\fn{F_{L,i}^{n}-F_{R,i}^{n}} \pec
+\lequ{evolved_quart}
+\ee
+
+\noindent where $F_{L/R,i}$ is the hydro flux computed as $F(U_{L/R,i})$. \URL{Note that a Riemann solver is not used to define these fluxes because they 
+are computed using only unknowns within cell $i$.  Further note} that $\rho_{i}^{n+1/4} = \rho_{i}^{*}$.  We continue by updating the fluid momentum in the predictor with the cell-averaged, explicit radiation momentum deposition: 
+
+\begin{align}
+\nonumber\frac{4\rho^{n+1/4}_{i}\fn{u^{n+1/4}_{i}-u^{*}_{i}}}{\Delta t} = &\half\frac{\sigma_{t,L,i}^{n}}{c}\fn{F_{r,L,i}^{n}-\frac{4}{3}E_{r,L,i}^{n}u_{L,i}^{n}} \\
++&\half\frac{\sigma_{t,R,i}^{n}}{c}\fn{F_{r,R,i}^{n}-\frac{4}{3}E_{r,R,i}^{n}u_{R,i}^{n}} \pep
+\lequ{mom_quart_up}
+\end{align}
+ 
+Then, we perform our nonlinear iterations for the predictor, in which we implicitly solve for the radiation energy density and \URL{flux} and update the material energy using the Crank-Nicholson method. \URL{ We neglect the spatial indexing in these equations for simplicity since we have 
+separate equations} \URL{ for the left and right unknowns in each spatial cell together with coupling between cells due to spatial derivatives:} 
+
+\begin{subequations} 
+\lequ{CN_pred}
+\begin{align}
+\nonumber \frac{4\fn{E_r^{n+1/4,k+1}-E_r^{n}}}{\Delta t} = & - \half\fn{\dxdy{F^{n+1/4,k+1}}{x} + \dxdy{F^n}{x}}  \\
+\nonumber & +\frac{\sigma_a^{n+1/4,k} c}{2} \fn{a(T^{n+1/4,k+1})^4 - E_r^{n+1/4,k+1}}\\
+  &+\frac{\sigma_a^n c}{2} \fn{a(T^n)^4 - E_r^n} + \sigma_{t}^n\frac{u^n}{c}\fn{\frac{4}{3}E_{r}^n u^n -F_{r}^n} \pec
+\lequ{CN_Erad_pred} 
+\end{align}
+\begin{align}
+\nonumber \third \dxdy{E_r^{n+1/4,k+1}}{x} + \third \dxdy{E_r^n}{x} + & \frac{\sigma_t^{n+1/4,k}}{c}F^{n+1/4,k+1} + \frac{\sigma_t^n}{c}F^n = \\ 
+& \sigma_t^{n+1/4,k}\frac{4}{3}E^{n+1/4,k+1}\frac{u^{n}}{c} + \sigma_t^n\frac{4}{3}E^n\frac{u^n}{c} \pec
+\lequ{CN_Frad_pred}
+\end{align}
+\begin{align}
+\nonumber \frac{4\fn{E^{n+1/4,k+1}-E^{*}}}{\Delta t} =& -\frac{\sigma_a^{n+1/4,k} c}{2} \fn{a(T^{n+1/4,k+1})^4 - E_r^{n+1/4,k+1}} \\
+      &-\frac{\sigma_a^n c}{2} \fn{a(T^n)^4 - E_r^n}- \sigma_{t}^n\frac{u^n}{c}\fn{\frac{4}{3}E_{r}^n u^n -F_{r}^n} \pep
+\lequ{CN_E_pred}
+\end{align}
+\end{subequations}
+
+In order to solve these equations, we first linearize the Planck function in \equ{CN_Erad_pred} and \equ{CN_E_pred}\URL{:
+\be
+(T^{n+1/4,k+1})^4 = (T^k)^4 + \frac{4(T^k)^3}{C^k_v}\fn{e^{n+1/4,k+1} - e^{n+1,k}} \pec 
+\lequ{texpnd}
+\ee
+where we have allowed for a non-constant specific heat for generality.
+Then we solve \equ{CN_E_pred} for $T^{n+1/4,k+1}$, and substitute that expression into \equ{CN_Erad_pred}.  This eliminates $(T^{n+1/4,k+1})^4$ from 
+from \equ{CN_Erad_pred}, leaving a 7-diagonal system for the radiation energy density and flux corresponding to Eqs.~(\requ{CN_Erad_pred}) and 
+(\requ{CN_Frad_pred}).  This system can be directly inverted during each Newton iteration.  Once the radiation energy density has been obtained, \equ{CN_E_pred} 
+can be locally solved within eack cell for the new material internal energy. Since the material density and the material velocity   
+are computed before the total energy and the radiation field, the only unknowns in the total energy equation are the internal energies. Thus solution of this equation within each Newton iteration yields new internal energies, from which new total energies and temperatures can be calculated. This process is repeated with each Newton iteration until $E^{n+1/4}$ and $E_{r}^{n+1/4}$ are converged. }
+
+To begin the corrector, we reconstruct the hydro variables, again following the implicit update and use these, in conjunction with a Riemann solver, to compute the quarter-step cell-edge fluxes for the hydro variables, $F_{i+1/2}^{n+1/4}$.  These fluxes allow us to compute a second-order approximation of the advection component of the rad-hydro system at $t^{n+1/2}$ using a Godunov update:
+
+\be
+U_{i}^{**} = U_{M,i}^n + \frac{\Delta t}{2\Delta x}\fn{F_{i-1/2}^{n+1/4}-F_{i+1/2}^{n+1/4}} \pep
+\lequ{Godunov_half}
+\ee
+
+Once this is computed, we update the fluid momentum in the corrector explicitly using the cell-averaged radiation momentum deposition at $t^{n+1/4}$. 
+
+\begin{align}
+\nonumber\frac{2\rho^{n+1/2}_{i}\fn{u^{n+1/2}_{i}-u^{*}_{i}}}{\Delta t} = &\half\frac{\sigma_{t,L,i}^{n+1/4}}{c}\fn{F_{r,L,i}^{n+1/4}-\frac{4}{3}E_{r,L,i}^{n+1/4}u_{L,i}^{n+1/4}} \\
++&\half\frac{\sigma_{t,R,i}^{n+1/4}}{c}\fn{F_{r,R,i}^{n+1/4}-\frac{4}{3}E_{r,R,i}^{n+1/4}u_{R,i}^{n+1/4}} \pep
+\lequ{mom_half_up}
+\end{align}
+
+Then, we solve the radiative transfer equations for the corrector step, computing the radiation energy density and radiation current and updating the 
+\URL{material internal energy, material total energy and material temperature}  using the Crank-Nicholson method:
+
+\begin{subequations}
+\lequ{CN_corr}
+\begin{align}
+\nonumber \frac{2\fn{E_r^{n+1/2,k+1}-E_r^{n}}}{\Delta t} = & - \half\fn{\dxdy{F^{n+1/2,k+1}}{x} + \dxdy{F^n}{x}}+\frac{\sigma_a^n c}{2} \fn{a(T^n)^4 - E_r^n}  \\
+\nonumber & +\frac{\sigma_a^{n+1/2,k} c}{2} \fn{a(T^{n+1/2,k+1})^4 - E_r^{n+1/2,k+1}} \\
+  &+ {\sigma_{t}^{n+1/4}}\frac{u^{n+1/4}}{c}\fn{\frac{4}{3}E_{r}^{n+1/4} u^{n+1/4} -F_{r}^{n+1/4}} \pec
+\lequ{CN_Erad_corr} 
+\end{align}
+\begin{align}
+\nonumber \third \dxdy{E_r^{n+1/2,k+1}}{x} + \third \dxdy{E_r^n}{x} + & \frac{\sigma_t^{n+1/2,k}}{c}F^{n+1/2,k+1} + \frac{\sigma_t^n}{c}F^n = \\ 
+& \sigma_t^{n+1/2,k}\frac{4}{3}E^{n+1/2,k+1}\frac{u^{n+1/4}}{c} + \sigma_t^n\frac{4}{3}E^n\frac{u^n}{c} \pec
+\lequ{CN_Frad_corr}
+\end{align}
+\begin{align}
+\nonumber \frac{2\fn{E^{n+1/2,k+1}-E^{**}}}{\Delta t} =& -\frac{\sigma_a^{n+1/2,k} c}{2} \fn{a(T^{n+1/2,k+1})^4 - E_r^{n+1/2,k+1}} \\
+\nonumber  &-\frac{\sigma_a^n c}{2} \fn{a(T^n)^4 - E_r^n} \\
+  &- \sigma_{t}^{n+1/4}\frac{u^{n+1/4}}{c}\fn{\frac{4}{3}E_{r}^{n+1/4} u^{n+1/4} -F_{r}^{n+1/4}} \pep
+\lequ{CN_E_corr}
+\end{align}
+\end{subequations} 
+
+Once \URL{$E^{n+1/2}$ and $E_{r}^{n+1/2}$} are converged, Cycle 1 is complete.
+
+%% ---------------------------------------------
+\subsection{Cycle 2}
+In this section, we detail the second cycle of our hybrid MUSCL-Hancock TR/BDF2 scheme.  This cycle is very similar to the first cycle with the exception that we use a BDF2 step to solve for the radiation energy density and to update the material energy in the corrector.  Like the first cycle, we begin by linearly reconstructing the hydro unknowns, $U_i^{n+1/2}$: 
+
+\be
+U_{L,i}^{n+1/2} = U_i^{n+1/2} - \frac{\Delta^{n+1/2}_i}{2};\quad U_{R,i}^{n+1/2} = U_i^{n+1/2} + \frac{\Delta^{n+1/2}_i}{2} \pep
+\lequ{reconstructed2}
+\ee
+
+Next, we evolve the hydro unknowns over another quarter time-step:
+
+\be
+U_{M,i}^{*} = U_{M,i}^{n+1/2} + \frac{\Delta t}{4\Delta x}\fn{F_{L,i}^{n+1/2}-F_{R,i}^{n+1/2}} \pep
+\lequ{evolved_quart2}
+\ee
+
+Again, note that $\rho_{i}^{n+3/4} = \rho_{i}^{*}$.  We update the fluid momentum in the predictor of the second cycle: 
+
+\begin{align}
+\nonumber\frac{4\rho^{n+3/4}_{i}\fn{u^{n+3/4}_{i}-u^{*}_{i}}}{\Delta t} = &\half\frac{\sigma_{t,L,i}^{n+1/2}}{c}\fn{F_{r,L,i}^{n+1/2}-\frac{4}{3}E_{r,L,i}^{n+1/2}u_{L,i}^{n+1/2}} \\
++&\half\frac{\sigma_{t,R,i}^{n+1/2}}{c}\fn{F_{r,R,i}^{n+1/2}-\frac{4}{3}E_{r,R,i}^{n+1/2}u_{R,i}^{n+1/2}} \pep
+\lequ{mom_quart_up2}
+\end{align}
+
+Then, we enter our nonlinear iterations for the second-cycle predictor.  As in the first-cycle predictor, in this loop we implicitly solve for the radiation energy density and \URL{flux} and update the material energy using the Crank-Nicholson method:
+
+\begin{subequations}
+\lequ{CN_pred2}
+\begin{align}
+\nonumber \frac{4\fn{E_r^{n+3/4,k+1}-E_r^{n}}}{\Delta t} = & - \half\fn{\dxdy{F^{n+3/4,k+1}}{x} + \dxdy{F^n}{x}}  \\
+\nonumber & +\frac{\sigma_a^{n+3/4,k} c}{2} \fn{a(T^{n+3/4,k+1})^4 - E_r^{n+3/4,k+1}} \\ 
+\nonumber & +\frac{\sigma_a^{n+1/2} c}{2} \fn{a(T^{n+1/2})^4 - E_r^{n+1/2}} \\
+  &+ \sigma_{t}^{n+1/2}\frac{u^{n+1/2}}{c}\fn{\frac{4}{3}E_{r}^{n+1/2} u^{n+1/2} -F_{r}^{n+1/2}} \pec
+\lequ{CN_Erad_pred2} 
+\end{align}
+\begin{align}
+\nonumber \third \dxdy{E_r^{n+3/4,k+1}}{x} + \third \dxdy{E_r^{n+1/2}}{x} + & \frac{\sigma_t^{n+3/4,k}}{c}F^{n+3/4,k+1} + \frac{\sigma_t^{n+1/2}}{c}F^{n+1/2} = \\ 
+& \sigma_t^{n+3/4,k}\frac{4}{3}E^{n+3/4,k+1}\frac{u^{n+1/2}}{c} + \sigma_t^{n+1/2}\frac{4}{3}E^{n+1/2}\frac{u^{n+1/2}}{c} \pec
+\lequ{CN_Frad_pred2}
+\end{align}
+\end{subequations}
+
+\begin{align}
+\nonumber \frac{4\fn{E^{n+3/4,k+1}-E^{*}}}{\Delta t} =& -\frac{\sigma_a^{n+3/4,k} c}{2} \fn{a(T^{n+3/4,k+1})^4 - E_r^{n+3/4,k+1}} \\
+\nonumber & -\frac{\sigma_a^{n+1/2} c}{2} \fn{a(T^{n+1/2})^4 - E_r^{n+1/2}} \\
+      & - \sigma_{t}^{n+1/2}\frac{u^{n+1/2}}{c}\fn{\frac{4}{3}E_{r}^{n+1/2} u^{n+1/2} -F_{r}^{n+1/2}} \pep
+\lequ{CN_E_pred2}
+\end{align}
+
+Then, \equ{CN_pred2} and \equ{CN_E_pred2} are repeatedly solved until $E^{n+3/4}$ and $E_{r}^{n+3/4}$ are converged.  To begin the cycle 2 corrector, we reconstruct the hydro variables, again, following the implicit update and use these, in conjunction with a Riemann solver, to compute the three quarter-step cell-edge fluxes for the hydro variables, $F_{i+1/2}^{n+3/4}$.  Using these fluxes, we compute the advection component of the rad-hydro system at $t^{n+1}$ using a Godunov update: 
+
+\be
+U_{i}^{**} = U_{M,i}^{n+1/2} + \frac{\Delta t}{2\Delta x}\fn{F_{i-1/2}^{n+3/4}-F_{i+1/2}^{n+3/4}} \pep
+\lequ{Godunov_full}
+\ee
+
+Computing this, we update the fluid momentum in the corrector explicitly using radiation values at $t^{n+3/4}$. 
+
+\begin{align}
+\frac{\rho^{n+1}_{i}\fn{u^{n+1}_{i}-u^{**}_{i}}}{\Delta t} =&  \frac{\sigma_{t,i}^{n+1/2}}{c}\fn{F_{r,i}^{n+1/2}-\frac{4}{3}E_{r,i}^{n+1/2}u_{i}^{n+1/2}} \pep
+\lequ{mom_full_up}
+\end{align}
+
+Finally, we enter the nonlinear iterations for the corrector step of Cycle 2.  Here, we implicitly \URL{solve} for the radiation energy density and current using the BDF2 method: 
+
+\begin{subequations}
+\lequ{CN_corr2}
+\begin{align}
+\nonumber \frac{\fn{E_r^{n+1,k+1}-E_r^{n}}}{\Delta t} = & - \third\fn{\dxdy{F^{n+1,k+1}}{x}+\dxdy{F^{n+1/2}}{x} + \dxdy{F^n}{x}}  \\
+\nonumber & +\frac{\sigma_a^{n+1,k} c}{3} \fn{a(T^{n+1,k+1})^4 - E_r^{n+1,k+1}} \\
+\nonumber & +\frac{\sigma_a^{n+1/2} c}{3} \fn{a(T^{n+1/2})^4 - E_r^{n+1/2}}+\frac{\sigma_a^n c}{3} \fn{a(T^n)^4 - E_r^n} \\
+  &+ {\sigma_{t}^{n+1/2}}\frac{u^{n+1/2}}{c}\fn{\frac{4}{3}E_{r}^{n+1/2} u^{n+1/2} -F_{r}^{n+1/2}} \pec
+\lequ{CN_Erad_corr2} 
+\end{align}
+\begin{align}
+\nonumber \third \dxdy{E_r^{n+1,k+1}}{x} &+ \third \dxdy{E_r^{n+1/2}}{x} + \third \dxdy{E_r^n}{x} +  \frac{\sigma_t^{n+1,k}}{c}F^{n+1,k+1} + \frac{\sigma_t^{n+1/2}}{c}F^{n+1/2} + \frac{\sigma_t^n}{c}F^n = \\ 
+& \sigma_t^{n+1,k}\frac{4}{3}E^{n+1,k+1}\frac{u^{n+1/2}}{c} + \sigma_t^{n+1/2}\frac{4}{3}E^{n+1/2}\frac{u^{n+1/2}}{c} + \sigma_t^n\frac{4}{3}E^n\frac{u^{n+1/2}}{c} \pec
+\lequ{CN_Frad_corr2}
+\end{align}
+\end{subequations} 
+
+Using these values, we compute the full-step material energy.  Because this is a full-step calculation, instead of updating the values computed in \equ{Godunov_full}, we treat the hydrodynamic fluxes, $F^{n+1/4}$ and $F^{n+3/4}$, from the first and second cycles as sources for the BDF2 equation.  
+
+\begin{align}
+\nonumber \frac{\fn{E^{n+1,k+1}-E^{n}}}{\Delta t} =& -\frac{\sigma_a^{n+1,k} c}{3} \fn{a(T^{n+1,k+1})^4 - E_r^{n+1,k+1}} \\ \nonumber & -\frac{\sigma_a^{n+1/2} c}{3} \fn{a(T^{n+1/2})^4 - E_r^{n+1/2}}-\frac{\sigma_a^n c}{3} \fn{a(T^n)^4 - E_r^n} \\
+\nonumber  &- \sigma_{t}^{n+1/2}\frac{u^{n+1/2}}{c}\fn{\frac{4}{3}E_{r}^{n+1/2} u^{n+1/2} -F_{r}^{n+1/2}} \\
+& - \half\fn{\dxdy{F^{n+1/4}}{x}+\dxdy{F^{n+3/4}}{x}} \pep
+\lequ{CN_E_corr2}
+\end{align}
+
+We iterate \equ{CN_corr2} and \equ{CN_E_corr2} until $E^{n+1}$ and $E_{r}^{n+1}$ are converged, and the solution over the full time step is complete.
+
+\end{document}
+\section{Second-Order Accuracy}
+\label{sec:OrderAccuracy}
+
+To demonstrate that our method is second-order accurate in space and time, we use the method of manufactured solutions (MMS).  With MMS, we assume a functional form of the exact solution and use that to derive a set of forcing functions.  These \URL{forcing} functions can then be used to reproduce those solutions with our numerical method.  This allows us to prescribe an exact solution with sufficient variation in space and time to fully test the coupling between the radiation and hydrodynamics while ensuring that the solution space is \URL{smooth}.  By comparing our results, generated using these forcing functions, with the exact solution as we refine the solution in space and time, we can examine the behavior of the error to determine order-accuracy.  
+
+For these tests, we use the manufactured solutions developed by McClarren and Lowrie in \cite{mcclarren2} as a foundation.  These solutions are composed of a combination of trigonometric functions with periodic boundary conditions.  Our manufactured sources are a modification of those in \cite{mcclarren2}, which uses a $P_1$ radiation model.  Our modifications primarily include eliminating the time derivative of $F_r$ as part of the diffusion approximation and the use of the simplified material motion model developed by Morel described earlier.  As in \cite{mcclarren2}, we consider both an equilibrium diffusion limit and a streaming limit solution.
+
+To this point, we have considered the dimensionalized form of our rad-hydro system.  However, to derive the sources for the manufactured solutions, we consider a non-dimensionalized form of this system, as presented in \cite{mcclarren2}.  To non-dimensionalize our system, we first define a set of characteristic dimensional parameters:
+
+
+\begin{tabular}{l l}
+\\
+$\hat{L}$ & (reference length) \\
+$\hat{\rho_0}$ & (reference material mass density) \\
+$\hat{T_0}$ & (reference material temperature) \\
+$\hat{a_0}$ & (reference material sound speed) \\
+$\hat{c}$ & (speed of light) \\
+$\hat{\alpha_r}$ & (radiation constant)\\
+\\
+\end{tabular}
+
+Then, we define a set of non-dimensional quantities in terms of their dimensional counterparts and the characteristic dimensional parameters:
+
+\begin{tabular}{l l}
+\\
+$x = \frac{\hat{x}}{\hat{L}}$ & (spatial coordinate) \\
+$t = \frac{\hat{t}\hat{a_0}}{\hat{L}}$ & (time coordinate) \\
+$\rho = \frac{\hat{\rho}}{\hat{\rho_0}}$ & (material density) \\
+$v = \frac{\hat{v}}{\hat{a_0}}$ & (material velocity) \\
+$e = \frac{\hat{e}}{\hat{a_0^2}}$ & (internal specific energy) \\
+$p = \frac{\hat{p}}{\hat{\rho}\hat{\hat{a_0^2}}}$ & (material pressure) \\
+$T = \frac{\hat{T}}{\hat{T_0}}$ & (material temperature) \\
+$\Theta = \frac{\hat{\Theta}}{\hat{T_0}}$ & (radiation temperature) \\
+$\sigma_a = \frac{\hat{\sigma_a}\hat{L}\hat{c}}{\hat{a_0}}$ & (absorption cross-section) \\
+$\sigma_t = \frac{\hat{\sigma_t}\hat{L}\hat{c}}{\hat{a_0}}$ & (total cross-section) \\
+\\
+\end{tabular}
+
+Substituting these into \requ{radhydro_system} and adding general source terms, we obtain a non-dimensionalized form of our RH system:
+
+\begin{subequations}
+\lequ{nond_radhydro_system}
+\be
+\dxdy{\rho}{t}+\dxdy{}{x}\fn{\rho u} = Q_\rho \pec
+\lequ{nond_cons_mass}
+\ee 
+\be
+\dxdy{\fn{\rho u}}{t} + \dxdy{}{x}\fn{\rho u^2 + p} =-\mathbb{P}S_F + Q_v \pec
+\lequ{nond_cons_mom}
+\ee
+\be
+\dxdy{E}{t} + \dxdy{}{x}\bracket{\fn{E+p}u}=-\mathbb{P}\mathbb{C}S_E+Q_E \pec
+\lequ{nond_cons_energy}
+\ee
+\be
+\dxdy{E_r}{t} + \dxdy{\mathbb{C}F_r}{x} = S_E+Q_{E_r} \pec
+\lequ{nond_cons_rad_energy}
+\ee
+\be
+\frac{\mathbb{C}}{3}\dxdy{E_r}{x} = \mathbb{C}S_F \pec
+\lequ{nond_cons_ficks}
+\ee
+\end{subequations}
+
+Here, the non-dimensionalized parameters $\mathbb{C}$ and $\mathbb{P}$ are defined as:
+\URL{
+\be
+\mathbb{P}=\frac{\hat{\alpha_r}\hat{T}_0^4}{\hat{\rho}_0 \hat{a}_0^2} \pec \mathbb{C}=\frac{\hat{c}}{\hat{a}_0} \pep
+\lequ{nond_params}
+\ee
+}
+Thus, $\mathbb{C}$ is the ratio of the speed of light to the characteristic \URL{sound speed} of the material, and $\mathbb{P}$ is proportional to the ratio of the characteristic radiant energy of the material to the characteristic kinetic energy of the material.  Note, also, that \requ{nond_cons_ficks} doesn't include a source term.  This is due to the fact that the variation of the radiative flux is defined explicitly by the other unknowns.  In addition to our non-dimensionalized parameters, we define the following:
+
+\begin{subequations}
+\lequ{nond_radhydro_sources}
+\be
+S_E = \mathbb{C}\sigma_a\fn{T^4-E_r}+\sigma_tvF_{r,0} \pec
+\lequ{nond_SE}
+\ee 
+\be
+S_F = -\sigma_tF_{r,0} \pec
+\lequ{nond_SF}
+\ee
+\be
+F_{r,0} = F_r-\frac{4}{3}\frac{v}{\mathbb{C}}E_r \pep
+\lequ{nond_Fnu0}
+\ee
+\end{subequations}
+
+\subsection{Diffusion Solution}
+We begin by examining the manufactured solution for a diffusive regime.  This represents a problem in which absorption and re-emission of radiation dominates streaming, and the radiation energy is in local equilibrium with the material temperature.  Numerically, this represents a case in which the opacity is large, and the radiation mean-free path is not resolved by the cell spacing.  Characterizing this solution using asymptotic analysis, the leading order solution for the radiation energy density  is given by \cite{lowrie}:
+
+\begin{subequations}
+\lequ{diffusive_leadord}
+\be
+E_r = T^4 \pep
+\ee
+\end{subequations}
+
+We set the non-dimensionalized, functional form of the exact hydrodynamics solution to be:  
+
+\begin{subequations}
+\lequ{diffusive_hydro}
+\be
+\rho = sin\fn{x-t}+2 \pec
+\ee
+\be
+v = cos\fn{x-t}+2 \pec
+\ee
+\be
+p = \alpha\fn{cos\fn{x-t}+2} \pep
+\ee
+\end{subequations}
+
+Using the equation of state, the exact material temperature is:
+
+\be 
+\lequ{diffusive_T}
+T = \frac{\alpha\gamma\fn{cos\fn{x-t}+2}}{sin\fn{x-t}+2} \pec
+\ee
+
+Now, substituting \requ{diffusive_T} into \requ{diffusive_leadord} and \requ{nond_cons_ficks}, we have the functional form of the radiation energy density and flux:
+
+\begin{subequations}
+\lequ{diffusive_rad}
+\be
+E_r=\frac{\alpha^4\gamma^4\fn{cos\fn{x-t}+2}^4}{\fn{sin\fn{x-t}+2}^4} \pec
+\ee
+\begin{align}
+\nonumber F_r = & \frac{4\alpha^4\gamma^4\fn{cos\fn{x-t}+2}^5}{3\mathbb{C}\fn{2-sin{t-x}}^4} - \frac{4\alpha^4\gamma^4\fn{cos\fn{x-t}+2}^3sin{t-x}}{3\sigma\fn{2-sin\fn{t-x}}^4} \\
+& -\frac{4\alpha^4\gamma^4cos\fn{x-t}\fn{cos\fn{x-t}+2}^4}{3\sigma\fn{2-sin\fn{t-x}}^5} \pep
+\end{align}
+\end{subequations}
+
+The material unknowns given by \requ{diffusive_hydro} and \requ{diffusive_T} are shown in Figure \ref{fig:diffusive_hydro_solns}, and the radiation energy density is shown in Figures \ref{fig:diffusive_raden_soln}. Substituting \requ{diffusive_hydro}, \requ{diffusive_T}, and \requ{diffusive_rad} into \requ{nond_radhydro_system}, we solve for the forcing functions necessary to reproduce those solutions.  These functions are as follows:
+
+\begin{subequations}
+\lequ{diffusion_forcefcns}
+\be 
+Q_\rho =2 \sin (t-x)+\cos (t-x)+\cos (2 (t-x)) \pec
+\ee
+\begin{align}
+\nonumber Q_v = & \frac{4 \alpha ^4 \gamma ^4 \text{PP} (\cos (t-x)+2)^3 (-2 \sin (t-x)+2 \cos (t-x)+1)}{3 (\sin (t-x)-2)^5} \\
+\nonumber      &+\alpha  \sin (t-x)+(\sin (t-x)-2) \sin (t-x)+\cos (t-x) (\cos (t-x)+2)^2 \\
+               & -\cos (t-x) (\cos (t-x)+2)-2 (\sin (t-x)-2) \sin (t-x) (\cos (t-x)+2) \pec
+\end{align}
+\begin{align}
+\nonumber Q_E = & -\frac{4 \alpha ^4 \gamma ^4 \text{PP} (\cos (t-x)+2)^4 (-2 \sin (t-x)+2 \cos (t-x)+1)}{3 (\sin (t-x)-2)^5} \\
+\nonumber      & -\frac{1}{2} \cos (t-x) (\cos (t-x)+2) \left(-\frac{2 \alpha }{(\gamma -1) (\sin (t-x)-2)}+\cos (t-x)+2\right) \\
+\nonumber      & +\frac{1}{2} \sin (t-x) (\cos (t-x)+2) \Bigg(2 \alpha  \\
+\nonumber      & +(2-\sin (t-x)) \left(-\frac{2 \alpha }{(\gamma -1) (\sin (t-x)-2)}+\cos (t-x)+2\right)\Bigg) \\
+\nonumber      & +\frac{1}{8 (\gamma -1)} (\cos (t-x)+2) \Big(8 \left(\sin (t-x) ((\alpha +4) \gamma +2 (\gamma -1) \cos (t-x)-4)\right. \\
+\nonumber      & \left.+2 (\gamma -1) \cos (2 (t-x))\right)+17 (\gamma -1) \cos (t-x)+3 (\gamma -1) \cos (3 (t-x))\Big) \\
+\nonumber      & +(2-\sin (t-x))\bigg(\frac{\alpha  \sin (t-x)}{(\gamma -1) (\sin (t-x)-2)} \\
+               & +\frac{\alpha  \cos (t-x) (\cos (t-x)+2)}{(\gamma -1) (\sin (t-x)-2)^2}-\sin (t-x) (\cos (t-x)+2)\bigg) \pec
+\end{align}
+\begin{align}
+\nonumber Q_{ER} = & \frac{1}{12 \sigma  (\sin (t-x)-2)^6}\Big(\alpha ^4 \gamma ^4 (\cos (t-x)+2)^2 (-8 (23 \mathbb{C}+235 \sigma ) \cos (t-x) \\
+\nonumber & -16 (\mathbb{C}+17 \sigma ) \cos (2 (t-x))+328 \mathbb{C} \sin (t-x)+256 \mathbb{C} \sin (2 (t-x)) \\
+\nonumber & +8 \mathbb{C} \sin (3 (t-x))-8 \mathbb{C} \cos (3 (t-x))-320 \mathbb{C}-1452 \sigma +1678 \sigma  \sin (t-x) \\
+\nonumber & +1088 \sigma  \sin (2 (t-x))+237 \sigma  \sin (3 (t-x))+12 \sigma  \sin (4 (t-x))-\sigma  \sin (5 (t-x)) \\
+          & +120 \sigma  \cos (3 (t-x))+28 \sigma  \cos (4 (t-x)))\Big) \pep
+\end{align}
+%\begin{align}
+%\nonumber F_r = & \frac{4\alpha^4\gamma^4\fn{cos\fn{x-t}+2}^5}{3\mathbb{C}\fn{2-sin{t-x}}^4} - \frac{4\alpha^4\gamma^4\fn{cos\fn{x-t}+2}^3sin{t-x}}{3\sigma\fn{2-sin\fn{t-x}}^4} \\
+%& -\frac{4\alpha^4\gamma^4cos\fn{x-t}\fn{cos\fn{x-t}+2}^4}{3\sigma\fn{2-sin\fn{t-x}}^5}
+%\end{align}
+\end{subequations}
+
+%
+%\vspace{16pt}
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Diffusion_hydro_exact.png}
+\caption{\bf Exact solution for the hydrodynamic unknowns, $\rho$, $u$, and $p$, for the equilibrium diffusion limit at $t=0$.} 
+\label{fig:diffusive_hydro_solns}
+%\end{spacing}
+\end{figure}
+%\vspace{16pt}
+%
+%\vspace{16pt}
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Diffusion_raden_exact.png}
+\caption{\bf Exact solution for the radiation energy density, $E_r$, for the equilibrium diffusion limit at $t=0$.} 
+\label{fig:diffusive_raden_soln}
+%\end{spacing}
+\end{figure}
+%\vspace{16pt}
+%
+%
+%%\vspace{16pt}
+%\begin{figure}[ht!]
+%%\begin{spacing}{1.0}
+%\centering
+%\includegraphics[scale=0.60]{./figures/Diffusion_hydro_mansources.png}
+%\caption{\bf Forcing functions for the hydrodynamic conservation equations, $Q_\rho$, $Q_u$, and $Q_E$, for the equilibrium diffusion limit \URL{problem} at $t=0$.} 
+%\label{fig:diffusive_hydro_forcefcns}
+%%\end{spacing}
+%\end{figure}
+%%\vspace{16pt}
+%
+%%\vspace{16pt}
+%\begin{figure}[ht!]
+%%\begin{spacing}{1.0}
+%\centering
+%\includegraphics[scale=0.60]{./figures/Diffusion_raden_mansources.png}
+%\caption{\bf Forcing functions for the radiation energy balance equation, $Q_{E_r}$, for the equilibrium diffusion limit \URL{problem} at $t=0$.} 
+%\label{fig:diffusive_raden_forcefcn}
+%%\end{spacing}
+%\end{figure}
+%%\vspace{16pt}
+%
+
+Analytically, using \requ{diffusion_forcefcns} as a source for \requ{nond_radhydro_system} yields the exact solution given by \requ{diffusive_hydro}, \requ{diffusive_T}, and \requ{diffusive_rad}.  Thus, we can use these functions as a framework for testing the accuracy of our RH algorithm in both time and space.  However, because our method is defined using the dimensionalized RH system, we must re-dimensionalize \requ{diffusion_forcefcns} to use these sources.  We do this as follows:
+
+\begin{subequations}
+\lequ{redimensionalization}
+\be
+\hat{Q_\rho} = \frac{\hat{\rho_0}\hat{a_0}}{\hat{L}}Q_\rho \pec
+\ee
+\be
+\hat{Q_u} = \frac{\hat{\rho_0}\hat{a_0}^2}{\hat{L}}Q_u \pec
+\ee
+\be
+\hat{Q_E} = \frac{\hat{\rho_0}\hat{a_0}^3}{\hat{L}}Q_E \pec
+\ee
+\be
+\hat{Q_{E_r}} = \frac{\alpha_r\hat{T_0}^4\hat{a_0}}{\hat{L}}Q_{E_r}  \pep
+\ee
+\end{subequations}
+
+This manufactured solution affords us the opportunity to test the behavior of our method in the equilibrium diffusion limit.  To test this limit, we examine the error of the solution as the mesh is refined while preserving the optical thickness, $\tau$, of each cell.  The error of a method that preserves the equilibrium diffusion limit will decrease as the mesh is refined for a fixed $\tau$ and $CFL$ condition; however, a method that does not have this limit will only converge to the correct solution if $\tau$ decreases with the mesh spacing.  In order to test the thick diffusion limit, it is necessary to set $\tau >> 1$.  For our test problems, we set $\tau = 100\pi$, $\alpha = 0.5$, $\gamma = 5/3$, and $\mathbb{P} = 0.001$.  To keep $\tau$ constant as we vary the mesh spacing, we define a parameter $\epsilon$ and vary $\Delta x$, $\mathbb{C}$, and $\sigma$ with $\epsilon$ as follows:
+
+\begin{subequations}
+\lequ{diffusion_params}
+\be
+\Delta x =  \frac{\pi}{10}\epsilon \pec
+\ee
+\be
+\mathbb{C} = \sigma = \frac{1000}{\epsilon} \pep
+\ee
+\end{subequations}
+
+Thus, as $\epsilon$ approaches zero, $\Delta x$ also approaches zero, $\mathbb{C}$ and $\sigma$ become very large, and $\tau$ remains constant.  The time step is bound by the Courant limit:
+
+\be
+\lequ{CFL}
+CFL = \frac{\mathbb{C} \Delta t}{\Delta x} \pep
+\ee
+
+By fixing $CFL$, \equ{diffusion_params} requires that $\Delta t$ decreases according to $\epsilon^2$.  To meet the $CFL$ condition, $CFL = 0.3$, we use fixed timesteps and set $\Delta t$ as:
+
+\be
+\lequ{diffusion_dt}
+\Delta t = \frac{t_{fin}}{2000}\epsilon^2 \pep
+\ee
+
+Substituting these values into \requ{nond_params} and using the relation $T_0 = \alpha_0^2$, we obtain the characteristic variables, $\rho_0$, $\alpha_0$, and $T_0$.  The slab thickness is $2 \pi$ cm, and the final time, $t_{fin}$, is 0.105 shakes.
+
+We compute the spatially-distributed error in the computational solution by subtracting the solution computed at the final time from the exact solution at that time.  Then, we take the $L_2$ norm of the spatially distributed error to get a measure of the total error of the final solution.  Figures \ref{fig:diffusion_T} and \ref{fig:diffusion_theta} show the errors in the material temperature and radiation energy density, respectively, between the computed and exact solution for the equilibrium diffusion limit as the spatial and temporal mesh is refined.  In each of these figures, we see that, as the mesh is refined, the error varies with second-order accuracy. 
+%
+%%\vspace{16pt}
+%\begin{figure}[ht!]
+%%\begin{spacing}{1.0}
+%\centering
+%\includegraphics[scale=0.60]{./figures/Diffusion_v_convergence.png}
+%\caption{\bf Error in the material velocity between the computed and exact solution for the diffusive limit manufactured solution.} 
+%\label{fig:diffusion_v}
+%%\end{spacing}
+%\end{figure}
+%%\vspace{16pt}
+%%
+%%\vspace{16pt}
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Diffusion_T_convergence.png}
+\caption{\bf Error in the material temperature between the computed and exact solution for the diffusive limit manufactured solution.} 
+\label{fig:diffusion_T}
+%\end{spacing}
+\end{figure}
+%\vspace{16pt}
+%
+%\vspace{16pt}
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Diffusion_Er_convergence.png}
+\caption{\bf Error in the radiation energy density between the computed and exact solution for the diffusive limit manufactured solution.} 
+\label{fig:diffusion_theta}
+%\end{spacing}
+\end{figure}
+%\vspace{16pt}
+
+\subsection{Streaming Limit}
+
+Next, we consider the manufactured solution for the streaming limit.  In this limit, radiation streaming dominates a relatively small radiation absorption/re-emission term.  Here, we keep the re-emission term small by making the opacity relatively small so that the radiation is nearly transparent to the material.  Therefore, in contrast to the equilibrium diffusion limit which represents very tight coupling between the radiation and hydrodynamic components, this limit represents very weak coupling between the two.  Also, because the radiation streams much faster than the material, this results in a solution in which the unknowns evolve at significantly different time scales.  The functional form of the exact streaming solution is given by:
+
+\begin{subequations}
+\lequ{streaming_exact}
+\be
+\rho = sin\fn{x-t}+2 \pec
+\ee
+\be
+v = \frac{1}{sin\fn{x-t}+2} \pec
+\ee
+\be
+p = \alpha\fn{cos\fn{x-t}+2} \pec
+\ee
+\be
+E_r = \alpha\fn{sin\fn{x-\mathbb{C}t}+2} \pep
+\ee
+\end{subequations}
+
+Here, was can see that the wave speed of the radiation energy density is faster than that of the hydrodynamic unknowns by a factor of $\mathbb{C}$.  This solution is also defined to mimic an isothermal flow regime, in which the radiation varies rapidly enough that changes in the material temperature are suppressed. In this case, the exact solution for the material temperature is a constant given by:
+
+\be 
+\lequ{streaming_T}
+T = \alpha \gamma \pep
+\ee
+%
+
+The exact solution for the streaming solution hydrodynamic unknowns are shown in Figure \ref{fig:diffusive_hydro_solns}, and the radiation energy density is shown in Figures \ref{fig:diffusive_raden_soln}.  
+
+\vspace{16pt}
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Streaming_hydro_exact.png}
+\caption{\bf Exact solution for the hydrodynamic unknowns, $\rho$, $u$, and $p$, for the streaming limit \URL{problem} at $t=0$.} 
+\label{fig:streaming_hydro_solns}
+%\end{spacing}
+\end{figure}
+\vspace{16pt}
+%
+\vspace{16pt}
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Streaming_raden_exact.png}
+\caption{\bf Exact solution for the radiation energy density, $E_r$, for the streaming limit \URL{problem} at $t=0$.} 
+\label{fig:streaming_raden_soln}
+%\end{spacing}
+\end{figure}
+\vspace{16pt}
+
+Again, we derive the forcing functions corresponding to these solutions by substituting \requ{streaming_exact} and \requ{streaming_T} into \requ{nond_radhydro_system}.  The resulting functions are as follows:
+
+\begin{subequations}
+\lequ{streaming_forcefcns}
+\be
+Q_\rho =-\cos (t-x) \pec
+\ee
+\be
+Q_v = \frac{1}{3} \alpha \mathbb{P} \cos (\mathbb{C} t-x)+\cos (t-x) \left(\alpha -\frac{1}{(\sin (t-x)-2)^2}\right) \pec
+\ee
+\begin{align}
+\nonumber Q_E = & \frac{1}{3} \alpha \mathbb{P} \left(3 \mathbb{C} \sigma  \left(\alpha ^3 \gamma ^4+\sin (\mathbb{C} t-x)-2\right)+\frac{\cos (\mathbb{C} t-x)}{\sin (t-x)-2}\right) \\
+\nonumber       & +\frac{1}{4 (\gamma -1) (\sin (t-x)-2)^3}\left(\cos (t-x) ((-51 \alpha +2 \gamma -2) \sin (t-x)\right. \\
+                & \left.+\alpha  (\sin (3 (t-x))+44)-12 \alpha  \cos (2 (t-x)))\right) \pec
+\end{align}
+\begin{align}
+\nonumber Q_{ER} = & \frac{1}{3} \alpha  \left(-3 \alpha ^3 \gamma ^4 \mathbb{C} \sigma +6 \mathbb{C} \sigma -3 \mathbb{C} \sigma  \sin (\mathbb{C} t-x)-\frac{\mathbb{C} \sin (\mathbb{C} t-x)}{\sigma }\right. \\
+                & \left.+\left(-3 \mathbb{C}-\frac{5}{\sin (t-x)-2}\right) \cos (\mathbb{C} t-x)+\frac{4 \cos (t-x) (\sin (\mathbb{C} t-x)-2)}{(\sin (t-x)-2)^2}\right) \pep
+\end{align}
+%\begin{align}
+%\nonumber F_r = & \frac{4\alpha^4\gamma^4\fn{cos\fn{x-t}+2}^5}{3\mathbb{C}\fn{2-sin{t-x}}^4} - \frac{4\alpha^4\gamma^4\fn{cos\fn{x-t}+2}^3sin{t-x}}{3\sigma\fn{2-sin\fn{t-x}}^4} \\
+%& -\frac{4\alpha^4\gamma^4cos\fn{x-t}\fn{cos\fn{x-t}+2}^4}{3\sigma\fn{2-sin\fn{t-x}}^5}
+%\end{align}
+\end{subequations}
+
+%Our non-dimensionalized sources for the streaming limit test in \ref{fig:streaming_hydro_forcefcns} and \ref{fig:streaming_raden_forcefcn}.  For this test, we set $\alpha = 0.5$, $\gamma = 5/3$, $\mathbb{C}=10$, and $\sigma = 1$.  The slab thickness is $2 \pi$ cm, and the final time is 0.011 shakes.  
+
+%Note that, while the final time for the streaming limit test is 100 times shorter than that of the diffusion limit test, because the characteristic fluid velocity is 100 times faster than the diffusion solution fluid, the final time represents the same duration through the periodicity of the solution.  
+%
+%\vspace{16pt}
+%\begin{figure}[ht!]
+%%\begin{spacing}{1.0}
+%\centering
+%\includegraphics[scale=0.60]{./figures/Streaming_hydro_mansources.png}
+%\caption{\bf Forcing functions for the hydrodynamic conservation equations, $Q_\rho$, $Q_u$, and $Q_E$, for the streaming limit \URL{problem} at $t=0$.} 
+%\label{fig:streaming_hydro_forcefcns}
+%%\end{spacing}
+%\end{figure}
+%\vspace{16pt}
+%
+%\vspace{16pt}
+%\begin{figure}[ht!]
+%%\begin{spacing}{1.0}
+%\centering
+%\includegraphics[scale=0.60]{./figures/Streaming_raden_mansources.png}
+%\caption{\bf Forcing functions for the radiation energy balance equation, $Q_{E_r}$, for the streaming limit \URL{problem} at $t=0$.} 
+%\label{fig:streaming_raden_forcefcn}
+%%\end{spacing}
+%\end{figure}
+%\vspace{16pt}
+%
+
+For this test, we set $\alpha = 0.5$, $\gamma = 5/3$, $\mathbb{C}=10$, and $\sigma = 1$.  The slab thickness is $2 \pi$ cm, and the final time is 0.011 shakes.  As with the equilibrium diffusion limit test, we approximate the exact solution given by \requ{streaming_exact} and \requ{streaming_T} computationally by using \requ{streaming_forcefcns} as sources for our method, redimensionalizing these sources using \requ{redimensionalization}.   We compute the $L_2$ norm of the spatially-distributed error as outlined for the equilibrium diffusion limit test for various mesh refinements, in which $\Delta x/\Delta t$ is kept constant.  Figures \ref{fig:streaming_v}, \ref{fig:streaming_T}, and \ref{fig:streaming_theta} compare the error in the material velocity, material temperature, and radiation energy density, respectively, with reference lines to first and second-order accuracy.  Again, for this test, we see that, as the mesh is refined, the method shows second-order accuracy. 
+%
+\vspace{16pt}
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Streaming_v_convergence.png}
+\caption{\bf Error in the material velocity between the computed and exact solution for the streaming limit manufactured solution.} 
+\label{fig:streaming_v}
+%\end{spacing}
+\end{figure}
+\vspace{16pt}
+%
+\vspace{16pt}
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Streaming_T_convergence.png}
+\caption{\bf Error in the material temperature between the computed and exact solution for the streaming limit manufactured solution.} 
+\label{fig:streaming_T}
+%\end{spacing}
+\end{figure}
+\vspace{16pt}
+%
+\vspace{16pt}
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Streaming_Er_convergence.png}
+\caption{\bf Error in the radiation energy density between the computed and exact solution for the streaming limit manufactured solution.} 
+\label{fig:streaming_theta}
+%\end{spacing}
+\end{figure}
+\vspace{16pt}
+
+\section{Radiative Shock Solutions}
+\label{sec:ShockSolutions}
+
+Reproducing radiative shocks accurately, particularly in the optically thick regime, represents a challenging problem in the simulation of radiation hydrodynamics.  However, because many problems of interest include radiative shocks, it is imperative that a numerical scheme be able to meet these challenges well.  The widely used Zel'dovich and Raizer \cite{zeldovich} and Mihalas and Mihalas \cite{mihalas} provide the classic descriptions of radiative shocks.  The structure of optically thick radiative shocks, which we consider here, has been described in more detail by Drake in \cite{Drake} and by Lowrie and Edwards in \cite{lowrie3}.  In the remainder of this section, we demonstrate the capability of our rad-hydro algorithm to compute accurate radiative shock solutions by reproducing the semi-analytic shocks detailed in \cite{lowrie3} and comparing our results with those of a first-order scheme.
+
+%\subsection{Structure of Radiative Shocks}
+%\label{sec:shockstructure}
+
+%A shock wave is a disturbance propagating through a medium and characterized by rapid or, in some cases, nearly discontinuous changes in the properties of that medium. Hydrodynamic shocks often correspond to a very sharp decrease in fluid velocity and a corresponding increase in density, pressure, and temperature due to compression across the shock front.  Neglecting viscosity in a pure hydrodynamic regime, all variables are discontinuous at the shock front.  A radiative shock is a shock wave moving through a fluid with sufficient speed or internal energy that the radiation energy and/or pressure plays a significant role in the dynamics.  Even neglecting viscosity, the radiation intensity is never discontinuous in a radiative shock, and the hydrodynamic variables may or may not be discontinuous.  Radiative shocks  occur, for example, in astrophysical systems such as shocks within stars or shocks formed when active galactic nuclei capture stars.  They have also been generated in laboratory experiments in which Be is shocked via laser irradiation through xenon gas \cite{reighard}.  
+
+%The widely used books by Zel'dovich and Raizer \cite{zeldovich} and Mihalas and Mihalas \cite{mihalas} provide the classic descriptions of radiative shocks.  The structure of optically thick radiative shocks, which we consider here, has been described in more detail by Drake in \cite{Drake} and by Lowrie and Edwards in \cite{lowrie3}.  These are shocks in which the medium appears infinite to photons entering or leaving the shock.  Thus, in a 1-D infinite medium slab geometry, radiative shocks are always optically thick so long as the opacity is never zero.  %Optically thick radiative shocks are shocks which occur in regions that are many radiation mean-free-paths thick, i.e. which are characterized by a high effective probability of radiation interaction with the material.  
+
+%There are three key regions of radiative shocks - a precursor region, a hydrodynamic shock, and a relaxation region.  As demonstrated in \cite{lowrie3}, not every radiative shock will exhibit each of these features.  Instead, the character of a given shock depends upon several dimensionless parameters: the shock Mach number, the ratio of the radiant energy to the kinetic energy of the material $\mathbb{P}$, the radiative diffusivity $\kappa$, which is defined later, and the non-dimensional absorption cross-section $\sigma_a$.  \fig{radiative_shock_illustration} illustrates the important features of a radiative shock, which we describe here in further detail.  
+
+%\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+%\centering
+%\includegraphics[scale=0.60]{./figures/Shock_description.png}
+%\caption{\bf Illustration of the important features in the material and radiation temperature profiles for an example radiative shock.} 
+%\lfig{radiative_shock_illustration}
+%\end{spacing}
+%\end{figure}
+
+%Similar to standard hydrodynamic shocks, far upstream of radiative shocks, there is a steady flow of incoming fluid with a corresponding steady net radiation energy flux.  As the material moves downstream, the first feature of the radiative shock it encounters is the precursor region.  This region is created by the relatively high radiation energy flux moving upstream from the compressed, heated material in the hydrodynamic shock.  Drake further differentiates this region into a ``transmissive'' precursor and a ``diffusive'' precursor. In this description, the transmissive precursor is distinguished by an exponential rise in temperature as a result of heating from the decaying radiation energy field.  Nearer to the hydrodynamic shock as the radiation flux intensifies, the shape of the diffusive precursor becomes similar to that of a Marshak wave, discussed in \cite{mihalas}, in which material is heated from a constant-temperature radiation source at the boundary.  
+
+%After the precursor region, the fluid encounters the embedded hydrodynamic shock.  Here, the fluid undergoes the same compressive effects as in a standard hydrodynamic shock with the exception that the initial jump conditions correspond to the precursor values rather than the far-upstream values.  Because this jump occurs on the scale of a few ion-ion mean-free-paths, which is very much smaller than typical mesh spacing for problems of interest, it is entirely reasonable to treat this shock as a discontinuity \cite{Drake}.  For a steady shock, identifying the precursor state with the subscript ``p'' and the shocked state with the subscript ``s'', the discontinuity may be computed using the Rankine-Hugoniot relationship, which establishes the continuity of the hydrodynamic flux across the shock \cite{lowrie3}:
+
+%\begin{subequations}
+%\lequ{hydro_jump}
+%\be
+%\left(\rho v\right)_p = \left(\rho v\right)_s \pec
+%\ee
+%\be 
+%\left(\rho v^2+p\right)_p = \left(\rho v^2+p\right)_s \pec
+%\ee
+%\be 
+%\left[\left(\rho E+p\right)v\right]_p = \left[\left(\rho E+p\right)v\right]_s \pep
+%\ee
+%\end{subequations}
+
+%Following the hydrodynamic shock, the fluid enters the relaxation (or cooling) region.  In shocks with an isothermal sonic point (ISP), the post-shock temperature may significantly exceed the far-downstream fluid temperature.  This phenomenon, called a Zel'dovich spike, is caused by the compression from the hydrodynamic shock combined with radiative effects which can serve to increase those compressive effects.  The Zel'dovich spike is described in greater detail in \cite{zeldovich,lowrie3}.  The effect of this dramatic increase in temperature is to drive the fluid far out of equilibrium with the radiation.  As the material cools, the relaxation region extends downstream from the hydrodynamic shock until the radiation and material temperatures have equilibrated and the fluid is, again, steady. 
+
+%As described in \cite{Drake}, the distinct features of radiative shocks stem from large differences in important spatial scales.  The radiation emission and absorption occurs over the largest spatial scale, which gives rise to the precursor region upstream of the hydrodynamic shock and the cooling down region downstream of the hydrodynamic shock.  The hydrodynamic shock, itself, occurs on the viscous scale, which is the smallest spatial scale of interest.  Lowrie and Edwards quantify the range of shocks over which hydrodynamic shocks and isothermal sonic points may be present \cite{lowrie3}.  They, also, show that, in the case of no hydrodynamic shock, the solution will be continuous in all variables, and that, when an isothermal sonic point is present, the maximum temperature of the shock will exceed the far-downstream temperature.    
+
+\subsection{Simulation of Radiative Shocks}
+\label{sec:simradshocks}
+
+Here, we describe our procedure to generate the shocks and compare our computational results with the semi-analytic solutions.  We begin by computing the far-downstream fluid state associated with a prescribed set of far-upstream conditions.  As we previously mentioned, these far-upstream conditions, and subsequently, the radiative shock itself, are specified by the shock Mach number $M$, the parameters $\mathbb{P}$ and $\sigma_a$, and the radiative diffusivity $\kappa$, which is given by:
+
+\be
+\lequ{kappa_def}
+\kappa = \frac{\hat{c}}{3\hat{\sigma_t}\hat{a_0}\hat{L}} \pep
+\ee
+
+The equations that describe the overall jump from the upstream to the downstream states are a modified version of the Rankine-Hugoniot conditions derived by equating the flux terms from the fluid conservation equations in the rad-hydro model.  These modified Rakine-Hugoniot conditions are given-by:
+
+\begin{subequations}
+\lequ{radhydro_jump}
+\be
+\left(\rho v\right)_0 = \left(\rho v\right)_1 \pec
+\ee
+\be 
+\left(\rho v^2+p^*\right)_0 = \left(\rho v^2+p^*\right)_1 \pec
+\ee
+\be 
+\left[\left(\rho E^*+p^*\right)v\right]_0 = \left[\left(\rho E^*+p^*\right)v\right]_1 \pec
+\ee
+\end{subequations}
+
+\noindent where
+
+\begin{subequations}
+\lequ{radhydro_jump_defns}
+\be
+p^* = p+\third \mathbb{P}T^4 \pec
+\ee
+\be
+e^* = e + \frac{1}{\rho} \mathbb{P}T^4 \pec
+\ee
+\be
+E^* = e^* + \half v^2 \pep
+\ee
+\end{subequations}
+
+In \cite{lowrie4}, Lowrie and Rauenzahn show that these equations may be manipulated algebraically to solve for $\rho_1$:
+
+\be
+\lequ{jump_rho}
+\rho_1(T_1) = \frac{f_1(T_1)+\sqrt{f_1^2(T_1)+f_2(T_1)}}{6(\gamma-1)T_1} \pec
+\ee
+
+\noindent where
+
+\begin{subequations}
+\lequ{jump_rho_defs}
+\be
+f_1(T_1) = 3(\gamma+1)(T_1-1)-\mathbb{P}\gamma(\gamma-1)(7+T_1^4) \pec
+\ee
+\be
+f_2(T_1) = 12(\gamma-1)^2 T_1 \left[3+\gamma\mathbb{P}\left(1+7T_1^4\right)\right] \pep
+\ee
+\end{subequations}
+
+Furthermore, eliminating $v_1$ from the mass equation, substituting the result into the momentum equation, and rearranging terms, we have an equation for $T_1$:  
+
+\be
+\lequ{jump_T}
+3\rho_1(\rho_1 T_1 - 1)+\gamma\mathbb{P}\rho_1 \left(T_1^4-1\right) = 3\gamma(\rho_1-1)M_0^2 \pep
+\ee
+
+Substituting \equ{jump_rho} into \equ{jump_T}, this results in a ninth-order polynomial, which may be solved numerically for $T_1$.  We initialize this solution procedure using an estimate for $T_1$ based on $\mathbb{P}$.  For ``small'' values of $\mathbb{P}$, we initialize using:
+
+\be
+\lequ{T1_smallP}
+T_1^{est} = \frac{\left(1-\gamma+2\gamma M^2\right)\left(2+(\gamma-1)M^2\right)^2}{(\gamma+1)^2 M^2} \pep
+\ee
+
+For ``large'' values of $\mathbb{P}$, we estimate $T_1$ as:
+
+\be
+\lequ{T1_largeP}
+T_1^{est} = \sqrt[4]{\frac{8\left(\frac{M^2}{(4/9)\mathbb{P}}-1\right)}{7}} \pep
+\ee
+
+In solving for $T_1$, we note that the numerical solver does not always converge to the same final value for $T_1$ for both initial estimates.  However, for the shocks considered here, in the case when the initial estimates lead to differing values of $T_1$, the final solution for one estimate is always non-physical. So in these cases, it is obvious which converged $T_1$ value is correct. 
+
+Because our radiation-hydrodynamics method is developed in dimensional form, we must also define the characteristic values $\hat{\rho_0}$ and $\hat{T_0}$.  The remaining dimensionalized values are computed from the non-dimensional parameters as follows:
+
+\begin{subequations}
+\label{shock_dim_defs}
+\be
+\hat{\rho_1} = \rho_1 \hat{\rho_0} \pec
+\ee
+\be
+\hat{T_1} = T_1 \hat{T_0} \pec
+\ee
+\be
+\hat{a_0} = \sqrt{\frac{\hat{\alpha_r} \hat{T_0}^4}{\hat{\rho_0} \mathbb{P}}} \pec
+\ee
+\be
+\hat{v_0} = M \hat{a_0} \pec
+\ee
+\be
+\hat{v_1} = v_1 \hat{a_0} \pec
+\ee
+\be
+C_v = \frac{\hat{a_0}^2}{\hat{T_0}\gamma\left(\gamma-1\right)} \pec
+\ee
+\be
+\hat{\sigma_t} = \frac{c}{3\kappa\hat{a_0}} \pec
+\ee
+\be
+\hat{\sigma_a} = \sigma_a \frac{\hat{a_0}}{c} \pep
+\ee
+\end{subequations}
+
+We initialize each radiative shock calculation by setting the left half of the spatial domain equal to the far-upstream condition and the right half equal to the downstream condition.  At the boundary, we compute the fluxes using our standard Riemann solver, setting the hydrodynamic unknowns in a ghost cell just to the other side of the boundary equal to the far-stream conditions.  This adds stability to the evolution of the shock by reinforcing the steady-state solution while allowing \URL{propagating} waves to exit the domain.  \fig{hydro_boundary_illustration} illustrates this concept for the right boundary.  Here, we set the left unknown in an exterior ghost cell equal to the far-downstream conditions, $U_{downstream}$, and compute the boundary advection flux, $F_{N+1/2}$, using our Riemann solver.
+
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.70]{./figures/Hydro_Boundary_Illustration.png}
+\caption{\bf Illustration of the advection boundary conditions for the radiative shock calculations.} 
+\lfig{hydro_boundary_illustration}
+%\end{spacing}
+\end{figure}
+
+Because sharp slopes in LDFEMs can cause negativities in edge values, we monitor for negativities in the material temperature.  If a negative temperature is detected, we set all the slopes in that cell to zero so that the edge values are equal to the cell-averages.  This preserves energy conservation while eliminating non-physical temperatures at cell-edges.  
+
+%\subsubsection{Time Step Control}
+%\label{time_step_control_rh}
+ 
+To compute the time steps during the calculation, we use an adaptive time step control scheme based on a user-specified ``target temperature change'', $\Delta T_{targ}$.  Again, for a given time step, the maximum relative change is computed using:
+\be
+\Delta T=2\max_i\frac{\abs{T_i^{n+1}-T_i^n}}{T_i^{n+1}+T_i^n} \pep
+\lequ{max_delT_eqn_rh}
+\ee
+
+However, because we use an IMEX scheme to solve our rad-hydro system, we must also limit the time step according to the Courant limit associated with the hydrodynamic advection terms.  We compute this limit by determining the maximum signal velocity associated with the system and define the maximum hydrodynamic time step to be:
+
+\be
+\lequ{courant_limit}
+\Delta t_H = CFL\Delta x S_{max} \pec
+\ee
+
+\noindent where $S_{max}$ is the maximum signal velocity, and $CFL$ is the user-defined Courant condition number such that $0\le C \le 1$.  We use the following estimate for $S_{max}$ outlined in \cite{toro}:
+
+\be
+\lequ{S_max}
+S_{max} = \max_{i\in \bracket{1,N}}\bracet{\abs{u_i-a_i},\abs{u_i+a_i}} \pec
+\ee
+
+\noindent where $N$ is the number of cells, $u_i$ is the velocity in cell i, and $a_i$ is the speed of sound in cell i.  We then compute the time step as follows:
+
+\be
+\Delta t^{n+1}=\min\fn{\frac{\Delta T_{targ}}{\Delta T}\Delta t^{n}, \xi \Delta t^n, \Delta t_H, t-t_{fin}} \pep
+\lequ{time_control_rh}
+\ee
+
+The second term ensures that the time step doesn't grow too rapidly by imposing a maximum allowed time step change, $\xi$, and the fourth term forces the final time step to end the calculation at $t_{fin}$.  In order to ensure that the temperature doesn't vary too much, $\Delta T$ is also compared with a maximum allowed temperature change, $\Delta T_{max}$.  If $\Delta T > \Delta T_{max}$, then the time step $\Delta t^{n+1/2}$ is reduced by a factor of 1/3, and the calculation is repeated from $t_n$.  In our calculations, we set $CFL = 0.3$, $\Delta T_{targ} = 1.01$, $\Delta T_{max} = 1.012$, and $\xi = 1.5$.
+
+\subsection{Radiative Shock Solutions}
+\label{sec:radshocksols}
+
+We test our algorithm over a range of the radiative shocks presented in \cite{lowrie3}, which incorporate a variety of structural features.  For each of these shocks, we set $\mathbb{P} = 1e-4$, $\gamma = 5/3$, $\kappa = 1$, and $\sigma_a = 1e6$, and the material properties are given in \ta{matl_prop}. 
+
+%We test our algorithm using two of the radiative shocks presented in \cite{lowrie3}.  The Mach 2 shock solution shows the full complexity in the shock structure, and the Mach 50 shock is the most computationally challenging to solve.  For each of these shocks, we set $\mathbb{P} = 1e-4$, $\gamma = 5/3$, $\kappa = 1$, and $\sigma_a = 1e6$, and the material properties are given in \ta{matl_prop}. 
+
+\begin{table}
+\centering
+\caption{\bf Material properties for radiative shock calculations.}
+\lta{matl_prop}
+\begin{tabular}{|c|c|}
+\hline
+$\hat{\sigma_a}$ & 3.9071164263502112e+002 \\
+$\hat{\sigma_t}$ & 8.5314410158161809e+002 \\
+$\hat{C_v}$ & 1.2348000000000001e-001 \\
+\hline
+\end{tabular}
+\end{table}
+
+%\rev{We begin by reproducing the Mach 1.05 shock, which has no hydrodynamic shock and no ISP.  \ta{mach105_initconds} details the initial fluid properties, and the final time of the calculation is 2.5 shakes.  Computationally, this is the easiest of the shocks to compute, since the small difference between the upstream and downstream values lends to a smooth transition period from the initial conditions to the steady-state solution.  As we see in \fig{mach105_rho} for the density and \fig{mach105_T} for the material and radiation temperatures, our results match the semi-analytic solutions well.  Here, we can see that the fluid properties are continuous, due to the lack of a hydrodynamic shock, and the maximum fluid temperature never exceeds the far-downstream temperature, since there is no ISP.} 
+
+%\begin{table}
+%\centering
+%\caption{\bf Mach 1.05 initial conditions.}
+%\lta{mach105_initconds}
+%\begin{tabular}{|c|c|c|}
+%\hline
+% & Pre-shock & Post-shock \\
+%\hline
+%$\hat{\rho}$ & 1.0000000000000000e+00 & 1.0749588725963066e+000 \\
+%$\hat{u}$ & 1.2298902390050911e-001 & 1.1441277153558302e-001 \\
+%$\hat{T}$ & 1.0000000000000001e-001 & 1.0494545175154467e-001 \\
+%$\hat{\rho} \hat{u}$ & 1.2298902390050911e-001 & 1.2298902390050913e-001 \\
+%$\hat{E}$ & 1.9911150000000002e-002 & 2.0965788801187071e-002 \\
+%$\hat{E_r}$ & 1.3720000000000002e-006 & 1.6642117992569650e-006 \\
+%$4/3 \hat{E} \hat{u}$ & 2.2498792105533135e-007 & 2.5387611250027822e-007 \\
+%\hline
+%\end{tabular}
+%\end{table}
+
+%\begin{figure}[ht!]
+%%\begin{spacing}{1.0}
+%\centering
+%\includegraphics[scale=0.60]{./figures/Mach_1p05_rho.png}
+%\caption{\bf Mach 1.05 radiative shock density.} 
+%\lfig{mach105_rho}
+%%\end{spacing}
+%\end{figure}
+
+%\begin{figure}[ht!]
+%%\begin{spacing}{1.0}
+%\centering
+%\includegraphics[scale=0.60]{./figures/Mach_1p05_T.png}
+%\caption{\bf Mach 1.05 radiative shock material and radiation temperatures.} 
+%\lfig{mach105_T}
+%%\end{spacing}
+%\end{figure}
+%%
+
+%\FloatBarrier
+First, we compute the Mach 1.2 shock, which has a hydrodynamic shock but no ISP.  \ta{mach12_initconds} shows the initial conditions; the final time of the calculation is 0.5 shakes.  \figs{mach12_rho} and \rfig{mach12_T} compare our results with the semi-analytic solutions for the density and fluid and radiation temperatures, respectively, and again, we see good agreement between the two.  In this solution, we see a discontinuity in both the density and material temperature due to the hydrodynamic shock, and the maximum temperature is bounded by the far-downstream temperature, since there is no ISP to drive it further.
+
+\begin{table}
+\centering
+\caption{\bf Mach 1.2 initial conditions.}
+\lta{mach12_initconds}
+\begin{tabular}{|c|c|c|}
+\hline
+ & Pre-shock & Post-shock \\
+\hline
+$\hat{\rho}$ & 1.0000000000000000e+00 & 1.2973213452231311e+000  \\
+$\hat{u}$ & 1.4055888445772469e-001 & 1.0834546504247138e-001 \\
+$\hat{T}$ & 1.0000000000000001e-001 & 1.1947515210501813e-001 \\
+$\hat{\rho} \hat{u}$ & 1.4055888445772469e-001 & 1.4055888445772469e-001 \\
+$\hat{E}$ & 2.2226400000000000e-002 & 2.6753570531538713e-002 \\
+$\hat{E_r}$ & 1.3720000000000002e-006 & 2.7955320762182542e-006  \\
+$4/3 \hat{E}\hat{u}$ & 2.5712905263466435e-007 & 4.0384429711868299e-007 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Mach_1p2_rho.png}
+\caption{\bf Mach 1.2 radiative shock density.} 
+\lfig{mach12_rho}
+%\end{spacing}
+\end{figure}
+
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Mach_1p2_T.png}
+\caption{\bf Mach 1.2 radiative shock material and radiation temperatures.} 
+\lfig{mach12_T}
+%\end{spacing}
+\end{figure}
+
+The most structurally complex shock that we compute is the Mach 2 shock, which has both a hydrodynamic shock and an ISP.  The initial conditions are given by \ta{mach2_initconds}, and the final time of the calculation is 1 shake.  \figs{mach2_rho} and \rfig{mach2_T} show our results compared with the semi-analytic solutions.  In each of these figures, we can see the effects of the hydrodynamic shock, causing a discontinuity in both the material density and temperature.  We can also see the Zel'dovich spike, caused by the ISP embedded within the hydrodynamic shock, driving up the material temperature at the shock front.  This spike leads to the relaxation region downstream as the material temperature and radiation temperature equilibrate. \fig{mach2_spike} shows the Zel'dovich spike and relaxation region in more detail. Here, we can see that our results still show very good agreement with the semi-analytic solution.
+
+\begin{table}
+\centering
+\caption{\bf Mach 2 initial conditions.}
+\lta{mach2_initconds}
+\begin{tabular}{|c|c|c|}
+\hline
+ & Pre-shock & Post-shock \\
+\hline
+$\hat{\rho}$ & 1.0000000000000000e+00 & 2.2860748989303659e+000   \\
+$\hat{u}$ & 2.3426480742954117e-001 & 1.0247468599526272e-001  \\
+$\hat{T}$ & 1.0000000000000001e-001 & 2.0775699953301918e-001  \\
+$\hat{\rho} \hat{u}$ & 2.3426480742954117e-001 & 2.3426480742954117e-001 \\
+$\hat{E}$ & 3.9788000000000004e-002  &  7.0649692950433357e-002 \\
+$\hat{E_r}$ & 1.3720000000000002e-006 & 2.5560936967521927e-005  \\
+$4/3 \hat{E} \hat{u}$ &  4.2854842105777400e-007 & 3.4924653193220162e-006  \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Mach_2_rho.png}
+\caption{\bf Mach 2 radiative shock density.} 
+\lfig{mach2_rho}
+%\end{spacing}
+\end{figure}
+
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Mach_2_T.png}
+\caption{\bf Mach 2 radiative shock material and radiation temperatures.} 
+\lfig{mach2_T}
+%\end{spacing}
+\end{figure}
+
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Mach_2_spike.png}
+\caption{\bf Zel'dovich spike and relaxation region of Mach 2 shock.} 
+\lfig{mach2_spike}
+%\end{spacing}
+\end{figure}
+
+Finally, we reproduce the Mach 50 radiative shock solution.  This shock has no hydrodynamic discontinuity or ISP; however, it is the most computationally intensive to compute.  This is due to the fact that the large discontinuity in the initial conditions causes sharp slopes leading to negativities in the edge values of the material temperature in the beginning steps of the calculation.  Furthermore, large, rapid temperature variations force time-step restarts described in Section \ref{sec:simradshocks}, and high fluid wave speeds restrict the time step size throughout the calculation.  The initial conditions for this shock are provided in \ta{mach50_initconds}, and the final time of the calculation is 1.5 shakes.  The results of this calculation are compared with semi-analytic solutions in \figs{mach50_rho} and \rfig{mach50_T}.  Note that the structure of the precursor for the Mach 50 shock differs from that of the Mach 1.2 and Mach 2 shocks in that the diffusive precursor is much more dominant in the Mach 50 shock; whereas, the others have a much larger transmissive precursor.  As with the other shocks, we continue to see good overall agreement between our results and the semi-analytic solutions.  Furthermore, additional tests show that, as we refine the mesh, our computed solution converges spatially to the semi-analytic solution.  %A closer inspection of the transmissive precursor, shown in \fig{mach50_T_foot}, reveals that there is a slight difference between our results and the semi-analytic solution.  However, this region spans only a few cells and may be improved with greater spatial resolution.
+
+%Finally, we reproduce the Mach 50 radiative shock solution.  This shock has no hydrodynamic discontinuity or ISP; however, it is the most computationally intensive to compute.  This is due to the fact that the large discontinuity in the initial conditions causes sharp slopes leading to negativities in the edge values of the material temperature in the beginning steps of the calculation.  Furthermore, large, rapid temperature variations force time-step restarts described in Section \ref{sec:simradshocks}, and high fluid wave speeds restrict the time step size throughout the calculation.  The initial conditions for this shock are provided in \ta{mach50_initconds}, and the final time of the calculation is 2.5 shakes.  The results of this calculation are compared with semi-analytic solutions in \figs{mach50_rho} and \rfig{mach50_T}.  Here, we see that the Mach 50 shock is continuous with no Zel'dovich spike.  We also see that this shock has a small transmissive precursor with a much more dominant diffusive precursor region.  As with the Mach 2 shock, we continue to see good overall agreement between our results and the semi-analytic solutions.  A closer inspection of the transmissive precursor reveals that there is a slight difference between our results and the semi-analytic solution.  However, this region spans only a few cells and may be better captured with an adaptive spatial resolution.
+
+
+\begin{table}
+\centering
+\caption{\bf Mach 50 initial conditions.}
+\lta{mach50_initconds}
+\begin{tabular}{|c|c|c|}
+\hline
+ & Pre-shock & Post-shock \\
+\hline
+$\hat{\rho}$ & 1.0000000000000000e+00 & 6.5189217901173153e+000    \\
+$\hat{u}$ & 5.8566201857385289e+000 & 8.9840319830453630e-001   \\
+$\hat{T}$ & 1.0000000000000001e-001 & 8.5515528368625038e+000   \\
+$\hat{\rho} \hat{u}$ & 5.8566201857385289e+000 & 5.8566201857385289e+000 \\
+$\hat{E}$ & 1.7162348000000001e+001  &  9.5144308747326214e+000  \\
+$\hat{E_r}$ & 1.3720000000000002e-006 & 7.3372623010289956e+001   \\
+$4/3 \hat{E} \hat{u}$ &  1.0713710526444349e-005 & 8.7890932240583339e+001   \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Mach_50_rho.png}
+\caption{\bf Mach 50 radiative shock density.} 
+\lfig{mach50_rho}
+%\end{spacing}
+\end{figure}
+
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/Mach_50_T.png}
+\caption{\bf Mach 50 radiative shock material and radiation temperatures.} 
+\lfig{mach50_T}
+%\end{spacing}
+\end{figure}
+
+%\begin{figure}[ht!]
+%%\begin{spacing}{1.0}
+%\centering
+%\includegraphics[scale=0.60]{./figures/Mach_50_T_foot.png}
+%\caption{\bf Transmissive precursor region of Mach 50 shock temperature.} 
+%\lfig{mach50_T_foot}
+%%\end{spacing}
+%\end{figure}
+
+\subsection{Comparison of Our Second-Order Method with a First-Order Scheme}
+\label{sec:methodcomparison}
+
+To demonstrate the effectiveness of our second-order method in solving radiative shock problems, we use the Mach 50 radiative shock solution and compare results from our method with those from a first-order scheme; though, we note that both methods will be first-order for problems with a discontinuity.  This scheme consists of a full MUSCL-Hancock step to compute the fluid advection component, followed by an explicit update to the momentum to account for radiation momentum deposition, and a Crank-Nicholson radiative transfer calculation over the full time-step to compute the radiation quantities and to update the internal energy.  Thus, our first-order method is actually a first-order coupling of some of the second-order components used in our full second-order scheme.  We begin the first-order method with the standard MHM data reconstruction and evolution steps:
+
+\be
+U_{L,i}^n = U_i^n - \frac{\Delta^n_i}{2};\quad U_{R,i}^n = U_i^n + \frac{\Delta^n_i}{2} \pec
+\lequ{reconstructed_fo}
+\ee
+
+\be
+U_{i}^{n+1/2} = U_{i}^n + \frac{\Delta t}{2\Delta x}\fn{F_{L,i}^{n}-F_{R,i}^{n}} \pep
+\lequ{evolved_fo}
+\ee
+
+Next, as with our second-order calculation, we reconstruct the half-step unknowns and use the Riemann solver to compute the cell edge fluxes $F_{i+1/2}^{n+1/2}$.  Then, we complete the MHM advection step with a Godunov calculation:
+
+\be
+U_{i}^{*} = U_{i}^n + \frac{\Delta t}{\Delta x}\fn{F_{i-1/2}^{n+1/2}-F_{i+1/2}^{n+1/2}} \pep
+\lequ{Godunov_fo}
+\ee
+
+Once this is computed, we update the fluid momentum explicitly using the cell-averaged radiation momentum deposition:
+
+\begin{align}
+\nonumber\frac{\rho^{n+1}_{i}\fn{u^{n+1}_{i}-u^{*}_{i}}}{\Delta t} = &\half\frac{\sigma_{t,L,i}^{n}}{c}\fn{F_{r,L,i}^{n}-\frac{4}{3}E_{r,L,i}^{n}u_{L,i}^{n}} \\
++&\half\frac{\sigma_{t,R,i}^{n}}{c}\fn{F_{r,R,i}^{n}-\frac{4}{3}E_{r,R,i}^{n}u_{R,i}^{n}} \pep
+\lequ{mom_up_fo}
+\end{align}
+
+Then, we solve the radiative transfer equations using the Crank-Nicholson method to compute the radiation energy density and radiation current and to update the material energy:
+
+\begin{subequations}
+\lequ{CN_corr_fo}
+\begin{align}
+\nonumber \frac{\fn{E_r^{n+1,k+1}-E_r^{n}}}{\Delta t} = & - \half\fn{\dxdy{F^{n+1,k+1}}{x} + \dxdy{F^n}{x}}+\frac{\sigma_a^n c}{2} \fn{a(T^n)^4 - E_r^n}  \\
+\nonumber & +\frac{\sigma_a^{n+1,k} c}{2} \fn{a(T^{n+1,k+1})^4 - E_r^{n+1,k+1}} \\
+  &+ {\sigma_{t}^{n}}\frac{u^{n}}{c}\fn{\frac{4}{3}E_{r}^{n} u^{n} -F_{r}^{n}} \pec
+\lequ{CN_Erad_corr_fo} 
+\end{align}
+\begin{align}
+\nonumber \third \dxdy{E_r^{n+1,k+1}}{x} + \third \dxdy{E_r^n}{x} + & \frac{\sigma_t^{n+1,k}}{c}F^{n+1,k+1} + \frac{\sigma_t^n}{c}F^n = \\ 
+& \sigma_t^{n+1,k}\frac{4}{3}E^{n+1,k+1}\frac{u^{n+1}}{c} + \sigma_t^n\frac{4}{3}E^n\frac{u^n}{c} \pec
+\lequ{CN_Frad_corr_fo}
+\end{align}
+\begin{align}
+\nonumber \frac{\fn{E^{n+1,k+1}-E^{*}}}{\Delta t} =& -\frac{\sigma_a^{n+1,k} c}{2} \fn{a(T^{n+1,k+1})^4 - E_r^{n+1,k+1}} \\
+\nonumber  &-\frac{\sigma_a^n c}{2} \fn{a(T^n)^4 - E_r^n} \\
+  &- \sigma_{t}^{n}\frac{u^{n}}{c}\fn{\frac{4}{3}E_{r}^{n} u^{n} -F_{r}^{n}} \pep
+\lequ{CN_E_corr_fo}
+\end{align}
+\end{subequations} 
+
+In order to compare these methods to a solution that varies in both space and time, we uniformly increase the velocity of the semi-analytic Mach 50 shock solution by some speed, $S_{shock}$.  Due to the Galilean invariance of the shock solution, the shock profile remains unchanged; however, now, it propagates through the fluid at $S_{shock}$, making the solution time-dependent.  For this test, we initialize our calculations with the original, semi-analytic shock profile and compute the solution for a shock moving at $S_{shock} = 1$ cm/shake for 0.04 shakes using 40 cells.  As with our other shock calculations, we use adaptive time step controls setting $CFL = 0.3$, $\Delta T_{targ} = 1.01$, $\Delta T_{max} = 1.012$, and $\xi = 1.5$.
+
+\figs{comp_mach50_rho}, \rfig{comp_mach50_T}, and \rfig{comp_mach50_radT} show the comparison of the first and second-order methods to the semi-analytic solution for the density, material temperature, and radiation temperature, respectively, and \ta{fobdf2work} shows the work required to obtain these results.  From these results, we see that, for this problem, our second-order scheme is consistently more accurate than the first-order scheme and requires 20\% fewer advection solves and 1/3 as many diffusion solves to compute the solution using the same time step control criteria.
+
+\begin{table}
+\centering
+\caption{\bf Comparison of the computational work required to compute the solution of the Mach 50 shock for the first and second-order methods.}
+\lta{fobdf2work}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+ & Number of & Average Non-linear & Total Advection & Total Diffusion \\
+ & Time Steps & Iterations per Step & Solves & Solves \\
+\hline
+First-Order & 382 & 27.78 & 382 & 9085 \\
+Second-Order & 158 & 19.07 & 316 & 3013 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/FOComp_Mach50Moving_rho.png}
+\caption{\bf Comparison of first- and second-order method results for the density of the Mach 50 radiative shock problem.} 
+\lfig{comp_mach50_rho}
+%\end{spacing}
+\end{figure}
+
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/FOComp_Mach50Moving_T.png}
+\caption{\bf Comparison of first- and second-order method results for the material temperature of the Mach 50 radiative shock problem.} 
+\lfig{comp_mach50_T}
+%\end{spacing}
+\end{figure}
+
+\begin{figure}[ht!]
+%\begin{spacing}{1.0}
+\centering
+\includegraphics[scale=0.60]{./figures/FOComp_Mach50Moving_radT.png}
+\caption{\bf Comparison of first- and second-order method results for the radiation temperature of the Mach 50 radiative shock problem.} 
+\lfig{comp_mach50_radT}
+%\end{spacing}
+\end{figure}
+
+\section{Conclusions and Future Work}
+\label{sec:Conclusions}
+
+We develop a new IMEX method for solving the equations of radiation-hydrodynamics that is second-order accurate in space and time.  In addition to accuracy, we meet the goals outlined in Section \ref{sec:Introduction}: it reliably converges non-linearities, rapidly damps oscillations, incorporates modern algorithms used by the hydrodynamics and radiation transport communities, appears to have straightforward extensibility to a full radiation transport model, preserves the diffusion limit in 1D in such a way that it is expected to preserve this limit in 2D and 3D, accurately computes radiative shocks, and reduces to fundamental algorithms when the effects of coupled physics are negligible.  Thus, it represents a very useful alternative to existing methods.
+
+In future work, we recommend extending our radiation solver to incorporate a radiation transport model.  The structure of our radiation-hydrodynamics algorithm should make this extension straightforward.  Since our algorithm only requires the angle-integrated radiation energy density and radiation current, the radiation solver may, in some sense, be treated as a black box module to compute these quantities.  Of course, the angular intensities will need to be preserved across time steps.  The only significant change required for this extension would be to make the momentum updates implicit to conserve momentum as well as energy. 
+
+
+%% The Appendices part is started with the command \appendix;
+%% appendix sections are then done as normal sections
+%% \appendix
+
+%% \section{}
+%% \label{}
+
+%% References
+%%
+%% Following citation commands can be used in the body text:
+%% Usage of \cite is as follows:
+%%   \cite{key}          ==>>  [#]
+%%   \cite[chap. 2]{key} ==>>  [#, chap. 2]
+%%   \citet{key}         ==>>  Author [#]
+
+%% References with bibTeX database:
+
+\bibliographystyle{model1-num-names}
+\bibliography{References}
+
+%% Authors are advised to submit their bibtex database files. They are
+%% requested to list a bibtex style file in the manuscript if they do
+%% not want to use model1-num-names.bst.
+
+%% References without bibTeX database:
+
+% \begin{thebibliography}{00}
+
+%% \bibitem must have the following form:
+%%   \bibitem{key}...
+%%
+
+% \bibitem{}
+
+% \end{thebibliography}
+
+
+\end{document}
+
+%%
+%% End of file `elsarticle-template-1-num.tex'.
