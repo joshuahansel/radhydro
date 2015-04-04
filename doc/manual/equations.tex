@@ -54,6 +54,16 @@
 \end{equation}
 }
 
+% Hydro momentum update, final phase
+\newcommand{\HydroMomentumUpdateFinal}{
+\begin{equation}
+  \frac{\rho^{n+1}\left(u^{k+1}-u^*\right)}{\hf\dt} = 
+   \sx\left[\frac{\sigma_t}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n
+  +\sx\left[\frac{\sigma_t}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{n+\hf}
+  +\frac{2}{3}\left[\frac{\sigma_t}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{k+1}
+\end{equation}
+}
+
 % Radiation energy update, Crank-Nicolson
 % #1 = old time index
 % #2 = fraction of full time step
@@ -182,7 +192,7 @@ Let $y^k$ denote $y^{n+\frac{3}{4},k}$.
 \subsection{Cycle 2, 2nd Step, $n\rightarrow n+1$}
 Let $y^k$ denote $y^{n+1,k}$.
 \MUSCLRiemann{n+\hf}{n+\frac{3}{4}}{\hf}
-\HydroMomentumUpdateCN{n+\hf}{n+1}{\hf}
+\HydroMomentumUpdateFinal
 \RadEnergyUpdateBDFTwo{n}{n+\hf}{}
 \RadFluxUpdateBDFTwo{n}{n+\hf}{}
 \HydroEnergyUpdateBDFTwo{n}{n+\hf}{}
