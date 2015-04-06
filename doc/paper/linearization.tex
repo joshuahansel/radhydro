@@ -1,0 +1,722 @@
+%% This is file `elsarticle-template-1-num.tex',
+%%
+%% Copyright 2009 Elsevier Ltd
+%%
+%% This file is part of the 'Elsarticle Bundle'.
+%% ---------------------------------------------
+%%
+%% It may be distributed under the conditions of the LaTeX Project Public
+%% License, either version 1.2 of this license or (at your option) any
+%% later version.  The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.2 or later is part of all distributions of LaTeX
+%% version 1999/12/01 or later.
+%%
+%% The list of all files belonging to the 'Elsarticle Bundle' is
+%% given in the file `manifest.txt'.
+%%
+%% Template article for Elsevier's document class `elsarticle'
+%% with numbered style bibliographic references
+%%
+%% $Id: elsarticle-template-1-num.tex 149 2009-10-08 05:01:15Z rishi $
+%% $URL: http://lenova.river-valley.com/svn/elsbst/trunk/elsarticle-template-1-num.tex $
+%%
+\documentclass[preprint,12pt]{elsarticle}
+
+%% Use the option review to obtain double line spacing
+%% \documentclass[preprint,review,12pt]{elsarticle}
+
+%% Use the options 1p,twocolumn; 3p; 3p,twocolumn; 5p; or 5p,twocolumn
+%% for a journal layout:
+%% \documentclass[final,1p,times]{elsarticle}
+%% \documentclass[final,1p,times,twocolumn]{elsarticle}
+%% \documentclass[final,3p,times]{elsarticle}
+%% \documentclass[final,3p,times,twocolumn]{elsarticle}
+%% \documentclass[final,5p,times]{elsarticle}
+%% \documentclass[final,5p,times,twocolumn]{elsarticle}
+
+%% if you use PostScript figures in your article
+%% use the graphics package for simple commands
+%% \usepackage{graphics}
+%% or use the graphicx package for more complicated commands
+%% \usepackage{graphicx}
+%% or use the epsfig package if you prefer to use the old commands
+%% \usepackage{epsfig}
+
+%% The amssymb package provides various useful mathematical symbols
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{color}
+
+%% The amsthm package provides extended theorem environments
+%% \usepackage{amsthm}
+
+%% The lineno packages adds line numbers. Start line numbering with
+%% \begin{linenumbers}, end it with \end{linenumbers}. Or switch it on
+%% for the whole article with \linenumbers after \end{frontmatter}.
+%% \usepackage{lineno}
+
+%% natbib.sty is loaded by default. However, natbib options can be
+%% provided with \biboptions{...} command. Following options are
+%% valid:
+
+%%   round  -  round parentheses are used (default)
+%%   square -  square brackets are used   [option]
+%%   curly  -  curly braces are used      {option}
+%%   angle  -  angle brackets are used    <option>
+%%   semicolon  -  multiple citations separated by semi-colon
+%%   colon  - same as semicolon, an earlier confusion
+%%   comma  -  separated by comma
+%%   numbers-  selects numerical citations
+%%   super  -  numerical citations as superscripts
+%%   sort   -  sorts multiple citations according to order in ref. list
+%%   sort&compress   -  like sort, but also compresses numerical citations
+%%   compress - compresses without sorting
+%%
+%% \biboptions{comma,round}
+
+% \biboptions{}
+%%---------------------------------------------------------------------------%%
+%% DEFINE SPECIFIC ENVIRONMENTS HERE
+%%---------------------------------------------------------------------------%%
+% Mark URL's
+\newcommand{\URL}[1]{{\textcolor{blue}{#1}}}
+
+%\newcommand{\elfit}{\ensuremath{\operatorname{Im}(-1/\epsilon(\vq,\omega)}}
+%\msection{}-->section commands
+%\tradem{}  -->add TM subscript to entry
+%\ucatm{}   -->add trademark footnote about entry
+%
+% Ways of grouping things
+%
+\newcommand{\bracket}[1]{\left[ #1 \right]}
+\newcommand{\bracet}[1]{\left\{ #1 \right\}}
+\newcommand{\fn}[1]{\left( #1 \right)}
+\newcommand{\ave}[1]{\left\langle #1 \right\rangle}
+\newcommand{\norm}[1]{\Arrowvert #1 \Arrowvert}
+\newcommand{\abs}[1]{\arrowvert #1 \arrowvert}
+
+%
+% Derivative forms
+%
+\newcommand{\dx}[1]{\,d#1}
+\newcommand{\dxdy}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\dxy}[2]{\frac{d #1}{d #2}}
+\newcommand{\dxdt}[1]{\frac{\partial #1}{\partial t}}
+\newcommand{\dxdz}[1]{\frac{\partial #1}{\partial z}}
+\newcommand{\dfdt}[1]{\frac{\partial}{\partial t} \fn{#1}}
+\newcommand{\dfdz}[1]{\frac{\partial}{\partial z} \fn{#1}}
+\newcommand{\ddt}[1]{\frac{\partial}{\partial t} #1}
+\newcommand{\ddz}[1]{\frac{\partial}{\partial z} #1}
+\newcommand{\dd}[2]{\frac{\partial}{\partial #1} #2}
+\newcommand{\ddx}[1]{\frac{\partial}{\partial x} #1}
+\newcommand{\ddy}[1]{\frac{\partial}{\partial y} #1}
+\newcommand{\dxdyn}[3]{\frac{\partial ^{#3} #1 }{\partial #2 ^{#3}}}
+\newcommand{\Dxdy}[2]{\frac{D #1}{D #2}}
+\newcommand{\Dxy}[2]{\frac{D #1}{D #2}}
+%
+% Vector forms
+%
+\renewcommand{\vec}[1]{\mbox{$\stackrel{\longrightarrow}{#1}$}}
+\renewcommand{\div}{\mbox{$\vec{\nabla} \cdot$}}
+\newcommand{\grad}{\mbox{$\vec{\nabla}$}}
+\newcommand{\bb}[1]{\bar{\bar{#1}}}
+%
+% Equation beginnings and endings
+%
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\beas}{\begin{eqnarray*}}
+\newcommand{\eeas}{\end{eqnarray*}}
+\newcommand{\bdm}{\begin{displaymath}}
+\newcommand{\edm}{\end{displaymath}}
+%
+% Equation punctuation
+%
+\newcommand{\pec}{\, ,}
+\newcommand{\pep}{\, .} 
+\newcommand{\pev}{\hspace{0.25in}}
+%
+% Equation labels and references, figure references, table references
+%
+\newcommand{\LEQ}[1]{\label{eq:#1}}
+\newcommand{\EQ}[1]{Eq.~(\ref{eq:#1})}
+\newcommand{\REQ}[1]{\ref{eq:#1}}
+\newcommand{\LFI}[1]{\label{fi:#1}}
+\newcommand{\FI}[1]{Fig.~\ref{fi:#1}}
+\newcommand{\RFI}[1]{\ref{fi:#1}}
+\newcommand{\LTA}[1]{\label{ta:#1}}
+\newcommand{\TA}[1]{Table~\ref{ta:#1}}
+\newcommand{\RTA}[1]{\ref{ta:#1}}
+\newcommand{\lequ}[1]{\label{eq:#1}}
+\newcommand{\equ}[1]{Eq.~(\ref{eq:#1})}
+\newcommand{\equs}[1]{Eqs.~(\ref{eq:#1})}
+\newcommand{\requ}[1]{(\ref{eq:#1})}
+\newcommand{\lfig}[1]{\label{fi:#1}}
+\newcommand{\fig}[1]{Fig.~\ref{fi:#1}}
+\newcommand{\figs}[1]{Figs.~\ref{fi:#1}}
+\newcommand{\rfig}[1]{\ref{fi:#1}}
+\newcommand{\lta}[1]{\label{ta:#1}}
+\newcommand{\ta}[1]{Table~\ref{ta:#1}}
+\newcommand{\rta}[1]{\ref{ta:#1}}
+%
+% Superscript and subscript in text
+%
+\newcommand{\supertext}[1]{\ensuremath{^{\textrm{#1}}}}
+\newcommand{\subtext}[1]{\ensuremath{_{\textrm{#1}}}}
+%
+%
+% List beginnings and endings
+%
+\newcommand{\bl}{\bss\begin{itemize}}
+\newcommand{\el}{\vspace{-.5\baselineskip}\end{itemize}\ess}
+\newcommand{\ben}{\bss\begin{enumerate}}
+\newcommand{\een}{\vspace{-.5\baselineskip}\end{enumerate}\ess}
+%
+% Figure and table beginnings and endings
+%
+\newcommand{\bfg}{\begin{figure}}
+\newcommand{\efg}{\end{figure}}
+\newcommand{\bt}{\begin{table}}
+\newcommand{\et}{\end{table}}
+%
+% Tabular and center beginnings and endings
+%
+\newcommand{\bc}{\begin{center}}
+\newcommand{\ec}{\end{center}}
+\newcommand{\btb}{\begin{center}\begin{tabular}}
+\newcommand{\etb}{\end{tabular}\end{center}}
+%
+% Single space command
+%
+\newcommand{\bss}{\begin{singlespace}}
+\newcommand{\ess}{\end{singlespace}}
+%
+%---New environment "arbspace". (modeled after singlespace environment
+%                                in Doublespace.sty)
+%   The baselinestretch only takes effect at a size change, so do one.
+%
+\def\arbspace#1{\def\baselinestretch{#1}\@normalsize}
+\def\endarbspace{}
+\newcommand{\bas}{\begin{arbspace}}
+\newcommand{\eas}{\end{arbspace}}
+%
+% An explanation for a function
+%
+\newcommand{\explain}[1]{\mbox{\hspace{2em} #1}}
+%
+% Quick commands for symbols
+%
+\newcommand{\half}{\frac{1}{2}}
+\newcommand{\third}{\frac{1}{3}}
+\newcommand{\twothird}{\frac{2}{3}}
+\newcommand{\fourth}{\frac{1}{4}}
+\newcommand{\mdot}{\dot{m}}
+%\newcommand{\ten}[1]{\times 10^{#1}\,}
+\newcommand{\cL}{{\cal L}}
+\newcommand{\cD}{{\cal D}}
+\newcommand{\cF}{{\cal F}}
+\newcommand{\cE}{{\cal E}}
+\renewcommand{\Re}{\mbox{Re}}
+\newcommand{\Ma}{\mbox{Ma}}
+\newcommand{\mA}{\mathbf{A}}
+\newcommand{\mB}{\mathbf{B}}
+\newcommand{\mC}{\mathbf{C}}
+\newcommand{\ER}{\mathcal{E}}
+\newcommand{\FR}{\mathcal{F}}
+
+%
+% Inclusion of Graphics Data
+%
+%\input{psfig}
+%\psfiginit
+%
+% More Quick Commands
+%
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\newcommand{\dxi}{\Delta x_i}
+\newcommand{\dyj}{\Delta y_j}
+\newcommand{\ts}[1]{\textstyle #1}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SIMONS MACROS 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\deriv}[2]{\frac{\mathrm{d} #1}{\mathrm{d} #2}}
+\newcommand{\pderiv}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\bx}{\mathbf{X}}
+\newcommand{\ba}{\mathbf{A}}
+\newcommand{\by}{\mathbf{Y}}
+\newcommand{\bj}{\mathbf{J}}
+\newcommand{\bs}{\mathbf{s}}
+\newcommand{\B}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\Dt}{\Delta t}
+\renewcommand{\d}{\mathrm{d}}
+\newcommand{\mom}[1]{\langle #1 \rangle}
+\newcommand{\cur}[1]{\left\{ #1 \right\}}
+\newcommand{\xl}{{x_{i-1/2}}}
+\newcommand{\xr}{{x_{i+1/2}}}
+\newcommand{\il}{{i-1/2}}
+\newcommand{\ir}{{i+1/2}}
+\newcommand{\sa}{\sigma_a}
+\newcommand{\CN}[3]{\frac{1}{2}\left[ #1 \right]^{#3} + \frac{1}{2} \left[ #1
+\right]^{#2}}
+\newcommand{\CNN}[3]{-\frac{1}{2}\left[ #1 \right]^{#3} - \frac{1}{2} \left[ #1
+\right]^{#2}}
+
+\newcommand{\CNS}[3]{\frac{1}{2}\left[ #1 \right]^{#3} + \frac{1}{2} \left[ #1
+\right]^{#2}}
+
+\journal{Journal of Computational Physics}
+
+\begin{document}
+
+\begin{frontmatter}
+
+%% Title, authors and addresses
+
+%% use the tnoteref command within \title for footnotes;
+%% use the tnotetext command for the associated footnote;
+%% use the fnref command within \author or \address for footnotes;
+%% use the fntext command for the associated footnote;
+%% use the corref command within \author for corresponding author footnotes;
+%% use the cortext command for the associated footnote;
+%% use the ead command for the email address,
+%% and the form \ead[url] for the home page:
+%%
+%% \title{Title\tnoteref{label1}}
+%% \tnotetext[label1]{}
+%% \author{Name\corref{cor1}\fnref{label2}}
+%% \ead{email address}
+%% \ead[url]{home page}
+%% \fntext[label2]{}
+%% \cortext[cor1]{}
+%% \address{Address\fnref{label3}}
+%% \fntext[label3]{}
+
+\title{Second-Order Discretization in Space and Time for Radiation-Hydrodynamics}
+
+%% use optional labels to link authors explicitly to addresses:
+%% \author[label1,label2]{<author name>}
+%% \address[label1]{<address>}
+%% \address[label2]{<address>}
+
+\author[tamu_address]{Simon Bolding}
+\author[tamu_address]{Joshua Hansel}
+\author[sandia_address]{Jarrod D. Edwards}
+\author[tamu_address]{Jim E. Morel}
+\author[lanl_address]{Robert B. Lowrie}
+
+
+\address[tamu_address]{Department of Nuclear Engineering, 337 Zachry Engineering Center, TAMU 3133, Texas A\&M University, College Station, Texas, 77843}
+\address[sandia_address]{Phenomenology and Sensor Science Department, Sandia National Laboratory, Albuquerque, NM}
+\address[lanl_address]{Computational Physics Group CCS-2, Los Alamos National Laboratory, P.O. Box 1663, MS D413, Los Alamos, NM 87545}
+
+\end{frontmatter}
+
+%% ---------------------------------------------
+%% ---------------------------------------------
+\section{Introduction}
+
+In this work, we derive, implement, and test a new IMEX scheme for solving the equations of radiation hydrodynamics that is second-order accurate in both space and time.  We consider a RH system that combines a 1-D slab model of compressible fluid dynamics with a grey radiation S$_2$ model, given by:
+\begin{subequations}
+\lequ{radhydro_system}
+\be
+\dxdy{\rho}{t}+\dxdy{}{x}\fn{\rho u} = 0 \pec
+\lequ{cons_mass}
+\ee 
+\be
+\dxdy{}{t}\fn{\rho u} + \dxdy{}{x}\fn{\rho u^2} + \dxdy{}{x}\fn{p}=
+\frac{\sigma_t}{c} \FR_{0} \pec
+\lequ{cons_mom}
+\ee
+\be
+\dxdy{E}{t} + \dxdy{}{x}\bracket{\fn{E+p}u}=-\sigma_a c \fn{aT^4 -
+\ER}+\frac{\sigma_t u}{c} \FR_{0} \pec
+\lequ{cons_energy}
+\ee
+\be
+\frac{1}{c}\dxdy{\psi^+}{t} + \frac{1}{\sqrt{3}}\dxdy{\psi^+}{x} + \sigma_t \psi^+ = 
+\frac{\sigma_s}{4\pi} c\ER + \frac{\sigma_a}{4\pi} acT^4  - \frac{\sigma_t u}{4\pi c}
+\FR_{0} + 
+\frac{\sigma_t}{\sqrt{3}\pi}\ER u
+\pec
+\lequ{intp}
+\ee
+
+\be
+\frac{1}{c}\dxdy{\psi^-}{t} - \frac{1}{\sqrt{3}}\dxdy{\psi^-}{x} + \sigma_t \psi^- = 
+\frac{\sigma_s}{4\pi} c\ER + \frac{\sigma_a}{4\pi} acT^4  - \frac{\sigma_t u}{4\pi c}
+\FR_{0} - 
+\frac{\sigma_t}{\sqrt{3}\pi}\ER u
+\pec
+\lequ{intm}
+\ee
+\end{subequations}
+where $\rho$ is the density, $u$ is the velocity, $E=\frac{\rho u^2}{2} + \rho e$ is the total material energy density, $e$ is the specific internal energy density, $T$ is the material temperature, $\ER$ is the radiation energy density, 
+\be
+\ER = \frac{2\pi}{c}\fn{\psi^{+}+\psi^{-}} \pec
+\lequ{Erad}
+\ee
+$\FR$ is the radiation energy flux, 
+\be
+\FR = \frac{2\pi}{\sqrt{3}}\fn{\psi^{+}-\psi^{-}}
+\lequ{flux}
+\ee
+and $\FR_{0}$ is an approximation to the comoving-frame flux,
+\be
+\lequ{nu_0}
+\FR_{0} = \FR-\frac{4}{3} \ER u \pep
+\ee
+Note that if we multiply Eqs.~\requ{intp} and \requ{intm} by $2\pi$ and sum them, we obtain the radiation energy equation
+\begin{subequations}
+\be
+\dxdy{\ER}{t} + \dxdy{\FR}{x} = \sigma_a c(aT^4 - \ER) - \frac{\sigma_t u}{c}\FR_{0} \pec
+\LEQ{erad}
+\ee
+and if we multiply \equ{intp} by $\frac{2\pi}{c\sqrt{3}}$, multiply \equ{intm} by $-\frac{2\pi}{c\sqrt{3}}$ and sum them, 
+we get the radiation momentum equation: 
+\be
+\frac{1}{c^2}\dxdy{\FR}{t} + \frac{1}{3}\dxdy{\ER}{x} = -\frac{\sigma_t}{c}\FR_{0} \pep
+\ee
+\end{subequations}
+
+Equations \requ{cons_mass} through \requ{intm} are closed in our calculations by assuming an ideal equation of state (EOS):
+\begin{subequations}
+\be
+p=\rho e (\gamma -1)
+\lequ{pressure}
+\pec
+\ee
+\be
+T = \frac{e}{c_v} \pec
+\lequ{matemp}
+\ee
+\end{subequations}
+where $\gamma$ is the adiabatic index, and $c_v$ is the specific heat.  However, our method is compatible with any valid EOS. 
+
+
+\clearpage
+\section{Solution method for nonlinear equations}
+
+\subsection{Elimination of material equations}
+
+Within each solution time step, first the hydro variables are advected (either using
+local predicted fluxes or a Riemann solver).  Then, a non-linear system must be solved.  
+Consider the case of the non-linear system to be solved for Crank Nicolson over a
+time step from $t_n$ to $t_{n+1}$.  The changes to the non-linear system for the
+predictor and corrector time steps will only affect the choice of $\Delta t$, the end time state, and the known source
+terms on the right hand side, which come from known previous states in time.  The non-linear equations
+to be solved in this case are, neglecting spatial differencing indices,
+\begin{multline}
+    \frac{\rho^{n+1}\left(u^{n+1,k} - u^{*}\right)}{\Dt} = \CN{\sigma_t \frac{u}{c} \left(
+    \FR - \frac{4}{3} \ER u \right)}{n}{n+1,k}\label{eq:vel_update}
+\end{multline}
+\begin{multline}
+    \frac{E^{n+1}-E^*}{\Dt} = \CNN{\sigma_a c \left( aT^4 - \ER
+\right)}{n}{n+1,k+1} \\  \CNN{\sigma_t \frac{u}{c} \left( \frac{4}{3} \ER u - \FR
+\right)}{n}{n+1,k}
+\label{eq:mat}
+\end{multline}
+plus the $S_2$ equations. 
+To simplify the algebra, define a source term $Q_E$ for all the known, lagged
+quantities in the above equation as
+\begin{equation}
+    Q_E^{k} = -\frac{1}{2}\left[\sa c\left( a(T^n)^4 - \ER\right)\right]^n 
+ \CNN{\sigma_t \frac{u}{c} \left( \frac{4}{3} \ER u - \FR \right)}{n}{n+1,k}
+\end{equation}
+First, Eq.~\eqref{eq:vel_update} is solved for a new velocity, using lagged radiation
+energy and flux densities.  For the initial solve, these can be taken at $t_n$.
+We then linearize the Planckian function about some temperature near $T^{n+1}$, denoted
+$T^k$. The linearized Planckian is
+\begin{equation}
+  \sigma_a a c  \left( T^{n+1,k+1} \right)^4 = \sigma_a a c \left[(T^k)^4 + \frac{4(T^k)^3}{c_v^k}\left(
+  e^{n+1,k+1} - e^{k}  \right)\right].
+    \label{eq:linearize}
+\end{equation}
+For the initial iteration $T^k=T^n$.  The above equation is substituted into
+Eq.~\eqref{eq:mat} and we define $\beta^k=\frac{4a(T^k)^3}{c_v^k}$ for
+clarity. The resulting equation can be solved for $(e^{n+1,k+1} -
+e^{k})$ 
+through algebraic manipulation:
+\begin{align*}
+    \frac{E^{n+1} - E^*}{\Dt} &= - \frac{1}{2}\left[\sa^{n+1,k} c \left(
+a(T^{n+1,k+1})^4 - \ER^{n+1,k+1}\right)\right]+Q_E^k \\
+    \frac{E^{n+1} - E^*}{\Dt} &= - \frac{1}{2}\left[\sa^{n+1,k}c\left(
+a(T^k)^4 + \beta^k(e^{n+1} - e^k)  - \ER^{n+1,k+1}\right)\right]+Q_E^k \\
+\frac{E^{n+1}-\rho^{n+1} e^k + \rho^{n+1} e^k - E^*}{\Dt} &= -\frac{1}{2}\left[\sa^{n+1,k}c\left(
+a(T^k)^4 + \beta^k(e^{n+1} - e^k)  - \ER^{n+1,k+1}\right)\right]+Q_E^k 
+\end{align*}
+We drop the superscript on $\rho$ because $\rho^{n+1} = \rho^*$. Then, the left hand
+side can be simplified as 
+\begin{equation} 
+    \frac{E^{n+1} - \rho e^k + \rho e^k -
+    E^*}{\Dt} = \frac{\rho}{\Dt}\left[(e^{n+1} - e^{k}) +
+    \frac{1}{2}(u^{n+1,2}-u^{*2}) + (e^k-e^*) \right]
+\end{equation}
+Solution of the main equation for the desired quantity then gives
+\begin{multline}
+    {e^{n+1}-e^k}= \frac{{\Dt}\left( \frac{1}{2}\sa c (\ER^{n+1,k+1} - a(T^k)^4)+Q_E^k \right)- \rho(e^k-e^*)-
+     \frac{\rho}{2}(u^{n+1,2}-u^{*2})}{\left[\rho +\frac{1}{2}\sa c \Dt
+     \beta\right]}\label{eq:energy_update}
+\end{multline}
+We then multiply the above equation by $\sigma_a c \beta^k$ and divide the RHS by
+$\rho/\rho$; this will simplify 
+substitution back into Eq.~\eqref{eq:linearize}.
+\begin{multline}
+    \sa c \beta (e^{n+1} - e^k) = \frac{\frac{1}{2}\sigma_a c \Dt \frac{\beta}{\rho}}{1
+        +\frac{1}{2}\sa c \Dt \frac{\beta}{\rho}}\left(\sa c
+        \left[\ER^{n+1,k+1} - a (T^k)^4\right] + 2Q_E^k\right)\\
+        - \left(\frac{\frac{1}{2}\sa c \frac{\beta}{\rho} \Dt}{1 +\frac{1}{2}\sa c \Dt
+        \frac{\beta}{\rho}}\right)\left(\frac{2\rho}{\Dt}\right)\left[(e^k - e^*) + \frac{1}{2}(u^{n+1,2} - u^{*2})\right]
+ \end{multline}
+The effective scattering fraction $\nu_{1/2}$, for the case of Crank Nicolson, is
+defined as
+\begin{equation}
+    \nu_{1/2} = \frac{\sigma_a c \frac{\beta^k}{\rho}}{\frac{2}{\Dt}+ \sa c
+    \frac{\beta^k}{\rho}  }.
+\end{equation}
+Substituting back into the main equation, the result can be simplified as.
+\begin{equation*}
+    \sa c \beta(e^{n+1} - e^k) = \nu_{1/2} \left(\sa c
+    \left[\ER^{n+1,k+1} - a (T^k)^4\right] + 2Q_E^k\right) -
+    \frac{2\nu_{1/2}\rho}{\Dt} \left[(e^k - e^*) + \frac{1}{2}(u^{n+1,2} - u^{*2})\right]
+\end{equation*}
+Finally, this can be substituted into Eq.~\eqref{eq:linearize} and the $(T^k)^4$
+terms simplified, giving the source term
+\begin{multline}
+    \sigma_a a c\left(T^{n+1,k+1}\right)^4 = \left(1 - \nu_{1/2}\right)\sigma_a a c (T^k)^4 + \sigma_a
+    c \nu_{1/2} \ER^{n+1,k+1}+\\2\nu_{1/2}Q_E^k - \frac{2\rho\nu}{\Dt} \left[(e^k -
+    e^*) + \frac{1}{2}(u^{n+1,2} - u^{*2})\right].
+\end{multline}
+The above expression can be substituted for the emission source in the S$_2$
+equations, including an effective scattering cross section given by $\sigma_a \nu$.  After
+solving for $\ER^{n+1,k+1}$, a new internal energy can be estimated using
+Eq.~\eqref{eq:energy_update}. It is important to use this linearized equation to ensure energy
+conservation.  This process can now be repeated until convergence,
+beginning with a solve of Eq.~\eqref{eq:vel_update} with updated radiation quantities.  Once
+the system is converged, the EOS can be used to update $p^{n+1}$.
+
+
+\subsection{Constructing sources for S$_2$ equations}
+
+Without spatial discretization, the S$_2$ equations can be writen as
+%\begin{align}
+%\end{align}
+
+
+
+
+
+
+
+
+%
+%Because we have only considered problems with constant densities and heat capacities, the following
+%derivation is depicted in terms of temperature $T$ rather than material energy
+%for simplicity.  Application of the first order Taylor expansion in time of the
+%gray emission source $B(T)$, about some temperature $T^*$ at some
+%time near $t^{n+1}$ gives
+%\begin{equation}\label{new_planck}
+%    \sigma_a^* a c T^{4,n+1} \simeq \sigma_a^* a c \left[T^{*4} + (T^{n+1} - T^*) 4T^{*3} \right]
+%\end{equation}
+%where $\sigma_a^*$ is evaluated at $T^*$.  Substitution of this into the material
+%energy equation given by Eq.~\eqref{mat_eq} yields
+%\begin{equation}
+%    \rho c_v \left( \frac{T^{n+1} - T^{n}}{\Delta t} \right) = \sigma_a^* \phi^{n+1} -
+%    \sigma_a^* a c \left[ T^{*4} +  (T^{n+1} - T^*) 4T^{*3} \right].
+%\end{equation}
+%Further manipulation to solve for the unkown temperature at the next time step $T^{n+1}$
+%yields
+%\begin{align*}
+%    \rho c_v \left( \frac{T^{n+1} - T^* + T^* - T^n}{\Delta t} \right) 
+%    &= \sigma_a^* \phi^{n+1} - \sigma_a^* a c \left[ T^{*4} +  (T^{n+1} - T^*) 4T^{*3}
+%\right] \\
+%\left( {T^{n+1} - T^*} \right) \left\{\rho c_v + \sigma_a^* a c 4
+%T^{*3} \Delta t \right\} &= \Delta t \sigma_a^* \phi^{n+1} - \Delta t \sigma_a^* a c
+%T^{*4} + \rho c_v (T^n - T^*) \\
+%\left( T^{n+1} - T^* \right) &= \frac{\left( \Delta t \sigma_a^* \phi^{n+1} - \Delta t \sigma_a^* a c
+%T^{*4} + \rho c_v (T^n - T^*) \right)}{\left\{\rho c_v + \sigma_a^* a c 4
+%T^{*3} \Delta t \right\}} \\
+%\left( T^{n+1} - T^* \right) &= \frac{ {\displaystyle \frac{\sigma_a^* \Delta t}{\rho
+%c_v}}  \left[ \phi^{n+1} -  a c T^{*4} \right] + (T^n - T^*) }{1 +
+%        \sigma_a^* a c \Delta t\frac{\displaystyle 4
+%T^{*3}}{\displaystyle \rho c_v } }.
+%\end{align*}
+%This provides an expression for $T^{n+1}$ as a
+%function of $T^*$ and the radiation scalar intensity $\phi^{n+1}$, i.e.,
+%\begin{equation}
+%\label{lo_t_new}
+%T^{n+1}  = \frac{1}{\rho c_v } f\sigma_a^* \Delta t \left( \phi^{n+1} - c a T^{*4} \right)
+%+ f T^n + (1-f) T^*.
+%\end{equation}
+%If $T^*=T^n$, then this produces the standard IMC temperature update equation.  The
+%expression for $T^{n+1}$ can be substituted back into Eq.~\eqref{new_planck} to form
+%an explicit approximation for the emission source at $t_{n+1}$ as
+%\begin{equation}\label{t_next1}
+%    \sigma_a a c T^{4,n+1} \simeq \sigma_a^* (1 -f^*) \phi^{n+1}
+%    + f^* \sigma_a^* a c T^{4,n} + \rho c_v\frac{1-f^*}{\Delta t} (T^N - T^*)
+%\end{equation}
+%where $f^* = (1 + \sigma_a^* c \Delta t \beta^*)^{-1}$ is the usual Fleck factor with
+%\begin{equation}
+%    \beta^* = \frac{4 a T^{*3}}{\rho c_v}
+%\end{equation}
+%The material temperature is updated at the end of the time step using Eq.~\ref{lo_t_new}.
+%
+%Now, the above equation for $U_r^{n+1}$ must be discretized in space.  Taking the
+%left spatial moment yields
+%\begin{align}\label{temp_moms}
+%    \mom{\sigma_a^* a c T^{4,n+1}}_L =& \frac{2}{h_i} \int_{x_\il} ^{x_{\ir}}
+%    b_L(x) \left[ \sigma_a^*(1-f^*)\phi^{n+1} + f^* \sigma_a^* a c T^{4,n}\right] \d x.
+%\end{align}
+%To keep the derivation general, we look at the two terms on the right side
+%seperately: $f^* \sigma_a^* a c T^{4,n}$ can be evaluated explicitly because the spatial
+%dependence over a cell of $T^{4,n}$ is already assumed LD. 
+% The $\phi^{n+1}$ term is divided and multiplied by a normalization integral
+%to form the appropriate average
+%\begin{equation}
+%    \left\{ \displaystyle \frac{ \displaystyle \frac{2}{h_i} \int_{x_\il} ^{x_{\ir}}
+%    b_L(x) \sigma_a^*(1-f^*)\phi^{n+1}}{\displaystyle\frac{2}{h_i} \int_{x_\il} ^{x_{\ir}} b_L(x)
+%\phi(x) \d x} \right\} \int_{x_\il} ^{x_{\ir}} b_L(x)  \phi(x) \d x = \mom{\sigma_a^*
+%(1-f^*) }_L \mom{\phi^{n+1}}_L
+%\end{equation}
+%where the quotient in braces is defined as $\mom{\sigma_a^*(1-f^*)}_L$ and
+%$\mom{\phi}^{n+1}_L= \mom{\phi}_L^{+,n+1}+\mom{\phi}_L^{-,n+1}$ is in terms of
+%the desired unknowns. 
+%
+%The evaluation of $\mom{\sigma_a^*(1-f^*)}_L$ is performed
+%based on the assumed spatial dependence over a cell of $\sigma_a$ and $f^*$.  If $f^*$
+%and $\sigma_a^*$ are assumed constant over a cell (i.e., the dependence of these terms
+%on temperature is assumed constant over a cell), Eq.~\eqref{temp_moms} reduces to
+%\begin{equation}\label{temp_const}
+%    \mom{\sigma_a^* a c T^{4,n+1}}_L = \sigma^*_{a}(1-f^*)\mom{\phi^{n+1}}_L +
+%    f^*
+%    \sigma^*_{a} \mom{ a c T^{4,n}}_L
+%\end{equation}
+%where 
+%\begin{equation}
+%    f^* = f(T^*_{avg,i}) = f\left(\sqrt[4]{\frac{T^{*4}_{L,i}+T^{*4}_{R,i}}{2}}\right)
+%\end{equation}
+%and $\sigma^* = \sigma_a(T^*_{avg,i})$.  Constant cross sections over a cell
+%have been assumed for the first iteration of the code.   If an LD
+%dependence of the cross sections and temperature is used, $\mom{\sigma_a^*(1-f^*)}_L$
+%can be evaluated without truncation via a Gaussian quadrature or analytical
+%integration and use of the previous (in the HOLO context) HO fine mesh solution; this
+%is the same procedure used for evaluation of the consistency terms.  It will likely
+%be easier to use the full non-linear NK solve to handle the LD case than to try to
+%define an LD dependence of $f$.
+%
+%Based on a guess for $T^*$, the above equation gives an expression for
+%the Planckian emission source on the right hand side
+%of Eq.~\eqref{lo_tran} with an additional effective scattering source.
+%This allows for four linear equations for the four remaining radiation unknowns to be fully
+%defined.  The final equation for the left basis moment and positive flow, for constant
+%$f^*$ and $\sigma_a^*$ over a cell, becomes
+%\begin{multline}\label{lo_trans_fin}
+%    -2{\mu}_{i-1/2}^{n+1,+} \phi_{i-1/2}^{n+1,+} + \mom {\mu}_{L,i}^{n+1,+}
+%  \mom{\phi}_{L,i}^{n+1,+}
+%  +  \mom\mu_{R,i}^{n+1,+}
+%  \mom{\phi}_{R,i}^{n+1,+} +  \left(\sigma_t^*+\frac{1}{c \Delta t} \right) h_i 
+%  \mom{\phi}_{L,i}^{n+1,+} \\- \frac{h_i}{2}\left(\sigma_s^* + \sigma_a^*(1-f^*)\right)
+%  \left( \mom{\phi}_{L,i}^{n+1,+} +
+%  \mom\phi_{L,i}^{n+1,-}\right) = \\ \frac{1}{2} h_i \sigma_a^*a c f^* \left(\frac{2}{3} T_{L,i}^{4,n} +
+%  \frac{1}{3} T_{R,i}^{4,n} \right) + 
+%  \frac{h_i}{c\Delta t}\mom{\phi}_{L,i}^{n,+}
+%\end{multline}
+%%In operator
+%%notation, denote the LO system in operator notation to be
+%%\begin{equation}
+%%    \B D(T) \Phi = \B B(T),
+%%\end{equation}
+%%where $\B B$ denotes the emission source and $\B D$ accounts for the effective
+%%scattering source, as a function of temperature.
+%
+%THIS SECTION IS NOT COMPLETELY RIGHT
+%
+%Once these linear equations have been solved for $\phi^{n+1}$, a new estimate of
+%$T^{n+1}$ can be determined.  To conserve energy, the same linearization used to
+%solve the radiation equation must be used in the material energy equation.
+%Substitution of
+%Eq.~\eqref{temp_const} into the material energy equation yields
+%\begin{equation} 
+%    \rho c_v\frac{ T^{n+1}-T^n}{\Delta t} = \sigma_a^* \phi^{n+1} - \left(\sigma_a^*  (1 -f) \phi^{n+1}
+%    + f \sigma_a^* a c T^{4,n} \right),
+%\end{equation}
+%which gives a temperature at the end of the time step as
+%\begin{equation}\label{new_temp}
+%    T^{n+1}= \frac{f^* \sigma_a^* \Delta t}{\rho c_{v}}  \left( \phi^{n+1}
+%    - c a T^{n4}\right)
+%    +  T^n,   
+%\end{equation}
+%This is how the IMC method estimates the temperature at the end of the time
+%step, following the MC solve.  Here, the LO radiation equations have taken the place of the Monte Carlo
+%solve.  To account for spatial dependence, the above equation can simply be evaluated
+%using $\phi^{n+1}_L$ and $T^*_L$ to get $T_L^{n+1}$.
+%
+%Based on these equations, the algorithm for solving the LO system with constant $f^*$
+%and cross sections over a cell is defined as
+%\begin{enumerate}
+%    \item Guess $T^*_L$ and $T^*_R$, typically using $T^n$.
+%    \item  Build the LO system based on the effective scattering $(1-f^*)$ and emission terms
+%        (i.e., evaluation of  Eq.~\eqref{lo_trans_fin}).
+%    \item Solve the linearized LO system to produce an estimate for $\phi^{n+1}$.
+%    \item Evaluate a new estimate of the $T_{L,i}$ and $T_{R,i}$ at the end of the time step
+%    $\tilde{T}^{n+1}$ using Eq.~\eqref{new_temp}.
+%    \item $T^*\leftarrow\tilde{T}^{n+1}$.
+%    \item Repeat 2-5 until $\tilde T^{n+1}$ and $\phi^{n+1}$ are converged.
+%\end{enumerate}
+%Because of the chosen linearization, the convergence primarily takes place in the
+%lagged material properties and factor $f$.
+%
+%
+
+%% The Appendices part is started with the command \appendix;
+%% appendix sections are then done as normal sections
+%% \appendix
+
+%% \section{}
+%% \label{}
+
+%% References
+%%
+%% Following citation commands can be used in the body text:
+%% Usage of \cite is as follows:
+%%   \cite{key}          ==>>  [#]
+%%   \cite[chap. 2]{key} ==>>  [#, chap. 2]
+%%   \citet{key}         ==>>  Author [#]
+
+%% References with bibTeX database:
+
+\bibliographystyle{model1-num-names}
+\bibliography{References}
+
+%% Authors are advised to submit their bibtex database files. They are
+%% requested to list a bibtex style file in the manuscript if they do
+%% not want to use model1-num-names.bst.
+
+%% References without bibTeX database:
+
+% \begin{thebibliography}{00}
+
+%% \bibitem must have the following form:
+%%   \bibitem{key}...
+%%
+
+% \bibitem{}
+
+% \end{thebibliography}
+
+
+\end{document}
+
+%%
+%% End of file `elsarticle-template-1-num.tex'.
+
+
+
+
+
+
