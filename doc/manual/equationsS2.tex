@@ -134,8 +134,26 @@ discretized equations result from integrating each half cell
 $(x_i-\frac{\Delta x_i}{2},x_i)$ and $(x_i,x_i+\frac{\Delta x_i}{2})$,
 where $x_i$ is the cell center, and $\Delta x_i$ is the cell width.
 Integrating the first half cell gives
-
-
-
+\begin{multline}
+\frac{1}{c}\dxdt{\psi^\pm_{i,L}}\frac{\Delta x_i}{2}
+  + \mu^\pm\fn{\psi_i^\pm-\psi_{i-\half}^\pm}
+  + \sigma_{t,i,L}\psi_{i,L}^\pm\frac{\Delta x_i}{2} \\
+  = \frac{\sigma_{s,i,L}}{4\pi}\phi_{i,L}\frac{\Delta x_i}{2}
+  + \frac{1}{4\pi}Q_{0,i,L}\frac{\Delta x_i}{2}
+  + \frac{3\mu^\pm}{4\pi}Q_{1,i,L}\frac{\Delta x_i}{2} \pec
+\lequ{S2left}
+\end{multline}
+where $\psi_i^\pm=\half\fn{\psi_{i,L}^\pm + \psi_{i,R}^\pm}$,
+$\psi_{i+\half}^+=\psi_{i,R}^+$, and $\psi_{i+\half}^-=\psi_{i+1,L}^-$.
+Similarily, for the second half cell,
+\begin{multline}
+\frac{1}{c}\dxdt{\psi^\pm_{i,R}}\frac{\Delta x_i}{2}
+  + \mu^\pm\fn{\psi_{i+\half}^\pm-\psi_i^\pm}
+  + \sigma_{t,i,R}\psi_{i,R}^\pm\frac{\Delta x_i}{2} \\
+  = \frac{\sigma_{s,i,R}}{4\pi}\phi_{i,R}\frac{\Delta x_i}{2}
+  + \frac{1}{4\pi}Q_{0,i,R}\frac{\Delta x_i}{2}
+  + \frac{3\mu^\pm}{4\pi}Q_{1,i,R}\frac{\Delta x_i}{2} \pep
+\lequ{S2right}
+\end{multline}
 
 \end{document}
