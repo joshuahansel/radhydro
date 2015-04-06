@@ -1,0 +1,153 @@
+% Mark URL's
+\newcommand{\URL}[1]{{\textcolor{blue}{#1}}}
+
+%\newcommand{\elfit}{\ensuremath{\operatorname{Im}(-1/\epsilon(\vq,\omega)}}
+%\msection{}-->section commands
+%\tradem{}  -->add TM subscript to entry
+%\ucatm{}   -->add trademark footnote about entry
+%
+% Ways of grouping things
+%
+\newcommand{\bracket}[1]{\left[ #1 \right]}
+\newcommand{\bracet}[1]{\left\{ #1 \right\}}
+\newcommand{\fn}[1]{\left( #1 \right)}
+\newcommand{\ave}[1]{\left\langle #1 \right\rangle}
+\newcommand{\norm}[1]{\Arrowvert #1 \Arrowvert}
+\newcommand{\abs}[1]{\arrowvert #1 \arrowvert}
+
+%
+% Derivative forms
+%
+\newcommand{\dx}[1]{\,d#1}
+\newcommand{\dxdy}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\dxy}[2]{\frac{d #1}{d #2}}
+\newcommand{\dydx}[1]{\frac{\partial #1}{\partial x}}
+\newcommand{\dxdt}[1]{\frac{\partial #1}{\partial t}}
+\newcommand{\dxdz}[1]{\frac{\partial #1}{\partial z}}
+\newcommand{\dfdt}[1]{\frac{\partial}{\partial t} \fn{#1}}
+\newcommand{\dfdz}[1]{\frac{\partial}{\partial z} \fn{#1}}
+\newcommand{\ddt}[1]{\frac{\partial}{\partial t} #1}
+\newcommand{\ddz}[1]{\frac{\partial}{\partial z} #1}
+\newcommand{\dd}[2]{\frac{\partial}{\partial #1} #2}
+\newcommand{\ddx}[1]{\frac{\partial}{\partial x} #1}
+\newcommand{\ddy}[1]{\frac{\partial}{\partial y} #1}
+\newcommand{\dxdyn}[3]{\frac{\partial ^{#3} #1 }{\partial #2 ^{#3}}}
+\newcommand{\Dxdy}[2]{\frac{D #1}{D #2}}
+\newcommand{\Dxy}[2]{\frac{D #1}{D #2}}
+%
+% Vector forms
+%
+\renewcommand{\vec}[1]{\mbox{$\stackrel{\longrightarrow}{#1}$}}
+\renewcommand{\div}{\mbox{$\vec{\nabla} \cdot$}}
+\newcommand{\grad}{\mbox{$\vec{\nabla}$}}
+\newcommand{\bb}[1]{\bar{\bar{#1}}}
+%
+% Equation beginnings and endings
+%
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\beas}{\begin{eqnarray*}}
+\newcommand{\eeas}{\end{eqnarray*}}
+\newcommand{\bdm}{\begin{displaymath}}
+\newcommand{\edm}{\end{displaymath}}
+%
+% Equation punctuation
+%
+\newcommand{\pec}{\, ,}
+\newcommand{\pep}{\, .} 
+\newcommand{\pev}{\hspace{0.25in}}
+%
+% Equation labels and references, figure references, table references
+%
+\newcommand{\lequ}[1]{\label{eq:#1}}
+\newcommand{\equ}[1]{Eq.~(\ref{eq:#1})}
+\newcommand{\equs}[1]{Eqs.~(\ref{eq:#1})}
+\newcommand{\requ}[1]{(\ref{eq:#1})}
+\newcommand{\lfig}[1]{\label{fi:#1}}
+\newcommand{\fig}[1]{Fig.~\ref{fi:#1}}
+\newcommand{\figs}[1]{Figs.~\ref{fi:#1}}
+\newcommand{\rfig}[1]{\ref{fi:#1}}
+\newcommand{\lta}[1]{\label{ta:#1}}
+\newcommand{\ta}[1]{Table~\ref{ta:#1}}
+\newcommand{\rta}[1]{\ref{ta:#1}}
+%
+% Superscript and subscript in text
+%
+\newcommand{\supertext}[1]{\ensuremath{^{\textrm{#1}}}}
+\newcommand{\subtext}[1]{\ensuremath{_{\textrm{#1}}}}
+%
+%
+% List beginnings and endings
+%
+\newcommand{\bl}{\bss\begin{itemize}}
+\newcommand{\el}{\vspace{-.5\baselineskip}\end{itemize}\ess}
+\newcommand{\ben}{\bss\begin{enumerate}}
+\newcommand{\een}{\vspace{-.5\baselineskip}\end{enumerate}\ess}
+%
+% Figure and table beginnings and endings
+%
+\newcommand{\bfg}{\begin{figure}}
+\newcommand{\efg}{\end{figure}}
+\newcommand{\bt}{\begin{table}}
+\newcommand{\et}{\end{table}}
+%
+% Tabular and center beginnings and endings
+%
+\newcommand{\bc}{\begin{center}}
+\newcommand{\ec}{\end{center}}
+\newcommand{\btb}{\begin{center}\begin{tabular}}
+\newcommand{\etb}{\end{tabular}\end{center}}
+%
+% Single space command
+%
+\newcommand{\bss}{\begin{singlespace}}
+\newcommand{\ess}{\end{singlespace}}
+%
+%---New environment "arbspace". (modeled after singlespace environment
+%                                in Doublespace.sty)
+%   The baselinestretch only takes effect at a size change, so do one.
+%
+\def\arbspace#1{\def\baselinestretch{#1}\@normalsize}
+\def\endarbspace{}
+\newcommand{\bas}{\begin{arbspace}}
+\newcommand{\eas}{\end{arbspace}}
+%
+% An explanation for a function
+%
+\newcommand{\explain}[1]{\mbox{\hspace{2em} #1}}
+%
+% Quick commands for symbols
+%
+\newcommand{\half}{\frac{1}{2}}
+\newcommand{\third}{\frac{1}{3}}
+\newcommand{\twothird}{\frac{2}{3}}
+\newcommand{\fourth}{\frac{1}{4}}
+\newcommand{\mdot}{\dot{m}}
+%\newcommand{\ten}[1]{\times 10^{#1}\,}
+\newcommand{\cL}{{\cal L}}
+\newcommand{\cD}{{\cal D}}
+\newcommand{\cF}{{\cal F}}
+\newcommand{\cE}{{\cal E}}
+\renewcommand{\Re}{\mbox{Re}}
+\newcommand{\Ma}{\mbox{Ma}}
+\newcommand{\mA}{\mathbf{A}}
+\newcommand{\mB}{\mathbf{B}}
+\newcommand{\mC}{\mathbf{C}}
+\newcommand{\E}{\mathcal{E}}
+\newcommand{\F}{\mathcal{F}}
+
+%
+% Inclusion of Graphics Data
+%
+%\input{psfig}
+%\psfiginit
+%
+% More Quick Commands
+%
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\newcommand{\dxi}{\Delta x_i}
+\newcommand{\dyj}{\Delta y_j}
+\newcommand{\ts}[1]{\textstyle #1}
