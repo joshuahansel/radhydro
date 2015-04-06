@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.9.28)  4 APR 2015 21:15
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.9.28)  6 APR 2015 10:12
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -266,25 +266,25 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2]
-Overfull \hbox (29.04626pt too wide) detected at line 428
+Overfull \hbox (29.04626pt too wide) detected at line 430
 \OML/cmm/m/it/12 Q[] \OT1/cmr/m/n/12 = \OMS/cmsy/m/n/12 ^^@[] [][] ^^@ [] [][] 
 ^^@ [] [][]
  []
 
 
-Overfull \hbox (61.0906pt too wide) in paragraph at lines 450--450
+Overfull \hbox (61.0906pt too wide) in paragraph at lines 452--452
 [] 
  []
 
 [3
 
 ]
-Overfull \hbox (32.16127pt too wide) detected at line 463
+Overfull \hbox (32.16127pt too wide) detected at line 465
  []$[]  [] \OT1/cmr/m/n/12 = []$ []  
  []
 
 
-Overfull \hbox (82.7143pt too wide) detected at line 485
+Overfull \hbox (82.7143pt too wide) detected at line 487
 \OML/cmm/m/it/12 ^^[[]c^^L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 e[] \OMS/cmsy/m/n/1
 2 ^^@ \OML/cmm/m/it/12 e[]\OT1/cmr/m/n/12 ) = \OML/cmm/m/it/12 ^^W[] [] \OMS/cm
 sy/m/n/12 ^^@ [] []
@@ -294,11 +294,11 @@ sy/m/n/12 ^^@ [] []
 No file linearization.bbl.
 [5] (./linearization.aux) ) 
 Here is how much of TeX's memory you used:
- 3142 strings out of 493304
- 39000 string characters out of 6139871
+ 3144 strings out of 493304
+ 39021 string characters out of 6139871
  109191 words of memory out of 5000000
- 6545 multiletter control sequences out of 15000+600000
- 11975 words of font info for 46 fonts, out of 8000000 for 9000
+ 6546 multiletter control sequences out of 15000+600000
+ 12322 words of font info for 47 fonts, out of 8000000 for 9000
  957 hyphenation exceptions out of 8191
  38i,10n,30p,321b,183s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/am
@@ -313,11 +313,12 @@ ist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/font
 s/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type
 1/public/amsfonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/type1/publi
 c/amsfonts/cm/cmti10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsf
-onts/cm/cmti7.pfb>
-Output written on linearization.pdf (5 pages, 152659 bytes).
+onts/cm/cmti12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/c
+m/cmti7.pfb>
+Output written on linearization.pdf (5 pages, 164603 bytes).
 PDF statistics:
- 72 PDF objects out of 1000 (max. 8388607)
- 51 compressed objects within 1 object stream
+ 76 PDF objects out of 1000 (max. 8388607)
+ 54 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
