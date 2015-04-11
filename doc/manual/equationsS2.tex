@@ -132,6 +132,8 @@ where $\mu^\pm=\pm\frac{1}{\sqrt{3}}$.
 \section{Temporal Discretization of the S$_2$ Equations}
 %===============================================================================
 
+\subsection{Crank-Nicolson}
+%-------------------------------------------------------------------------------
 Applying the Crank-Nicolson scheme to Equation \requ{S2Q}, the S-2 equations become
 \be\begin{split}
 \frac{1}{c}\frac{\psi^{\pm,k+1}-\psi^{\pm,n}}{\dt} = &
@@ -143,7 +145,10 @@ Applying the Crank-Nicolson scheme to Equation \requ{S2Q}, the S-2 equations bec
 \lequ{S2CN}
 \end{split}\ee
 where $k$ represents the $k$th iteration of a quantity at time $t^{n+1}$.
-Similarly, applying the BDF-2 scheme gives
+
+\subsection{BDF-2}
+%-------------------------------------------------------------------------------
+Applying the BDF-2 scheme to Equation \requ{S2Q}, the S-2 equations become
 \be\begin{split}
 \frac{1}{c}\frac{\psi^{\pm,k+1}-\psi^{\pm,n}}{\dt} = &
   -\third\mu^\pm\dydx{\psi^{\pm,n}}
@@ -160,9 +165,10 @@ Similarly, applying the BDF-2 scheme gives
    +\third\frac{1}{4\pi}Q_0^{k+1}\\
   &+\third\frac{3\mu^\pm}{4\pi}Q_1^n
    +\third\frac{3\mu^\pm}{4\pi}Q_1^{n+\half}
-   +\third\frac{3\mu^\pm}{4\pi}Q_1^{k+1} \pep
+   +\third\frac{3\mu^\pm}{4\pi}Q_1^{k+1} \pec
 \lequ{S2BDF2}
 \end{split}\ee
+where $k$ represents the $k$th iteration of a quantity at time $t^{n+1}$.
 
 %===============================================================================
 \section{Spatial Discretization of the S$_2$ Equations}
@@ -172,28 +178,28 @@ A lumped linear discontinuous spatial discretization is employed, so the
 numerical unknowns are the left and right values $\psi_{i,L}^\pm$ and
 $\psi_{i,R}^\pm$ for each cell $i$. The spatially
 discretized equations result from integrating each half cell
-$(x_i-\frac{\Delta x_i}{2},x_i)$ and $(x_i,x_i+\frac{\Delta x_i}{2})$,
-where $x_i$ is the cell center, and $\Delta x_i$ is the cell width.
+$(x_i-\frac{h_i}{2},x_i)$ and $(x_i,x_i+\frac{h_i}{2})$,
+where $x_i$ is the cell center, and $h_i$ is the cell width.
 Integrating the first half cell gives
 \begin{multline}
-\frac{1}{c}\dxdt{\psi^\pm_{i,L}}\frac{\Delta x_i}{2}
+\frac{1}{c}\dxdt{\psi^\pm_{i,L}}\frac{h_i}{2}
   + \mu^\pm\fn{\psi_i^\pm-\psi_{i-\half}^\pm}
-  + \sigma_{t,i,L}\psi_{i,L}^\pm\frac{\Delta x_i}{2} \\
-  = \frac{\sigma_{s,i,L}}{4\pi}\phi_{i,L}\frac{\Delta x_i}{2}
-  + \frac{1}{4\pi}Q_{0,i,L}\frac{\Delta x_i}{2}
-  + \frac{3\mu^\pm}{4\pi}Q_{1,i,L}\frac{\Delta x_i}{2} \pec
+  + \sigma_{t,i,L}\psi_{i,L}^\pm\frac{h_i}{2} \\
+  = \frac{\sigma_{s,i,L}}{4\pi}\phi_{i,L}\frac{h_i}{2}
+  + \frac{1}{4\pi}Q_{0,i,L}\frac{h_i}{2}
+  + \frac{3\mu^\pm}{4\pi}Q_{1,i,L}\frac{h_i}{2} \pec
 \lequ{S2left}
 \end{multline}
 where $\psi_i^\pm=\half\fn{\psi_{i,L}^\pm + \psi_{i,R}^\pm}$,
 $\psi_{i+\half}^+=\psi_{i,R}^+$, and $\psi_{i+\half}^-=\psi_{i+1,L}^-$.
 Similarily, for the second half cell,
 \begin{multline}
-\frac{1}{c}\dxdt{\psi^\pm_{i,R}}\frac{\Delta x_i}{2}
+\frac{1}{c}\dxdt{\psi^\pm_{i,R}}\frac{h_i}{2}
   + \mu^\pm\fn{\psi_{i+\half}^\pm-\psi_i^\pm}
-  + \sigma_{t,i,R}\psi_{i,R}^\pm\frac{\Delta x_i}{2} \\
-  = \frac{\sigma_{s,i,R}}{4\pi}\phi_{i,R}\frac{\Delta x_i}{2}
-  + \frac{1}{4\pi}Q_{0,i,R}\frac{\Delta x_i}{2}
-  + \frac{3\mu^\pm}{4\pi}Q_{1,i,R}\frac{\Delta x_i}{2} \pep
+  + \sigma_{t,i,R}\psi_{i,R}^\pm\frac{h_i}{2} \\
+  = \frac{\sigma_{s,i,R}}{4\pi}\phi_{i,R}\frac{h_i}{2}
+  + \frac{1}{4\pi}Q_{0,i,R}\frac{h_i}{2}
+  + \frac{3\mu^\pm}{4\pi}Q_{1,i,R}\frac{h_i}{2} \pep
 \lequ{S2right}
 \end{multline}
 
@@ -201,6 +207,9 @@ Similarily, for the second half cell,
 \section{Full Discretization of the S$_2$ Equations}
 %===============================================================================
 
+\subsection{Crank-Nicolson}
+%-------------------------------------------------------------------------------
+The fully discretized S$_2$ equations for a Crank-Nicolson step are
 \be\begin{split}
 \frac{1}{c}\frac{\psi\iL^{\pm,k+1}-\psi\iL^{\pm,n}}{\dt} = &
   -\half\mu^\pm\fn{\psi^{\pm,n}_i - \psi^{\pm,n}_{i-\half}}
@@ -213,7 +222,83 @@ Similarily, for the second half cell,
    +\half\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^{k+1}\\
   &+\half\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^n
    +\half\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^{k+1} \pec
-\lequ{S2CNfull}
+\lequ{S2CNfullL}
+\end{split}\ee
+
+\be\begin{split}
+\frac{1}{c}\frac{\psi\iR^{\pm,k+1}-\psi\iR^{\pm,n}}{\dt} = &
+  -\half\mu^\pm\fn{\psi^{\pm,n}_{i+\half} - \psi^{\pm,n}_i}
+  -\half\mu^\pm\fn{\psi^{\pm,k+1}_{i+\half} - \psi^{\pm,k+1}_i}\\
+  &-\half\sigma_{t,i,R}^n\frac{h_i}{2}\psi\iR^{\pm,n}
+   -\half\sigma_{t,i,R}^k\frac{h_i}{2}\psi\iR^{\pm,k+1}\\
+  &+\half\frac{\sigma_{s,i,R}^n}{4\pi}\frac{h_i}{2}\phi\iR^n
+   +\half\frac{\sigma_{s,i,R}^k}{4\pi}\frac{h_i}{2}\phi\iR^{k+1}\\
+  &+\half\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^n
+   +\half\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^{k+1}\\
+  &+\half\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^n
+   +\half\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^{k+1} \pec
+\lequ{S2CNfullR}
+\end{split}\ee
+where
+\be
+Q_{0,i,L}^{k+1}=\sigma_{a,i,L}^k a c \fn{T_{i,L}^k}^4
+  -\sigma_{t,i,L}^k\frac{u_{i,L}^k}{c}\F_{0,i,L}^{k+1} \pec
+\ee
+\be
+Q_{1,i,L}^{k+1}=\sigma_{t,i,L}^k \E_{i,L}^{k+1} u_{i,L}^k \pec
+\ee
+\be
+\F_{0,i,L}^{k+1}=\F_{i,L}^{k+1} - \frac{4}{3}\E_{i,L}^{k+1}u_{i,L}^k \pec
+\ee
+\be
+\F\iL^{k+1} = \frac{2\pi}{\sqrt{3}}\fn{\psi\iL^{+,k+1}-\psi\iL^{-,k+1}} \pec
+\ee
+\be
+\E\iL^{k+1} = \frac{2\pi}{c}\fn{\psi\iL^{+,k+1}+\psi\iL^{-,k+1}} \pec
+\ee
+and quantities at the right state $i,R$ are similarly defined.
+
+\subsection{BDF-2}
+%-------------------------------------------------------------------------------
+The fully discretized S$_2$ equations for a BDF-2 step are
+\be\begin{split}
+\frac{1}{c}\frac{\psi\iL^{\pm,k+1}-\psi\iL^{\pm,n}}{\dt} = &
+   -\third\mu^\pm\fn{\psi^{\pm,n}_i - \psi^{\pm,n}_{i-\half}}
+   -\third\mu^\pm\fn{\psi^{\pm,n+\half}_i - \psi^{\pm,n+\half}_{i-\half}}\\
+  &-\third\mu^\pm\fn{\psi^{\pm,k+1}_i - \psi^{\pm,k+1}_{i-\half}}\\
+  &-\third\sigma_{t,i,L}^n\frac{h_i}{2}\psi\iL^{\pm,n}
+   -\third\sigma_{t,i,L}^{n+\half}\frac{h_i}{2}\psi\iL^{\pm,n+\half}
+   -\third\sigma_{t,i,L}^k\frac{h_i}{2}\psi\iL^{\pm,k+1}\\
+  &+\third\frac{\sigma_{s,i,L}^n}{4\pi}\frac{h_i}{2}\phi\iL^n
+   +\third\frac{\sigma_{s,i,L}^{n+\half}}{4\pi}\frac{h_i}{2}\phi\iL^{n+\half}
+   +\third\frac{\sigma_{s,i,L}^k}{4\pi}\frac{h_i}{2}\phi\iL^{k+1}\\
+  &+\third\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^n
+   +\third\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^{n+\half}
+   +\third\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^{k+1}\\
+  &+\third\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^n
+   +\third\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^{n+\half}
+   +\third\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^{k+1} \pec
+\lequ{S2BDF2fullL}
+\end{split}\ee
+
+\be\begin{split}
+\frac{1}{c}\frac{\psi\iR^{\pm,k+1}-\psi\iR^{\pm,n}}{\dt} = &
+   -\third\mu^\pm\fn{\psi^{\pm,n}_{i+\half}       - \psi^{\pm,n}_i}
+   -\third\mu^\pm\fn{\psi^{\pm,n+\half}_{i+\half} - \psi^{\pm,n+\half}_i}\\
+  &-\third\mu^\pm\fn{\psi^{\pm,k+1}_{i+\half}     - \psi^{\pm,k+1}_i}\\
+  &-\third\sigma_{t,i,R}^n\frac{h_i}{2}\psi\iR^{\pm,n}
+   -\third\sigma_{t,i,R}^{n+\half}\frac{h_i}{2}\psi\iR^{\pm,n+\half}
+   -\third\sigma_{t,i,R}^k\frac{h_i}{2}\psi\iR^{\pm,k+1}\\
+  &+\third\frac{\sigma_{s,i,R}^n}{4\pi}\frac{h_i}{2}\phi\iR^n
+   +\third\frac{\sigma_{s,i,R}^{n+\half}}{4\pi}\frac{h_i}{2}\phi\iR^{n+\half}
+   +\third\frac{\sigma_{s,i,R}^k}{4\pi}\frac{h_i}{2}\phi\iR^{k+1}\\
+  &+\third\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^n
+   +\third\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^{n+\half}
+   +\third\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^{k+1}\\
+  &+\third\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^n
+   +\third\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^{n+\half}
+   +\third\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^{k+1} \pep
+\lequ{S2BDF2fullR}
 \end{split}\ee
 
 \end{document}
