@@ -95,7 +95,7 @@ where $\gamma$ is the adiabatic index, and $c_v$ is the specific heat capacity.
 However, the method presented is compatible with any valid EOS. 
 
 %===============================================================================
-\section{The S$_2$ Equations}
+\subsection{Source Definitions for the S$_2$ Equations}
 %===============================================================================
 
 Taking the zeroth angular moment of the S$_2$ equations, given by Equations
@@ -129,10 +129,38 @@ Rewriting the S$_2$ equations and employing the definitions given by Equations
 where $\mu^\pm=\pm\frac{1}{\sqrt{3}}$.
 
 %===============================================================================
-\section{Temporal Discretization of the S$_2$ Equations}
+\section{Solution Overview}
 %===============================================================================
+\subsection{Pseudocode}
+%-------------------------------------------------------------------------------
+\begin{enumerate}
+  \item CN from $n$ to $n+\fourth$
+  \item CN from $n+\fourth$ to $n+\half$
+  \item CN from $n+\half$ to $n+\frac{3}{4}$
+  \item BDF-2 from $n$ to $n+1$
+\end{enumerate}
 
-\subsection{Crank-Nicolson}
+%===============================================================================
+\section{Temporal Discretization}
+%===============================================================================
+\subsection{Euler Equations Momentum Source Update}
+%-------------------------------------------------------------------------------
+\subsubsection{Crank-Nicolson}
+%-------------------------------------------------------------------------------
+\subsubsection{BDF-2}
+%-------------------------------------------------------------------------------
+
+\subsection{Euler Equations Energy Source Update}
+%-------------------------------------------------------------------------------
+\subsubsection{Crank-Nicolson}
+%-------------------------------------------------------------------------------
+\subsubsection{BDF-2}
+%-------------------------------------------------------------------------------
+
+
+\subsection{S$_2$ Equations}
+%-------------------------------------------------------------------------------
+\subsubsection{Crank-Nicolson}
 %-------------------------------------------------------------------------------
 Applying the Crank-Nicolson scheme to Equation \requ{S2Q}, the S-2 equations become
 \be\begin{split}
@@ -146,7 +174,7 @@ Applying the Crank-Nicolson scheme to Equation \requ{S2Q}, the S-2 equations bec
 \end{split}\ee
 where $k$ represents the $k$th iteration of a quantity at time $t^{n+1}$.
 
-\subsection{BDF-2}
+\subsubsection{BDF-2}
 %-------------------------------------------------------------------------------
 Applying the BDF-2 scheme to Equation \requ{S2Q}, the S-2 equations become
 \be\begin{split}
@@ -171,7 +199,7 @@ Applying the BDF-2 scheme to Equation \requ{S2Q}, the S-2 equations become
 where $k$ represents the $k$th iteration of a quantity at time $t^{n+1}$.
 
 %===============================================================================
-\section{Spatial Discretization of the S$_2$ Equations}
+\section{Spatial Discretization}
 %===============================================================================
 
 A lumped linear discontinuous spatial discretization is employed, so the
@@ -204,10 +232,11 @@ Similarily, for the second half cell,
 \end{multline}
 
 %===============================================================================
-\section{Full Discretization of the S$_2$ Equations}
+\section{Full Discretization}
 %===============================================================================
-
-\subsection{Crank-Nicolson}
+\subsection{S$_2$ Equations}
+%-------------------------------------------------------------------------------
+\subsubsection{Crank-Nicolson}
 %-------------------------------------------------------------------------------
 The fully discretized S$_2$ equations for a Crank-Nicolson step are
 \be\begin{split}
@@ -258,7 +287,7 @@ Q_{1,i,L}^{k+1}=\sigma_{t,i,L}^k \E_{i,L}^{k+1} u_{i,L}^k \pec
 \ee
 and quantities at the right state $i,R$ are similarly defined.
 
-\subsection{BDF-2}
+\subsubsection{BDF-2}
 %-------------------------------------------------------------------------------
 The fully discretized S$_2$ equations for a BDF-2 step are
 \be\begin{split}
