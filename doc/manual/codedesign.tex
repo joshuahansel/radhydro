@@ -1,34 +1,224 @@
 \documentclass[preprint,12pt]{elsarticle}
 \usepackage{amssymb}
+\usepackage{hyperref}
 \usepackage{amsmath}
 \usepackage{color}
+\usepackage[procnames]{listings}
 \input{newcommands}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SIMONS MACROS 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\deriv}[2]{\frac{\mathrm{d} #1}{\mathrm{d} #2}}
+\newcommand{\pderiv}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\bx}{\mathbf{X}}
+\newcommand{\ba}{\mathbf{A}}
+\newcommand{\by}{\mathbf{Y}}
+\newcommand{\bj}{\mathbf{J}}
+\newcommand{\bs}{\mathbf{s}}
+\newcommand{\B}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\Dt}{\Delta t}
+\renewcommand{\d}{\mathrm{d}}
+\newcommand{\mom}[1]{\langle #1 \rangle}
+\newcommand{\cur}[1]{\left\{ #1 \right\}}
+\newcommand{\xl}{{x_{i-1/2}}}
+\newcommand{\xr}{{x_{i+1/2}}}
+\newcommand{\il}{{i-1/2}}
+\newcommand{\ir}{{i+1/2}}
+\newcommand{\sa}{\sigma_a}
+\newcommand{\CN}[3]{\frac{1}{2}\left[ #1 \right]^{#3} + \frac{1}{2} \left[ #1
+\right]^{#2}}
+\newcommand{\CNN}[3]{-\frac{1}{2}\left[ #1 \right]^{#3} - \frac{1}{2} \left[ #1
+\right]^{#2}}
+
+
+\newcommand{\ER}{\mathcal{E}}
+\newcommand{\FR}{\mathcal{F}}
+
+%Code input stuff for python
+\definecolor{keywords}{RGB}{255,0,90}
+\definecolor{comments}{RGB}{0,0,113}
+\definecolor{red}{RGB}{160,0,0}
+ 
+\lstset{language=Python, 
+        basicstyle=\ttfamily\small, 
+        keywordstyle=\color{keywords},
+        commentstyle=\color{comments},
+        stringstyle=\color{red},
+        showstringspaces=false,
+        identifierstyle=\color{blue},
+        procnamekeys={def,class}}
+
 \begin{document}
 
 \section{Code Design}
 
+\subsection{A Couple Warnings about Python}
+Variables in python are only names: they are \emph{not} a pointer
+or a value. This can lead to unusal behavior compared to C or Fortran.
+Nonmutable objects (doubles, ints, etc.) will behave as expected. Mutable
+objects (strings, lists, arrays, classes, i.e., things that have a state that can be
+changed) in assignment (= operator) by default do not
+construct a new object. Instead, they just assign the new name to the same object.
+This is done to save memory when dealing with large objects.   Thus, 
+\begin{lstlisting}
+#Immutable
+a = 5.
+b = a
+b += 2.
+print a            #will yield 5.
+print b            #will yield 7.     
+
+#Mutable
+a = [1,2,3]        #There is a list [1,2,3], we name it 'a'
+b = a              #There is a list [1,2,3], it also has a name 'b'
+b[0] = 5 
+print a            #will yield [5,2,3]
+\end{lstlisting}
+This means you can accidentally change an array without meaning
+to. Passes of mutable
+objects to functions demonstrate the same behavior.  But b is \emph{not} a pointer to a, it just happens to own the same data
+currently. Thus,
+\begin{lstlisting}
+a = [1,2,3]
+b = a
+b = [4]     #assign b to name a new list [4]
+b[0] = 5
+print a     #will yield [1,2,3]
+\end{lstlisting}
+To copy the contents of a to b, if it is a class, use the deepcopy command.  If it is
+something simple, like a list, just use the constructor, i.e., \verb{b = list(a){.
+    Numpy arrays have a .copy() method that works as well.
+
+You need to be careful when working with classes in python. Python is ``duck typed''
+\url{http://en.wikipedia.org/wiki/Duck_typing}. What this means in short is that
+python does not care what you pass it, as long as it has the methods you asked it
+for.  If you try to assign to a class member (e.g., a.member=5) and that class does
+not have that member, it will make it have it for you.  Also, be sure to construct
+\emph{instances} and not accidentally modify the \emph{class}\dots because it will
+let you do that:
+\begin{lstlisting}
+a = MyClass(args)   #some class that takes arugments
+a.name = 5       
+MyClass.name = 5    #This is not the same as a.name
+                    #It creates a new class variable called 'name' that now all
+                    instances will have. 
+\end{lstlisting}
+Our naming conventions should take care of this problem. In general, define all
+variables in the constructor to avoid similar issues:
+\begin{lstlisting}
+class myGoodClass:
+
+    #define constructor, all member functions are passed 'self'
+    def __init__(self, a,b,arr=[]): #default for arr is empty list
+        self.a = a
+        self.b = b
+        self.arr = arr
+
+    BAD_VAR = [] #DO NOT DEFINE VARIABLES AT CLASS SCOPE!!!!
+    
+\end{lstlisting}
+
+
+
 \subsection{Naming Convention}
-
-
+\begin{itemize}
+    \item Functions: nameOfFunction (first letter lower case)
+    \item Variables: name\_sep\_by\_underscores (upper case only for special
+    variables, e.g., \verb}rho_F} for rho Flux)
+    \item Class Names: NameOfClass (first letter capital)
+    \item Member Variables: same as variable naming convention
+    \item Function Definitions: in general functions can be done with pass by order
+        (e.g., func(a,b,c)).
+        Python is also very effective at keyword arguments, which have default values (e.g.,
+        func(a,b,mesh=my\_mesh). I recommend using keyword arguments when possible if
+        there is a large number of variables of similar form (e.g., they are all long
+        lists) being passed to a function.
+\end{itemize}
 
 \subsection{Basic Data Structures}
 
 \begin{enumerate}
-    \item Global constants - $c$, $a$, etc.
+    \item Arrays: We will be using numpy (np) arrays for all matrices and vectors.  Have
+        to be careful with syntax on commands, e.g., $A*B$ for two 2D numpy arrays
+        does not do a matrix multiply, for that you want \verb{np.dot(A,B){.  Numpy arrays are indexed like c arrays. For a 2D
+            array a[0][2] gives value of  first row, third column. I find the syntax
+            for creating np arrays to be a pain sometimes, so I often just use lists
+            of lists and then convert them to a np array. This is slow, but our run
+            times should be pretty fast anyways.  Also
+            note we are not using np.matrix in general, unless we need it temporarily
+            for a  special command.    
+    \item Other Data: If anything is accessed by a string use a dictionary, otherwise
+        just use lists or numpy arrays. Numpy arrays and dictionaries can take lists
+        of any type, indexed by any type
+    \item Global constants - $c$, $a$, etc. Stored in a dictionary that is globally
+        accessible. Stored in it's own module file.
     \item Spatial Mesh
     \begin{itemize}
         \item List of edge coordinates, element widths, element centers. 
-        \item Basic accessor functions to get values
-        \item 
-
-    \end{itemize}<++>
-
+        \item Basic accessor functions to get values for a particular element
+    \end{itemize}   
+    \item Hydro State Variable
+    \begin{itemize}
+        \item Class object
+        \item Contains the full state of system at a point, i.e., $\rho, E, e, u, p$
+        \item Has methods for EOS updates to pressure etc.
+        \item note, \emph{all object members are public in python}, so dont really need accessor
+            functions
+    \end{itemize}
+    \item Radiation State
+    \begin{itemize}
+        \item Fundamental unknowns are $\psi^+$ and $\psi^-$ at a point, but there is
+            no need to store these in a class because only the radiation solver
+            cares.
+        \item We can store $\ER$ and $\FR$ in a class that recieves $\psi^+$ and
+            $\psi^-$ in constructor, if necessary.
+    \end{itemize}
+    \item Structure of variables on the mesh: 
+        \begin{itemize}
+            \item Radiation variables are at points left and right,
+        there is no need for an average and a slope in general. 
+            \item Hydro variables will
+        exist as averages and slopes. L and R values are reconstructed as needed, but
+        all functions are expected to modify (or return) the averages and slopes. 
+            \item We can just store a list of the states for each element, indexed by
+                number, and pass these lists around to solvers etc.  This will decouple our code better than having the mesh store
+        variables, and will be easier with all the different time steps. 
+    \end{itemize}
+    \item CrossSection Class:
+    \begin{itemize}
+        \item Class that contains $\sigma_s$, $\sigma_a$, $\sigma_t$
+        \item Use external functions or classes to generate the Newton specific cross
+            sections, and $\sigma_t + 1/c \Delta t$.  Then pass a list of cross
+            sections objects, for all elements, to solvers.
+    \end{itemize}
 \end{enumerate}
 
-\begin{itemize}
+\subsection{Methods}
+
+There is a lot of similarities between steps that we can utilize. Our main solvers
+will be predictor and corrector hydro solvers and an S$_2$ solver with a fixed $Q_0$
+and $Q_1$. The rest of it boils down to setting the correct coefficients and building
+the sources.  
+
+\begin{enumerate}
     \item Hydro Predictor
+    \begin{itemize}
+        \item \textbf{What is fixed?}: Always a CN step
+        \item \textbf{What changes?}: $\Dt$, 
+        \item \textbf{Inputs:} $\Dt$, old HydroStates averages
+        \item \textbf{Output}: new HydroStates, averages and slopes
+    \end{itemize}
+    \item Hydro Corrector
+    \begin{itemize}
+        \item The hydro solvers are already implemented, but will need to have the predictor and corrector seperated
+    
+     \end{itemize}
+     \item Method to convert from avg slope to $L$ and $R$, for a single element
 
 
+    
 \end{itemize}
 
 \end{document}
