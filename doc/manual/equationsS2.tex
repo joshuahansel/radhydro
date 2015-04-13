@@ -98,6 +98,11 @@ However, the method presented is compatible with any valid EOS.
 \section{Spatial Discretization of the S$_2$ Equations}
 %===============================================================================
 
+For any particular non-linear solve in the algorithm, it is only necessary to
+solve the S$_2$ equations with scattering and a linearly anisotropic fixed source
+\begin{equation}
+    Q = \frac{Q_0 + 3\mu Q_1}{4\pi}.
+\end{equation}
 Taking the zeroth angular moment of the S$_2$ equations, given by Equations
 \requ{intp} and \requ{intm}, gives
 \be
@@ -111,15 +116,16 @@ Q_0 = \sigma_a acT^4 - \sigma_t\frac{u}{c}\F_0 \pep
 \ee
 Taking the first angular moment of the S$_2$ equations gives
 \be
-\frac{1}{c}\dxdt{\F} + \dydx{\phi} + \sigma_t\F = Q_1 \pec
+\frac{1}{c}\dxdt{\F} + \frac{1}{3}\dydx{\phi} + \sigma_t \F = Q_1 \pec
 \lequ{firstmoment}
 \ee
 where $Q_1$ is
 \be
-Q_1 = \sigma_a acT^4 - \sigma_t\frac{u}{c}\F_0 \pep
+Q_1 = \frac{4}{3}u\E \pep
 \lequ{Q1}
 \ee
-Rewriting the S$_2$ equations and employing the definitions given by Equations
+Thus, \requ{intp} and \requ{intm} contain the correct definitions for the source
+terms. Rewriting the S$_2$ equations and employing the definitions given by Equations
 \requ{Q0} and \requ{Q1} gives
 \be
 \frac{1}{c}\dxdt{\psi^\pm} + \mu^\pm\dydx{\psi^\pm} + \sigma_t\psi^\pm
