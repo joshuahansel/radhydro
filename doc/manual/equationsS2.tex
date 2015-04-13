@@ -147,15 +147,42 @@ where $\mu^\pm=\pm\frac{1}{\sqrt{3}}$.
 %-------------------------------------------------------------------------------
 \subsubsection{Crank-Nicolson}
 %-------------------------------------------------------------------------------
+\begin{equation}
+  \frac{\rho_i^{n+1}\left(u_i^{k+1}-u_i^*\right)}{\dt} = 
+   \half\left[\frac{\sigma_{t,i}}{c}\left(\F_i-\frac{4}{3}\E_i u_i\right)\right]^n
+  +\half\left[\frac{\sigma_{t,i}}{c}\left(\F_i-\frac{4}{3}\E_i u_i\right)\right]^k
+\end{equation}
 \subsubsection{BDF-2}
 %-------------------------------------------------------------------------------
+\begin{equation}
+  \frac{\rho_i^{n+1}\left(u_i^{k+1}-u_i^*\right)}{\half\dt} = 
+   \sixth\left[\frac{\sigma_{t,i}}{c}\left(\F_i-\frac{4}{3}\E_i u_i\right)\right]^n
+  +\sixth\left[\frac{\sigma_{t,i}}{c}\left(\F_i-\frac{4}{3}\E_i u_i\right)\right]^{n+\half}
+  +\frac{2}{3}\left[\frac{\sigma_{t,i}}{c}\left(\F_i-\frac{4}{3}\E_i u_i\right)\right]^{k+1}
+\end{equation}
 
 \subsection{Euler Equations Energy Source Update}
 %-------------------------------------------------------------------------------
 \subsubsection{Crank-Nicolson}
 %-------------------------------------------------------------------------------
+\begin{equation}\begin{split}
+  \frac{E_i^{k+1}-E_i^*}{\dt} = &
+  -\half\left[\sigma_{a,i} c\left(aT_i^4 - \E_i\right)\right]^{n}
+  -\half\left[\sigma_{a,i}^k c\left(a(T_i^{k+1})^4 - \E_i^{k+1}\right)\right]\\
+  &+\half\left[\sigma_{t,i}\frac{u_i}{c}\left(\F_i-\frac{4}{3}\E_i u\right)\right]^{#1}
+   +\half\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
+\end{split}\end{equation}
 \subsubsection{BDF-2}
 %-------------------------------------------------------------------------------
+\begin{equation}\begin{split}
+  \frac{E^{k+1}-E^{#1}}{#3\dt} = &
+  -\td\left[\sigma_a c\left(aT^4 - \E\right)\right]^{#1}
+  -\td\left[\sigma_a c\left(aT^4 - \E\right)\right]^{#2}
+  -\td\left[\sigma_a^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]\\
+  &+\td\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{#1}
+   +\td\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{#2}
+   +\td\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
+\end{split}\end{equation}
 
 
 \subsection{S$_2$ Equations}
