@@ -148,40 +148,42 @@ where $\mu^\pm=\pm\frac{1}{\sqrt{3}}$.
 \subsubsection{Crank-Nicolson}
 %-------------------------------------------------------------------------------
 \begin{equation}
-  \frac{\rho_i^{n+1}\left(u_i^{k+1}-u_i^*\right)}{\dt} = 
-   \half\left[\frac{\sigma_{t,i}}{c}\left(\F_i-\frac{4}{3}\E_i u_i\right)\right]^n
-  +\half\left[\frac{\sigma_{t,i}}{c}\left(\F_i-\frac{4}{3}\E_i u_i\right)\right]^k
+  \frac{\rho^{n+1}\left(u^{k+1}-u^*\right)}{\dt} = 
+   \half\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n
+  +\half\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
 \end{equation}
+
 \subsubsection{BDF-2}
 %-------------------------------------------------------------------------------
-\begin{equation}
-  \frac{\rho_i^{n+1}\left(u_i^{k+1}-u_i^*\right)}{\half\dt} = 
-   \sixth\left[\frac{\sigma_{t,i}}{c}\left(\F_i-\frac{4}{3}\E_i u_i\right)\right]^n
-  +\sixth\left[\frac{\sigma_{t,i}}{c}\left(\F_i-\frac{4}{3}\E_i u_i\right)\right]^{n+\half}
-  +\frac{2}{3}\left[\frac{\sigma_{t,i}}{c}\left(\F_i-\frac{4}{3}\E_i u_i\right)\right]^{k+1}
-\end{equation}
+\begin{equation}\begin{split}
+  \frac{\rho^{n+1}\left(u^{k+1}-u^*\right)}{\dt} =  
+  & \sixth\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n
+   +\sixth\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{n+\half}\\
+  &+\frac{2}{3}\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{k+1}
+\end{split}\end{equation}
 
 \subsection{Euler Equations Energy Source Update}
 %-------------------------------------------------------------------------------
 \subsubsection{Crank-Nicolson}
 %-------------------------------------------------------------------------------
 \begin{equation}\begin{split}
-  \frac{E_i^{k+1}-E_i^*}{\dt} = &
-  -\half\left[\sigma_{a,i} c\left(aT_i^4 - \E_i\right)\right]^{n}
-  -\half\left[\sigma_{a,i}^k c\left(a(T_i^{k+1})^4 - \E_i^{k+1}\right)\right]\\
-  &+\half\left[\sigma_{t,i}\frac{u_i}{c}\left(\F_i-\frac{4}{3}\E_i u\right)\right]^{#1}
+  \frac{E^{k+1}-E^*}{\dt} = &
+  -\half\left[\sigma_{a} c\left(aT^4 - \E\right)\right]^n
+  -\half\sigma_{a}^k c\left[aT^4 - \E\right]^{k+1}\\
+  &+\half\left[\sigma_{t}\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n
    +\half\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
 \end{split}\end{equation}
+
 \subsubsection{BDF-2}
 %-------------------------------------------------------------------------------
 \begin{equation}\begin{split}
-  \frac{E^{k+1}-E^{#1}}{#3\dt} = &
-  -\td\left[\sigma_a c\left(aT^4 - \E\right)\right]^{#1}
-  -\td\left[\sigma_a c\left(aT^4 - \E\right)\right]^{#2}
-  -\td\left[\sigma_a^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]\\
-  &+\td\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{#1}
-   +\td\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{#2}
-   +\td\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
+  \frac{E^{k+1}-E^*}{\dt} = &
+  -\third\left[\sigma_a c\left(aT^4 - \E\right)\right]^n
+  -\third\left[\sigma_a c\left(aT^4 - \E\right)\right]^{n+\half}\\
+  &-\third\sigma_a^k c\left[aT^4 - \E\right]^{k+1}
+   +\third\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n\\
+  &+\third\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{n+\half}
+   +\third\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
 \end{split}\end{equation}
 
 
@@ -217,7 +219,7 @@ Applying the BDF-2 scheme to Equation \requ{S2Q}, the S-2 equations become
    +\third\frac{\sigma_s^k}{4\pi}\phi^{k+1}\\
   &+\third\frac{1}{4\pi}Q_0^n
    +\third\frac{1}{4\pi}Q_0^{n+\half}
-   +\third\frac{1}{4\pi}Q_0^{k+1}\
+   +\third\frac{1}{4\pi}Q_0^{k+1}\\
   &+\third\frac{3\mu^\pm}{4\pi}Q_1^n
    +\third\frac{3\mu^\pm}{4\pi}Q_1^{n+\half}
    +\third\frac{3\mu^\pm}{4\pi}Q_1^{k+1} \pec
@@ -225,42 +227,87 @@ Applying the BDF-2 scheme to Equation \requ{S2Q}, the S-2 equations become
 \end{split}\ee
 where $k$ represents the $k$th iteration of a quantity at time $t^{n+1}$.
 
-%===============================================================================
-\section{Spatial Discretization}
-%===============================================================================
-
-A lumped linear discontinuous spatial discretization is employed, so the
-numerical unknowns are the left and right values $\psi_{i,L}^\pm$ and
-$\psi_{i,R}^\pm$ for each cell $i$. The spatially
-discretized equations result from integrating each half cell
-$(x_i-\frac{h_i}{2},x_i)$ and $(x_i,x_i+\frac{h_i}{2})$,
-where $x_i$ is the cell center, and $h_i$ is the cell width.
-Integrating the first half cell gives
-\begin{multline}
-\frac{1}{c}\dxdt{\psi^\pm_{i,L}}\frac{h_i}{2}
-  + \mu^\pm\fn{\psi_i^\pm-\psi_{i-\half}^\pm}
-  + \sigma_{t,i,L}\psi_{i,L}^\pm\frac{h_i}{2} \\
-  = \frac{\sigma_{s,i,L}}{4\pi}\phi_{i,L}\frac{h_i}{2}
-  + \frac{1}{4\pi}Q_{0,i,L}\frac{h_i}{2}
-  + \frac{3\mu^\pm}{4\pi}Q_{1,i,L}\frac{h_i}{2} \pec
-\lequ{S2left}
-\end{multline}
-where $\psi_i^\pm=\half\fn{\psi_{i,L}^\pm + \psi_{i,R}^\pm}$,
-$\psi_{i+\half}^+=\psi_{i,R}^+$, and $\psi_{i+\half}^-=\psi_{i+1,L}^-$.
-Similarily, for the second half cell,
-\begin{multline}
-\frac{1}{c}\dxdt{\psi^\pm_{i,R}}\frac{h_i}{2}
-  + \mu^\pm\fn{\psi_{i+\half}^\pm-\psi_i^\pm}
-  + \sigma_{t,i,R}\psi_{i,R}^\pm\frac{h_i}{2} \\
-  = \frac{\sigma_{s,i,R}}{4\pi}\phi_{i,R}\frac{h_i}{2}
-  + \frac{1}{4\pi}Q_{0,i,R}\frac{h_i}{2}
-  + \frac{3\mu^\pm}{4\pi}Q_{1,i,R}\frac{h_i}{2} \pep
-\lequ{S2right}
-\end{multline}
-
+%%===============================================================================
+%\section{Spatial Discretization}
+%%===============================================================================
+%
+%A lumped linear discontinuous spatial discretization is employed, so the
+%numerical unknowns are the left and right values $\psi_{i,L}^\pm$ and
+%$\psi_{i,R}^\pm$ for each cell $i$. The spatially
+%discretized equations result from integrating each half cell
+%$(x_i-\frac{h_i}{2},x_i)$ and $(x_i,x_i+\frac{h_i}{2})$,
+%where $x_i$ is the cell center, and $h_i$ is the cell width.
+%Integrating the first half cell gives
+%\begin{multline}
+%\frac{1}{c}\dxdt{\psi^\pm_{i,L}}\frac{h_i}{2}
+%  + \mu^\pm\fn{\psi_i^\pm-\psi_{i-\half}^\pm}
+%  + \sigma_{t,i,L}\psi_{i,L}^\pm\frac{h_i}{2} \\
+%  = \frac{\sigma_{s,i,L}}{4\pi}\phi_{i,L}\frac{h_i}{2}
+%  + \frac{1}{4\pi}Q_{0,i,L}\frac{h_i}{2}
+%  + \frac{3\mu^\pm}{4\pi}Q_{1,i,L}\frac{h_i}{2} \pec
+%\lequ{S2left}
+%\end{multline}
+%where $\psi_i^\pm=\half\fn{\psi_{i,L}^\pm + \psi_{i,R}^\pm}$,
+%$\psi_{i+\half}^+=\psi_{i,R}^+$, and $\psi_{i+\half}^-=\psi_{i+1,L}^-$.
+%Similarily, for the second half cell,
+%\begin{multline}
+%\frac{1}{c}\dxdt{\psi^\pm_{i,R}}\frac{h_i}{2}
+%  + \mu^\pm\fn{\psi_{i+\half}^\pm-\psi_i^\pm}
+%  + \sigma_{t,i,R}\psi_{i,R}^\pm\frac{h_i}{2} \\
+%  = \frac{\sigma_{s,i,R}}{4\pi}\phi_{i,R}\frac{h_i}{2}
+%  + \frac{1}{4\pi}Q_{0,i,R}\frac{h_i}{2}
+%  + \frac{3\mu^\pm}{4\pi}Q_{1,i,R}\frac{h_i}{2} \pep
+%\lequ{S2right}
+%\end{multline}
+%
 %===============================================================================
 \section{Full Discretization}
 %===============================================================================
+\subsection{Euler Equations Momentum Source Update}
+%-------------------------------------------------------------------------------
+\subsubsection{Crank-Nicolson}
+%-------------------------------------------------------------------------------
+\begin{equation}
+  \frac{\rho_i^{n+1}\left(u_i^{k+1}-u_i^*\right)}{\dt} = 
+   \half\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^n
+  +\half\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^k
+\end{equation}
+
+\subsubsection{BDF-2}
+%-------------------------------------------------------------------------------
+\begin{equation}\begin{split}
+  \frac{\rho_i^{n+1}\left(u_i^{k+1}-u_i^*\right)}{\dt} =  
+  & \sixth\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^n
+   +\sixth\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^{n+\half}\\
+  &+\frac{2}{3}\left[\frac{\sigma_{t,i}}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^{k+1}
+\end{split}\end{equation}
+
+%-------------------------------------------------------------------------------
+\subsection{Euler Equations Energy Source Update}
+%-------------------------------------------------------------------------------
+\subsubsection{Crank-Nicolson}
+%-------------------------------------------------------------------------------
+\begin{equation}\begin{split}
+  \frac{E_i^{k+1}-E_i^*}{\dt} = &
+  -\half\left[\sigma_{a} c\left(aT_i^4 - \E_i\right)\right]_i^n
+  -\half\left[\sigma_{a}^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]_i\\
+  &+\half\left[\sigma_{t}\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^n
+   +\half\left[\sigma_{t}\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^k
+\end{split}\end{equation}
+
+\subsubsection{BDF-2}
+%-------------------------------------------------------------------------------
+\begin{equation}\begin{split}
+  \frac{E_i^{k+1}-E_i^*}{\dt} = &
+  -\third\left[\sigma_a c\left(aT^4 - \E\right)\right]_i^n
+  -\third\left[\sigma_a c\left(aT^4 - \E\right)\right]_i^{n+\half}\\
+  &-\third\left[\sigma_a^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]_i
+   +\third\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^n\\
+  &+\third\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^{n+\half}
+   +\third\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^k
+\end{split}\end{equation}
+
+%-------------------------------------------------------------------------------
 \subsection{S$_2$ Equations}
 %-------------------------------------------------------------------------------
 \subsubsection{Crank-Nicolson}

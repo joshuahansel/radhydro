@@ -146,7 +146,7 @@
 % #3 = fraction of full time step
 \newcommand{\HydroEnergyUpdateBDFTwo}[3]{
 \begin{equation}\begin{split}
-  \frac{E^{k+1}-E^{#1}}{#3\dt} = &
+  \frac{E^{k+1}-E^*}{#3\dt} = &
   -\td\left[\sigma_a c\left(aT^4 - \E\right)\right]^{#1}
   -\td\left[\sigma_a c\left(aT^4 - \E\right)\right]^{#2}
   -\td\left[\sigma_a^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]\\
