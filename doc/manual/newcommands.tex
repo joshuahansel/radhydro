@@ -18,11 +18,11 @@
 %
 % Derivative forms
 %
-\newcommand{\dx}[1]{\,d#1}
+%\newcommand{\dx}[1]{\,d#1}
 \newcommand{\dxdy}[2]{\frac{\partial #1}{\partial #2}}
 \newcommand{\dxy}[2]{\frac{d #1}{d #2}}
 \newcommand{\dydx}[1]{\frac{\partial #1}{\partial x}}
-\newcommand{\dxdt}[1]{\frac{\partial #1}{\partial t}}
+\newcommand{\dydt}[1]{\frac{\partial #1}{\partial t}}
 \newcommand{\dxdz}[1]{\frac{\partial #1}{\partial z}}
 \newcommand{\dfdt}[1]{\frac{\partial}{\partial t} \fn{#1}}
 \newcommand{\dfdz}[1]{\frac{\partial}{\partial z} \fn{#1}}
@@ -72,6 +72,8 @@
 \newcommand{\lta}[1]{\label{ta:#1}}
 \newcommand{\ta}[1]{Table~\ref{ta:#1}}
 \newcommand{\rta}[1]{\ref{ta:#1}}
+\newcommand{\lsec}[1]{\label{sec:#1}}
+\newcommand{\rsec}[1]{\ref{sec:#1}}
 %
 % Superscript and subscript in text
 %
@@ -138,7 +140,10 @@
 \newcommand{\mC}{\mathbf{C}}
 \newcommand{\E}{\mathcal{E}}
 \newcommand{\F}{\mathcal{F}}
+\newcommand{\U}{\mathbf{U}}
+\newcommand{\Flux}{\mathbf{F}}
 \newcommand{\dt}{\Delta t}
+\newcommand{\dx}{\Delta x}
 \newcommand{\iL}{_{i,L}}
 \newcommand{\iR}{_{i,R}}
 
