@@ -1,3 +1,6 @@
+## @package radiationSolver
+#  contains steady-state S-2 solver
+
 import numpy as np
 from numpy import array
 from Mesh import Mesh    #Import the class
@@ -22,6 +25,23 @@ solvers, e.g., alpha*sigma_t*psi_L -> (alpha*sigma_t + 1/c*delta_t)psi_L. Must b
 factor is applied.
 
 """
+## Steady-state solve function for the S-2 equations.
+#
+#  @param[in] mesh     a mesh object
+#  @param[in] cross_x  list of cross sections for each element
+#  @param[in] Q0       isotropic source
+#  @param[in] Q1_plus  source for plus directions
+#  @param[in] Q1_minus source for minus directions
+#  @param[in] stream_scale_factor scale factor for reaction and streaming terms
+#  @param[in] diag_add_term       term to add to reaction term
+#  @param[in] bound_curr_lt       left boundary current
+#  @param[in] bound_curr_rt       right boundary current
+#  
+#  @return psi_plus  angular flux in plus directions
+#  @return psi_minus angular flux in minus directions
+#  @return E         radiation energy
+#  @return F         radiation flux
+#
 def radiationSolver(mesh, cross_x, Q0, Q1_plus, Q1_minus, stream_scale_factor=1.0,
         diag_add_term=0.0, bound_curr_lt=0.0, bound_curr_rt=0.0):
 
@@ -36,8 +56,8 @@ def radiationSolver(mesh, cross_x, Q0, Q1_plus, Q1_minus, stream_scale_factor=1.
 
     psi_minus = [(psi_l, psi_r) for i in range(mesh.n_elems)]
     psi_plus = [(psi_l, psi_r) for i in range(mesh.n_elems)]
-   # E = 
-   # F = 
+    E = [(psi_l, psi_r) for i in range(mesh.n_elems)]
+    F = [(psi_l, psi_r) for i in range(mesh.n_elems)]
 
     return psi_minus, psi_plus, E, F
 

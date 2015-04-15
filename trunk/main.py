@@ -1,11 +1,16 @@
-""" This is the main executioner. To execute the program type 'python main.py'
-"""
+## @package main
+#  Contains main function.
+#
+#  This file contains the main function. To execute the program type 'python main.py'.
 
-""" Import files from built in libraries and user-defined classes """
-
+# Import files from built in libraries and user-defined classes
 from src.Mesh import Mesh
 from src.CrossXInterface import *
+from src.radiationSolver import *
 
+## Main function.
+#
+#  This function does main stuff.
 def main():
 
     #Create a mesh, currently hardcoded
@@ -19,7 +24,7 @@ def main():
     #correctly. 
     print "\n The fancy cross sections are"
     cross_sects = [InvCubedCrossX(5.0,i+1,i+1,scale_coeff=10.0) for i in
-            xrange(len(cross_sects))]
+            xrange(mesh.n_elems)]
     
     for i in cross_sects:
         print i
@@ -37,8 +42,12 @@ def main():
 
 
     #Call radiation solver
+    Q0 = 0.0
+    Q1_plus = 0.0
+    Q1_minus = 0.0
+    psi_minus, psi_plus, E, F = radiationSolver(mesh, cross_sects, Q0, Q1_plus, Q1_minus)
 
 
-
+# run main function
 if __name__ == "__main__":
     main()

@@ -1,3 +1,6 @@
+## @package CrossXInterface
+#  contains classes for cross section interface
+
 #================================================================================
 """
 Class that handles the cross sections at a particular point in space.  If we want to

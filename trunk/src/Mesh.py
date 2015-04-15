@@ -1,7 +1,13 @@
+## @package Mesh
+#  Contains mesh classes
+
 #================================================================================
 """Very simple 1D, cartesian, fixed grid mesh.  Just contains a list of Element
 objects, which are defined below.  
 """
+## Class for mesh.
+#
+#  Just contains a list of element objects.
 class Mesh:
 
     """Define the constructor. Pass in number of elements, width of the entire
