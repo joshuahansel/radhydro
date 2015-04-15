@@ -135,12 +135,19 @@ class myGoodClass:
         func(a,b,mesh=my\_mesh). I recommend using keyword arguments when possible if
         there is a large number of variables of similar form (e.g., they are all long
         lists) being passed to a function.
+    \item Counters and lengths: all vars starting with \verb{n_{ are integer sizes
+    \item Use 85 character line widths
 \end{itemize}
 
 \subsection{Basic Data Structures}
 
 \begin{enumerate}
-    \item 
+    \item S$_2$ fluxes: Vectors, DOF, and equations corresponding to S$_2$ equations over an element will
+        be ordered $\psi_L^+,\psi_R^+,\psi_L^-,\psi_R^+$, e.g., the
+        source terms for the equations over an element will be passed into the
+        radiation solver corresponding to the equations in the above order.  This will result in a 7-banded matrix (not the ideal of 5, but
+        good enough for this).  Scipy has some sparse matrix options, but I don't
+        think we will probably need it. numpy.linalg.solve is easier to use.
     \item Arrays: We will be using numpy (np) arrays for all matrices and vectors.  Have
         to be careful with syntax on commands, e.g., $A*B$ for two 2D numpy arrays
         does not do a matrix multiply, for that you want \verb{np.dot(A,B){.  Numpy arrays are indexed like c arrays. For a 2D
@@ -148,8 +155,9 @@ class myGoodClass:
             for creating np arrays to be a pain sometimes, so I often just use lists
             of lists and then convert them to a np array. This is slow, but our run
             times should be pretty fast anyways.  Also
-            note we are not using np.matrix in general, unless we need it temporarily
-            for a  special command.    
+            note we are not using scipy.matrix in general, unless we need it temporarily
+            for a  special command. If you do, note that indexing for the matrix
+            classes is done as a[0,2] instead.
     \item Other Data: If anything is accessed by a string use a dictionary, otherwise
         just use lists or numpy arrays. Numpy arrays and dictionaries can take lists
         of any type, indexed by any type
@@ -167,6 +175,8 @@ class myGoodClass:
         \item Has methods for EOS updates to pressure etc.
         \item note, \emph{all object members are public in python}, so dont really need accessor
             functions
+        \item The state update functions may need to be modified in order to make the radiation
+            solver work correctly since it updates internal energy.
     \end{itemize}
     \item Radiation State
     \begin{itemize}
@@ -196,7 +206,7 @@ class myGoodClass:
     \end{itemize}
 \end{enumerate}
 
-\subsection{Methods}
+\subsection{Method Classes}
 
 There is a lot of similarities between steps that we can utilize. Our main solvers
 will be predictor and corrector hydro solvers and an S$_2$ solver with a fixed $Q_0$
@@ -208,8 +218,11 @@ the sources.
     \begin{itemize}
         \item \textbf{What is fixed?}: Always a CN step
         \item \textbf{What changes?}: $\Dt$, 
+        \item Interface
+        \begin{itemize}
         \item \textbf{Inputs:} $\Dt$, old HydroStates averages
         \item \textbf{Output}: new HydroStates, averages and slopes
+        \end{itemize}
     \end{itemize}
     \item Hydro Corrector
     \begin{itemize}
@@ -218,6 +231,16 @@ the sources.
      \end{itemize}
      \item Method to convert from avg slope to $L$ and $R$, for a single element
 
+    \item Hydro Predictor
+    \begin{itemize}
+        \item \textbf{What is fixed?}: Always a CN step
+        \item \textbf{What changes?}: $\Dt$, 
+        \item Interface
+        \begin{itemize}
+        \item \textbf{Inputs:} $\Dt$, old HydroStates averages
+        \item \textbf{Output}: new HydroStates, averages and slopes
+        \end{itemize}
+    \end{itemize}
 
     
 \end{enumerate}
