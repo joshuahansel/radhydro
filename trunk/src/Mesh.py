@@ -1,6 +1,3 @@
-## @package Mesh
-#  Contains mesh classes
-
 #================================================================================
 """Very simple 1D, cartesian, fixed grid mesh.  Just contains a list of Element
 objects, which are defined below.  
