@@ -3,14 +3,18 @@ import matplotlib as plt #alias module as 'plt'
 from pylab import *
 from math import sqrt, isinf
 from copy import deepcopy
+from utilityFunctions import *
+
 
 #--------------------------------------------------------------------------------------
+## Main is my original hydro code, we shouldnt need this anymore but it is here
+# temporarily in case we need it to compare
 def main():
     
     #Python requires indentation for nested functions etc.  It is best to use a text
     #editor that allows for tabs to be expanded as spaces
     width = 1.0
-    t_end = 0.2
+    t_end = 0.05
 
     t = 0.0
     cfl = 0.5
@@ -36,7 +40,7 @@ def main():
     #pick initial time step
     c_init = max(sqrt(gamma*p_left/rho_left)+u_left,sqrt(gamma*p_right/rho_right)+u_right)
     dt_init = cfl*dx/c_init
-    print "Initial dt: ", dt_init
+    print "new dt: ", dt_init
 
     #Can create lists of things in multiple ways
     spat_coors = []
@@ -65,7 +69,6 @@ def main():
 
     #loop over time steps
     while (t < t_end):
-
         t += dt
 
         #shorten last step to be exact
@@ -93,8 +96,9 @@ def main():
             states_l[i].updateState(rho_l[i], mom_l[i], erg_l[i])
             states_r[i].updateState(rho_r[i], mom_r[i], erg_r[i])
 
-        #plotSolutions(x,states=states_l)
-        #plotSolutions(x,states=states_r)
+
+        #plotHydroSolutions(x,states=states_l)
+        #plotHydroSolutions(x,states=states_r)
     
         #Check for positivity in all vars
  #       if not all( [(i > 0.0) for i in rho_l+rho_r+erg_l+erg_r] ):
@@ -129,8 +133,8 @@ def main():
             states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
             states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
 
-    #    plotSolutions(x,states=states_l)
-    #    plotSolutions(x,states=states_r)
+    #    plotHydroSolutions(x,states=states_l)
+    #    plotHydroSolutions(x,states=states_r)
 
         #Solve for fluxes and values at faces
         rho_F = [0.0 for i in range(n+1)]
@@ -149,7 +153,6 @@ def main():
 
         for i in range(0,n-1):
 
-
             rho_F[i+1] = riem_solver(rho_r_p[i], rho_l_p[i+1], states_r[i],
                     states_l[i+1], rhoFlux)
             mom_F[i+1] = riem_solver(mom_r_p[i], mom_l_p[i+1], states_r[i],
@@ -157,12 +160,11 @@ def main():
             erg_F[i+1] = riem_solver(erg_r_p[i], erg_l_p[i+1], states_r[i],
                     states_l[i+1], ergFlux)
 
- 
+
    #     plt.figure(3)
   #      plt.plot(x,rho_F)
  #       plt.plot(x,mom_F)
 #        plt.plot(x,erg_F)
-
 
         #Advance conserved values based on edge fluxes
         for i in range(len(rho)):
@@ -170,6 +172,7 @@ def main():
             rho[i] = advCons(rho[i],dx,dt,rho_F[i],rho_F[i+1])
             mom[i] = advCons(mom[i],dx,dt,mom_F[i],mom_F[i+1])
             erg[i] = advCons(erg[i],dx,dt,erg_F[i],erg_F[i+1])
+
 
         #figure(3)
       #  plt.plot(x_cent,rho)
@@ -181,23 +184,205 @@ def main():
         for i in range(len(states)):
             states[i].updateState(rho[i],mom[i],erg[i])
         
-        #plotSolutions(x,states=states)
-
-
+        #plotHydroSolutions(x,states=states)
+        
         #Compute a new time step
         c = [sqrt(i.p*i.gamma/i.rho)+abs(i.u) for i in states]
         dt_vals = [cfl*(x[i+1]-x[i])/c[i] for i in range(len(c))]
         dt = min(dt_vals)
         print "new dt:", dt
-        
+
     #plot solution, reads latex commands
-    plotSolutions(x,states=states) 
+    #plotHydroSolutions(x,states=states) 
     """ keyword arguments are cool.  After the
         standard "pass by reference" variables, the keyword varialbes can be specified in
         any order.  It is a little confusing since the keywords can have the same name as
         the vars, i.e., u (keyword) = u(variable)"""
-            
+    
+    for i in states:
+        print i
+
+
+#-------------------------------------------------------------------------------------
+#
+## Predictor solver for hydro.
+#
+# Boundary Conditions: Essentially boundaries are treated as reflective. The fluxes
+# on the boundary are just estimated based on the flux based on the edge state at
+# that node. There is no need to pass in the boundary conditions then.
+#
+# @param[in] mesh           Basic spatial mesh object
+# @param[in] states_old_a   Averages at old state. 
+# @param[in] dt             time step size for this hydro solve. To predict values at 
+#                           0.5 dt, pass in 1.0 dt
+# 
+#
+# @return
+#       -#  predicted states at averages
+#       -#  predicted states slopes
+#
+def hydroPredictor(mesh, states_old_a, dt):
+
+    dx = mesh.getElement(0).dx #currently a fixed width
+
+    if mesh.n_elems % 2 != 0: #simple error raise, % has lots of diff meanings in python
+        raise ValueError("Must be even number of cells")
+
+    #Can create lists of things in multiple ways
+    spat_coors = []
+    for i in mesh.elements:
+        spat_coors += [i.xl]
+    spat_coors += [mesh.elements[-1].xr]
+    x = np.array(spat_coors) #Similar to a matlab vector
+    x_cent = [0.5*(x[i]+x[i+1]) for i in range(len(x)-1)] #for plotting cell centers
+
+    #Intialize cell centered variables as passed in
+    states = states_old_a
+
+    #-----------------------------------------------------------------
+    # Solve Problem
+    #----------------------------------------------------------------
+
+    #Create vectors of conserved quantities
+    rho = [s.rho for s in states]
+    mom = [s.rho*s.u for s in states]
+    erg = [s.rho*(0.5*s.u*s.u + s.e) for s in states]
+
+    #Predict values by advecting each thing
+    rho_l, rho_r = slopeReconstruction(rho)
+    mom_l, mom_r = slopeReconstruction(mom)
+    erg_l, erg_r = slopeReconstruction(erg)
+
+    #Compute left and right states
+    states_l = [deepcopy(i) for i in states] #initialize 
+    states_r = [deepcopy(i) for i in states]
+
+    for i in range(len(rho_l)):
+        states_l[i].updateState(rho_l[i], mom_l[i], erg_l[i])
+        states_r[i].updateState(rho_r[i], mom_r[i], erg_r[i])
+
+    #Initialize predicited conserved quantities
+    rho_l_p = [0.0 for i in range(len(rho_l))]
+    rho_r_p = [0.0 for i in range(len(rho_l))]
+    mom_l_p = [0.0 for i in range(len(rho_l))]
+    mom_r_p = [0.0 for i in range(len(rho_l))]
+    erg_l_p = [0.0 for i in range(len(rho_l))]
+    erg_r_p = [0.0 for i in range(len(rho_l))]
+
+    #Advance in time each edge variable
+    for i in range(len(rho_l)):
+
+        #rho
+        rho_l_p[i] = advCons(rho_l[i],dx,0.5*dt,rhoFlux(states_l[i]),rhoFlux(states_r[i])) 
+        rho_r_p[i] = advCons(rho_r[i],dx,0.5*dt,rhoFlux(states_l[i]),rhoFlux(states_r[i])) 
+
+        #mom
+        mom_l_p[i] = advCons(mom_l[i],dx,0.5*dt,momFlux(states_l[i]),momFlux(states_r[i])) 
+        mom_r_p[i] = advCons(mom_r[i],dx,0.5*dt,momFlux(states_l[i]),momFlux(states_r[i])) 
+
+        #erg
+        erg_l_p[i] = advCons(erg_l[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
+        erg_r_p[i] = advCons(erg_r[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
         
+    #Advance the primitive variables at the edges
+    for i in range(len(rho_l)):
+        states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
+        states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
+
+
+    #Return states at left and right values
+    return states_l, states_r
+
+    
+#-------------------------------------------------------------------------------------
+#
+## Corrector solver for hydro.
+#
+# The corrector solve takes in a predicted state at dt/2, and computes new values at
+# dt.  The input is averages and slopes, the output is new averages, with the slopes
+# un-adjusted.
+#
+# The slopes are defined based on the following relation in a cell:
+# 
+# \f$U(x) = U_a + \frac{2U_x}{h_x}(x - x_i) \f$
+#
+# Thus, \f$U_R = U_a + U_x\f$ and \f$U_L = U_a - U_x\f$, and 
+# \f$U_x = \frac{U_R - U_L}{2}\f$
+#
+# @param[in] mesh           Basic spatial mesh object
+# @param[in] states_old_a   Averages at old state. 
+# @param[in] states_l       Predicted values at left nodes, at dt/2
+# @param[in] states_r       Predicted values at right nodes, at dt/2
+# @param[in] delta_t        time step size for this hydro solve. To predict values at 
+#                           0.5 dt, pass in 1.0 dt
+# 
+#
+# @return
+#       -#  predicted states averages
+#
+def hydroCorrector(mesh, states_old_a, states_l, states_r, dt):
+
+    #Choose riemann solver
+    riem_solver = HLLCSolver #HLLSolver, HLLCSolver
+
+    #Initialize the averages by copying left and right states
+    states_a = [deepcopy(i) for i in states_l] 
+
+    #Solve for fluxes and values at faces
+    n = mesh.n_elems
+    rho_F = np.zeros(n+1)
+    mom_F = np.zeros(n+1)
+    erg_F = np.zeros(n+1)
+
+    #Create vector of predicted variables at edges
+    rho_l_p = [s.rho for s in states_l]
+    rho_r_p = [s.rho for s in states_r]
+    mom_l_p = [s.rho*s.u for s in states_l]
+    mom_r_p = [s.rho*s.u for s in states_r]
+    erg_l_p = [s.rho*(0.5*s.u*s.u + s.e) for s in states_l]
+    erg_r_p = [s.rho*(0.5*s.u*s.u + s.e) for s in states_r]
+
+    #Solve Rieman problem at each face, for each quantity
+    #For boundaries it is easily defined
+    rho_F[0] = rhoFlux(states_l[0])
+    mom_F[0] = momFlux(states_l[0])
+    erg_F[0] = ergFlux(states_l[0])
+
+    rho_F[-1] = rhoFlux(states_r[-1])
+    mom_F[-1] = momFlux(states_r[-1])
+    erg_F[-1] = ergFlux(states_r[-1])
+
+    for i in range(0,n-1):
+
+        rho_F[i+1] = riem_solver(rho_r_p[i], rho_l_p[i+1], states_r[i],
+                states_l[i+1], rhoFlux)
+        mom_F[i+1] = riem_solver(mom_r_p[i], mom_l_p[i+1], states_r[i],
+                states_l[i+1], momFlux)
+        erg_F[i+1] = riem_solver(erg_r_p[i], erg_l_p[i+1], states_r[i],
+                states_l[i+1], ergFlux)
+
+    #Intialize cell average quantity arrays at t_old
+    rho = [s.rho for s in states_old_a]
+    mom = [s.rho*s.u for s in states_old_a]
+    erg = [s.rho*(0.5*s.u**2. + s.e) for s in states_old_a]
+
+    #Advance conserved values at centers based on edge fluxes
+    for i in range(len(rho)):
+
+        dx = mesh.getElement(i).dx
+
+        #Example of edge fluxes:
+        #   i is 0 for 1st element, so edge 0 and edge 1 is i and i+1
+        rho[i] = advCons(rho[i],dx,dt,rho_F[i],rho_F[i+1])
+        mom[i] = advCons(mom[i],dx,dt,mom_F[i],mom_F[i+1])
+        erg[i] = advCons(erg[i],dx,dt,erg_F[i],erg_F[i+1])
+
+    #Advance primitive variables
+    for i in range(len(states_a)):
+        states_a[i].updateState(rho[i],mom[i],erg[i])
+
+    return states_a
+
 
 #--------------------------------------------------------------------------------------
 class HydroState:
@@ -445,118 +630,30 @@ def HLLCSolver(U_l, U_r, L, R, flux): #quantity of interest U, state to the left
 
     else:
         print S_l, S_star, S_r
-        raise ValueError("HLL solver produced unrealistic fluxes\n")
+        raise ValueError("HLLC solver produced unrealistic fluxes\n")
 
 #-------------------------------------------------------------------------------------
-def getArtVisc(x,u,rho,p,gamma):
-
-    q = [0.0 for i in p] #initialize to zero
-    for i in range(len(p)):
-        if u[i+1] >= u[i]: #this has machine error, but doesnt matter cause those values are zero
-            continue
-        
-        #Do wierd shit at boundaries
-        if i==0:
-        
-            #calculate the terribleness
-            del_x_i = x[i+1]-x[i]
-            del_x_rt = x[i+2]-x[i+1]
-
-            rho_lt = rho[i]
-            rho_rt = (rho[i]*del_x_i    + rho[i+1]*del_x_rt)/(del_x_i +del_x_rt)
-            
-            c_lt = sqrt(gamma*p[i]/rho[i])
-            c_rt = ( sqrt(gamma*p[i+1]/rho[i+1])*del_x_rt 
-                 +   sqrt(gamma*p[i]/rho[i])*del_x_i ) / (del_x_rt + del_x_i)
-
-            del_u_i = u[i+1] - u[i]
-            del_u_rt = u[i+2] - u[i+1]
-
-            R_lt = 1.
-            R_rt = del_u_rt*del_x_i/(del_x_rt*del_u_i)
-        
-        elif i==len(p)-1:
-
-            #calculate the terribleness
-            del_x_i = x[i+1]-x[i]
-            del_x_lt = x[i]-x[i-1]
-
-            rho_lt = (rho[i-1]*del_x_lt +    rho[i]*del_x_i)/(del_x_lt+del_x_i )
-            rho_rt = rho[i]
-            
-            c_lt = ( sqrt(gamma*p[i-1]/rho[i-1])*del_x_lt 
-                 +   sqrt(gamma*p[i]/rho[i])*del_x_i ) / (del_x_lt + del_x_i)
-
-            c_rt = sqrt(gamma*p[i]/rho[i])
-
-            del_u_i = u[i+1] - u[i]
-            del_u_lt = u[i] - u[i-1]
-
-            R_lt = del_u_lt*del_x_i/(del_x_lt*del_u_i)
-            R_rt = 1.
-
-        else:
-
-            #calculate the terribleness
-            del_x_i = x[i+1]-x[i]
-            del_x_lt = x[i]-x[i-1]
-            del_x_rt = x[i+2]-x[i+1]
-
-            rho_lt = (rho[i-1]*del_x_lt +    rho[i]*del_x_i)/(del_x_lt+del_x_i )
-            rho_rt = (rho[i]*del_x_i    + rho[i+1]*del_x_rt)/(del_x_i +del_x_rt)
-            
-            c_lt = ( sqrt(gamma*p[i-1]/rho[i-1])*del_x_lt 
-                 +   sqrt(gamma*p[i]/rho[i])*del_x_i ) / (del_x_lt + del_x_i)
-
-            c_rt = ( sqrt(gamma*p[i+1]/rho[i+1])*del_x_rt 
-                 +   sqrt(gamma*p[i]/rho[i])*del_x_i ) / (del_x_rt + del_x_i)
-                           
-            del_u_i = u[i+1] - u[i]
-            del_u_rt = u[i+2] - u[i+1]
-            del_u_lt = u[i] - u[i-1]
-
-            R_lt = del_u_lt*del_x_i/(del_x_lt*del_u_i)
-            R_rt = del_u_rt*del_x_i/(del_x_rt*del_u_i)
-
-    
-        #same for all cells:
-        rho_bar = 2.*rho_lt*rho_rt/(rho_lt + rho_rt)
-        c_q = 0.25*(gamma+1.)
-        c_bar = min(c_lt,c_rt)
-        min1 = min(0.5*(R_lt+R_rt),2.*R_rt)
-        min2 = min(1.,2.*R_lt)
-        GAM = max( 0., min(min1,min2) )
-
-        q[i] = (1.-GAM)*rho_bar*abs(del_u_i)*( c_q*abs(del_u_i)
-                + sqrt(c_q*c_q*del_u_i*del_u_i+c_bar) )
-                        
-
-    return q
-
-
-
-#-------------------------------------------------------------------------------------
-def plotSolutions(x,states=None): #Default func values is trivial
+def plotHydroSolutions(x,states=None): #Default func values is trivial
 
     plt.figure(figsize=(11,8.5))
 
     #get the exact values
-    f = open('exact_results.txt', 'r')
-    x_e = []
-    u_e = []
-    p_e = []
-    rho_e = []
-    e_e = []
-    for line in f:
-        if len(line.split())==1:
-            t = line.split()
-        else:
-            data = line.split()
-            x_e.append(float(data[0]))
-            u_e.append(float(data[1]))
-            p_e.append(float(data[2]))
-            rho_e.append(float(data[4]))
-            e_e.append(float(data[3]))
+#    f = open('exact_results.txt', 'r')
+#    x_e = []
+#    u_e = []
+#    p_e = []
+#    rho_e = []
+#    e_e = []
+#    for line in f:
+#        if len(line.split())==1:
+#            t = line.split()
+#        else:
+#            data = line.split()
+#            x_e.append(float(data[0]))
+#            u_e.append(float(data[1]))
+#            p_e.append(float(data[2]))
+#            rho_e.append(float(data[4]))
+#            e_e.append(float(data[3]))
 
 
     if states==None:
@@ -573,23 +670,39 @@ def plotSolutions(x,states=None): #Default func values is trivial
             e.append(i.e)
 
     #get edge values
-    x_cent = [0.5*(x[i]+x[i+1]) for i in range(len(x)-1)]
+    x_cent = x
+    if len(x) == len(states)+1:
+        x_cent = [0.5*(x[i]+x[i+1]) for i in xrange(len(x))]
     
     if u != None:
-        plot2D(x_cent,u,x_e,u_e,"$u$")
+        plotSingle(x_cent,u,"$u$")
     
     if rho != None:
-        plot2D(x_cent,rho,x_e,rho_e,r"$\rho$") 
+        plotSingle(x_cent,rho,r"$\rho$") 
 
     if p != None:
-        plot2D(x_cent,p,x_e,p_e,r"$p$")
+        plotSingle(x_cent,p,r"$p$")
 
     if e != None:
-        plot2D(x_cent,e,x_e,e_e,r"$e$")
+        plotSingle(x_cent,e,r"$e$")
 
     plt.show(block=False) #show all plots generated to this point
     raw_input("Press anything to continue...")
-    plot2D.fig_num=0
+    plotSingle.fig_num=0
+
+#-------------------------------------------------------------------------------------
+def plotSingle(x,y,ylabl):
+
+    #static variable counter
+    plotSingle.fig_num += 1
+    plt.subplot(2,2,plotSingle.fig_num)
+    plt.xlabel('$x$ (cm)')
+    plt.ylabel(ylabl)
+    plt.plot(x,y,"b+-",label="My Stuff")
+    plt.savefig("var_"+str(plot2D.fig_num)+".pdf")
+    
+plotSingle.fig_num=0
+
 
 #-------------------------------------------------------------------------------------
 def plot2D(x,y,x_ex,y_ex,ylabl):

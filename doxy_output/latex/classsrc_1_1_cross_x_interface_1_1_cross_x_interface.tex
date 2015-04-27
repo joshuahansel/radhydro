@@ -1,0 +1,141 @@
+\hypertarget{classsrc_1_1_cross_x_interface_1_1_cross_x_interface}{\section{Cross\-X\-Interface Class Reference}
+\label{classsrc_1_1_cross_x_interface_1_1_cross_x_interface}\index{Cross\-X\-Interface@{Cross\-X\-Interface}}
+}
+
+
+Cross section class.  
+
+
+Inheritance diagram for Cross\-X\-Interface\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{classsrc_1_1_cross_x_interface_1_1_cross_x_interface}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \hyperlink{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_ac775ee34451fdfa742b318538164070e}{\-\_\-\-\_\-init\-\_\-\-\_\-}
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+def \hyperlink{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_aa7a4b9bc0941308e362738503137460e}{\-\_\-\-\_\-str\-\_\-\-\_\-}
+\begin{DoxyCompactList}\small\item\em Print string definition. \end{DoxyCompactList}\item 
+def \hyperlink{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_a738b60650d40ca81094acdae3cc55657}{update\-Cross\-X}
+\begin{DoxyCompactList}\small\item\em Update function cross sections. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_ab19871ffd067470950336cff88f8b1da}{sig\-\_\-a}
+\begin{DoxyCompactList}\small\item\em $\sigma_a$, the absorption cross section \end{DoxyCompactList}\item 
+\hyperlink{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_afb10e3cd4777a9b381a31a32071fc0d1}{sig\-\_\-s}
+\begin{DoxyCompactList}\small\item\em $\sigma_s$, the scattering cross section \end{DoxyCompactList}\item 
+\hyperlink{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_a9aa02ff48c273c3bc0a8213a045e6f4e}{sig\-\_\-t}
+\begin{DoxyCompactList}\small\item\em $\sigma_t$, the total cross section \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Cross section class. 
+
+Class that handles the cross sections at a particular point in space. If we want to make temperature dependent cross sections later, we will make a class that derives from this class. The derived class will have a function to update the need to change this later.
+
+All Cross sections have units of $\mbox{cm}^{-1}$. The basic cross sections included by this class are $\sigma_t$, $\sigma_s$, and $\sigma_a$, where $\sigma_t = \sigma_s+\sigma_a$. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_ac775ee34451fdfa742b318538164070e}{\index{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface@{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface}!\-\_\-\-\_\-init\-\_\-\-\_\-@{\-\_\-\-\_\-init\-\_\-\-\_\-}}
+\index{\-\_\-\-\_\-init\-\_\-\-\_\-@{\-\_\-\-\_\-init\-\_\-\-\_\-}!src::CrossXInterface::CrossXInterface@{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface}}
+\subsubsection[{\-\_\-\-\_\-init\-\_\-\-\_\-}]{\setlength{\rightskip}{0pt plus 5cm}def \-\_\-\-\_\-init\-\_\-\-\_\- (
+\begin{DoxyParamCaption}
+\item[{}]{self, }
+\item[{}]{sigma\-\_\-a, }
+\item[{}]{sigma\-\_\-s}
+\end{DoxyParamCaption}
+)}}\label{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_ac775ee34451fdfa742b318538164070e}
+
+
+Constructor. 
+
+Takes $\sigma_a$ and $\sigma_s$ and computes $\sigma_t$.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em self} & self \\
+\hline
+\mbox{\tt in}  & {\em sigma\-\_\-a} & $\sigma_a$, the absorption cross section \\
+\hline
+\mbox{\tt in}  & {\em sigma\-\_\-s} & $\sigma_s$, the scattering cross section \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_aa7a4b9bc0941308e362738503137460e}{\index{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface@{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface}!\-\_\-\-\_\-str\-\_\-\-\_\-@{\-\_\-\-\_\-str\-\_\-\-\_\-}}
+\index{\-\_\-\-\_\-str\-\_\-\-\_\-@{\-\_\-\-\_\-str\-\_\-\-\_\-}!src::CrossXInterface::CrossXInterface@{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface}}
+\subsubsection[{\-\_\-\-\_\-str\-\_\-\-\_\-}]{\setlength{\rightskip}{0pt plus 5cm}def \-\_\-\-\_\-str\-\_\-\-\_\- (
+\begin{DoxyParamCaption}
+\item[{}]{self}
+\end{DoxyParamCaption}
+)}}\label{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_aa7a4b9bc0941308e362738503137460e}
+
+
+Print string definition. 
+
+Defines how to print the object. Prints $\sigma_s$, $\sigma_a$, and $\sigma_t$.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em self} & self \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+string to be printed with the print command 
+\end{DoxyReturn}
+\hypertarget{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_a738b60650d40ca81094acdae3cc55657}{\index{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface@{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface}!update\-Cross\-X@{update\-Cross\-X}}
+\index{update\-Cross\-X@{update\-Cross\-X}!src::CrossXInterface::CrossXInterface@{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface}}
+\subsubsection[{update\-Cross\-X}]{\setlength{\rightskip}{0pt plus 5cm}def update\-Cross\-X (
+\begin{DoxyParamCaption}
+\item[{}]{self, }
+\item[{}]{args, }
+\item[{}]{kwargs}
+\end{DoxyParamCaption}
+)}}\label{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_a738b60650d40ca81094acdae3cc55657}
+
+
+Update function cross sections. 
+
+In this base class, cross sections are not updated by default; if it is necessary to update cross sections, this will be done by a derived class.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em args} & arbitrary number of arguments \\
+\hline
+\mbox{\tt in}  & {\em kwargs} & arbitrary number of keyword arguments \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Data Documentation}
+\hypertarget{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_ab19871ffd067470950336cff88f8b1da}{\index{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface@{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface}!sig\-\_\-a@{sig\-\_\-a}}
+\index{sig\-\_\-a@{sig\-\_\-a}!src::CrossXInterface::CrossXInterface@{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface}}
+\subsubsection[{sig\-\_\-a}]{\setlength{\rightskip}{0pt plus 5cm}sig\-\_\-a}}\label{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_ab19871ffd067470950336cff88f8b1da}
+
+
+$\sigma_a$, the absorption cross section 
+
+\hypertarget{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_afb10e3cd4777a9b381a31a32071fc0d1}{\index{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface@{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface}!sig\-\_\-s@{sig\-\_\-s}}
+\index{sig\-\_\-s@{sig\-\_\-s}!src::CrossXInterface::CrossXInterface@{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface}}
+\subsubsection[{sig\-\_\-s}]{\setlength{\rightskip}{0pt plus 5cm}sig\-\_\-s}}\label{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_afb10e3cd4777a9b381a31a32071fc0d1}
+
+
+$\sigma_s$, the scattering cross section 
+
+\hypertarget{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_a9aa02ff48c273c3bc0a8213a045e6f4e}{\index{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface@{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface}!sig\-\_\-t@{sig\-\_\-t}}
+\index{sig\-\_\-t@{sig\-\_\-t}!src::CrossXInterface::CrossXInterface@{src\-::\-Cross\-X\-Interface\-::\-Cross\-X\-Interface}}
+\subsubsection[{sig\-\_\-t}]{\setlength{\rightskip}{0pt plus 5cm}sig\-\_\-t}}\label{classsrc_1_1_cross_x_interface_1_1_cross_x_interface_a9aa02ff48c273c3bc0a8213a045e6f4e}
+
+
+$\sigma_t$, the total cross section 
+
+
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+src/\hyperlink{_cross_x_interface_8py}{Cross\-X\-Interface.\-py}\end{DoxyCompactItemize}

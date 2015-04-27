@@ -38,9 +38,6 @@ def main():
     for i in cross_sects:
         print i
 
-
-
-
     #Call radiation solver
     Q0 = 0.0
     Q1_plus = 0.0

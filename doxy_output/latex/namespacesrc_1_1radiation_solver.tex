@@ -1,0 +1,60 @@
+\hypertarget{namespacesrc_1_1radiation_solver}{\section{src.\-radiation\-Solver Namespace Reference}
+\label{namespacesrc_1_1radiation_solver}\index{src.\-radiation\-Solver@{src.\-radiation\-Solver}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \hyperlink{namespacesrc_1_1radiation_solver_a7c6794c1be4b79d2c09154579ff6a06c}{radiation\-Solver}
+\begin{DoxyCompactList}\small\item\em Steady-\/state solve function for the S-\/2 equations. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{namespacesrc_1_1radiation_solver_a7c6794c1be4b79d2c09154579ff6a06c}{\index{src\-::radiation\-Solver@{src\-::radiation\-Solver}!radiation\-Solver@{radiation\-Solver}}
+\index{radiation\-Solver@{radiation\-Solver}!src::radiationSolver@{src\-::radiation\-Solver}}
+\subsubsection[{radiation\-Solver}]{\setlength{\rightskip}{0pt plus 5cm}def src.\-radiation\-Solver.\-radiation\-Solver (
+\begin{DoxyParamCaption}
+\item[{}]{mesh, }
+\item[{}]{cross\-\_\-x, }
+\item[{}]{Q0, }
+\item[{}]{Q1\-\_\-plus, }
+\item[{}]{Q1\-\_\-minus, }
+\item[{}]{stream\-\_\-scale\-\_\-factor = {\ttfamily 1.0}, }
+\item[{}]{diag\-\_\-add\-\_\-term = {\ttfamily 0.0}, }
+\item[{}]{bound\-\_\-curr\-\_\-lt = {\ttfamily 0.0}, }
+\item[{}]{bound\-\_\-curr\-\_\-rt = {\ttfamily 0.0}}
+\end{DoxyParamCaption}
+)}}\label{namespacesrc_1_1radiation_solver_a7c6794c1be4b79d2c09154579ff6a06c}
+
+
+Steady-\/state solve function for the S-\/2 equations. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em mesh} & a mesh object \\
+\hline
+\mbox{\tt in}  & {\em cross\-\_\-x} & list of cross sections for each element \\
+\hline
+\mbox{\tt in}  & {\em Q0} & isotropic source \\
+\hline
+\mbox{\tt in}  & {\em Q1\-\_\-plus} & source for plus directions \\
+\hline
+\mbox{\tt in}  & {\em Q1\-\_\-minus} & source for minus directions \\
+\hline
+\mbox{\tt in}  & {\em stream\-\_\-scale\-\_\-factor} & scale factor for reaction and streaming terms \\
+\hline
+\mbox{\tt in}  & {\em diag\-\_\-add\-\_\-term} & term to add to reaction term \\
+\hline
+\mbox{\tt in}  & {\em bound\-\_\-curr\-\_\-lt} & left boundary current \\
+\hline
+\mbox{\tt in}  & {\em bound\-\_\-curr\-\_\-rt} & right boundary current\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyEnumerate}
+\item $\psi^+$, angular flux in plus directions
+\item $\psi^-$, angular flux in minus directions
+\item $\mathcal{E}$\-: radiation energy
+\item $\mathcal{F}$\-: radiation flux 
+\end{DoxyEnumerate}
+\end{DoxyReturn}

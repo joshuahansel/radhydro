@@ -42,7 +42,7 @@ class Mesh:
     """Accessor function"""
     def getElement(self, el_id):
 
-        return elements[el_id]
+        return self.elements[el_id]
 
 
 #================================================================================
@@ -52,6 +52,7 @@ the future."""
 class Element:
 
     #----------------------------------------------------------------------------
+    ## Simple constructor. Takes in ID, center, and width of element
     def __init__(self, el_id, x_center, width ):
 
         self.el_id = el_id              #id for this element
