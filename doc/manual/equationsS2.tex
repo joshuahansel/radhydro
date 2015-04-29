@@ -198,10 +198,10 @@ to compute the fluxes at time $n+\half$:
   +\half\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
 \end{equation}
 
-\subsubsection{BDF-2}
+\subsubsection{TR/BDF-2, Conservative Form}
 %-------------------------------------------------------------------------------
 \begin{equation}\begin{split}
-  \frac{\rho^{n+1}\left(u^{k+1}-u^*\right)}{\dt} =  
+  \frac{\rho^{n+1}\left(u^{k+1}-u^*\right)}{\half\dt} =  
   & \sixth\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n
    +\sixth\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{n+\half}\\
   &+\frac{2}{3}\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{k+1}
@@ -219,16 +219,16 @@ to compute the fluxes at time $n+\half$:
    +\half\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
 \end{split}\end{equation}
 
-\subsubsection{BDF-2}
+\subsubsection{TR/BDF-2, Conservative Form}
 %-------------------------------------------------------------------------------
 \begin{equation}\begin{split}
-  \frac{E^{k+1}-E^*}{\dt} = &
-  -\third\left[\sigma_a c\left(aT^4 - \E\right)\right]^n
-  -\third\left[\sigma_a c\left(aT^4 - \E\right)\right]^{n+\half}\\
-  &-\third\sigma_a^k c\left[aT^4 - \E\right]^{k+1}
-   +\third\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n\\
-  &+\third\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{n+\half}
-   +\third\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
+  \frac{E^{k+1}-E^*}{\half\dt} = &
+  -\sixth\left[\sigma_a c\left(aT^4 - \E\right)\right]^n
+  -\sixth\left[\sigma_a c\left(aT^4 - \E\right)\right]^{n+\half}\\
+  &-\frac{2}{3}\sigma_a^k c\left[aT^4 - \E\right]^{k+1}
+   +\sixth\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n\\
+  &+\sixth\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{n+\half}
+   +\frac{2}{3}\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
 \end{split}\end{equation}
 
 
@@ -299,10 +299,10 @@ The fully discretized equations are given in Section \rsec{full}.
 \lequ{hydromCNfull}
 \end{equation}
 
-\subsubsection{BDF-2}
+\subsubsection{TR/BDF-2, Conservative Form}
 %-------------------------------------------------------------------------------
 \begin{equation}\begin{split}
-  \frac{\rho_i^{n+1}\left(u_i^{k+1}-u_i^*\right)}{\dt} =  
+  \frac{\rho_i^{n+1}\left(u_i^{k+1}-u_i^*\right)}{\half\dt} =  
   & \sixth\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^n
    +\sixth\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^{n+\half}\\
   &+\frac{2}{3}\left[\frac{\sigma_{t,i}}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^{k+1}
@@ -323,16 +323,16 @@ The fully discretized equations are given in Section \rsec{full}.
 \lequ{hydroECNfull}
 \end{split}\end{equation}
 
-\subsubsection{BDF-2}
+\subsubsection{TR/BDF-2, Conservative Form}
 %-------------------------------------------------------------------------------
 \begin{equation}\begin{split}
-  \frac{E_i^{k+1}-E_i^*}{\dt} = &
-  -\third\left[\sigma_a c\left(aT^4 - \E\right)\right]_i^n
-  -\third\left[\sigma_a c\left(aT^4 - \E\right)\right]_i^{n+\half}\\
-  &-\third\left[\sigma_a^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]_i
-   +\third\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^n\\
-  &+\third\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^{n+\half}
-   +\third\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^k
+  \frac{E_i^{k+1}-E_i^*}{\half\dt} = &
+  -\sixth\left[\sigma_a c\left(aT^4 - \E\right)\right]_i^n
+  -\sixth\left[\sigma_a c\left(aT^4 - \E\right)\right]_i^{n+\half}\\
+  &-\frac{2}{3}\left[\sigma_a^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]_i
+   +\sixth\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^n\\
+  &+\sixth\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^{n+\half}
+   +\frac{2}{3}\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^k
 \lequ{hydroEBDF2full}
 \end{split}\end{equation}
 

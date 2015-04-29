@@ -140,19 +140,16 @@
 \end{split}\end{equation}
 }
 
-% Hydro energy update, BDF2
-% #1 = old time index
-% #2 = mid time index
-% #3 = fraction of full time step
-\newcommand{\HydroEnergyUpdateBDFTwo}[3]{
+% Hydro energy update, final phase
+\newcommand{\HydroEnergyUpdateFinal}{
 \begin{equation}\begin{split}
-  \frac{E^{k+1}-E^*}{#3\dt} = &
-  -\td\left[\sigma_a c\left(aT^4 - \E\right)\right]^{#1}
-  -\td\left[\sigma_a c\left(aT^4 - \E\right)\right]^{#2}
-  -\td\left[\sigma_a^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]\\
-  &+\td\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{#1}
-   +\td\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{#2}
-   +\td\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
+  \frac{E^{k+1}-E^*}{\hf\dt} = &
+  -\sx\left[\sigma_a c\left(aT^4 - \E\right)\right]^n
+  -\sx\left[\sigma_a c\left(aT^4 - \E\right)\right]^{n+\hf}
+  -\frac{2}{3}\left[\sigma_a^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]\\
+  &+\sx\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n
+   +\sx\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{n+\hf}
+   +\frac{2}{3}\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
 \end{split}\end{equation}
 }
 
@@ -195,6 +192,6 @@ Let $y^k$ denote $y^{n+1,k}$.
 \HydroMomentumUpdateFinal
 \RadEnergyUpdateBDFTwo{n}{n+\hf}{}
 \RadFluxUpdateBDFTwo{n}{n+\hf}{}
-\HydroEnergyUpdateBDFTwo{n}{n+\hf}{}
+\HydroEnergyUpdateFinal
 
 \end{document}
