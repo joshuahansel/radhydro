@@ -137,13 +137,9 @@ solves:
 
 \begin{enumerate}
   \item CN from $n$ to $n+\fourth$
-%  \begin{enumerate}
-%    \item Perform the first half of a MUSCL-Hancock step from
-%    \item Iterate on Solve the linear system 
-%  \end{enumerate}
   \item CN from $n+\fourth$ to $n+\half$
   \item CN from $n+\half$ to $n+\frac{3}{4}$
-  \item BDF-2 from $n$ to $n+1$
+  \item TR/BDF-2 from $n+\half$ to $n+1$
 \end{enumerate}
 
 %===============================================================================
@@ -190,7 +186,7 @@ to compute the fluxes at time $n+\half$:
 %===============================================================================
 \subsection{Fluid Momentum Source Update Equation}
 %-------------------------------------------------------------------------------
-\subsubsection{Crank-Nicolson}
+\subsubsection{Crank-Nicolson, $t^n\rightarrow t^{n+1}$}
 %-------------------------------------------------------------------------------
 \begin{equation}
   \frac{\rho^{n+1}\left(u^{k+1}-u^*\right)}{\dt} = 
@@ -198,7 +194,7 @@ to compute the fluxes at time $n+\half$:
   +\half\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
 \end{equation}
 
-\subsubsection{TR/BDF-2, Conservative Form}
+\subsubsection{TR/BDF-2, $t^{n+\half}\rightarrow t^{n+1}$}
 %-------------------------------------------------------------------------------
 \begin{equation}\begin{split}
   \frac{\rho^{n+1}\left(u^{k+1}-u^*\right)}{\half\dt} =  
@@ -209,7 +205,7 @@ to compute the fluxes at time $n+\half$:
 
 \subsection{Fluid Energy Source Update Equation}
 %-------------------------------------------------------------------------------
-\subsubsection{Crank-Nicolson}
+\subsubsection{Crank-Nicolson, $t^n\rightarrow t^{n+1}$}
 %-------------------------------------------------------------------------------
 \begin{equation}\begin{split}
   \frac{E^{k+1}-E^*}{\dt} = &
@@ -219,7 +215,7 @@ to compute the fluxes at time $n+\half$:
    +\half\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
 \end{split}\end{equation}
 
-\subsubsection{TR/BDF-2, Conservative Form}
+\subsubsection{TR/BDF-2, $t^{n+\half}\rightarrow t^{n+1}$}
 %-------------------------------------------------------------------------------
 \begin{equation}\begin{split}
   \frac{E^{k+1}-E^*}{\half\dt} = &
@@ -234,7 +230,7 @@ to compute the fluxes at time $n+\half$:
 
 \subsection{S$_2$ Equations}
 %-------------------------------------------------------------------------------
-\subsubsection{Crank-Nicolson}
+\subsubsection{Crank-Nicolson, $t^n\rightarrow t^{n+1}$}
 %-------------------------------------------------------------------------------
 Applying the Crank-Nicolson scheme to Equation \requ{S2Q}, the S-2 equations become
 \be\begin{split}
@@ -248,26 +244,26 @@ Applying the Crank-Nicolson scheme to Equation \requ{S2Q}, the S-2 equations bec
 \end{split}\ee
 where $k$ represents the $k$th iteration of a quantity at time $t^{n+1}$.
 
-\subsubsection{BDF-2}
+\subsubsection{TR/BDF-2, $t^{n+\half}\rightarrow t^{n+1}$}
 %-------------------------------------------------------------------------------
 Applying the BDF-2 scheme to Equation \requ{S2Q}, the S-2 equations become
 \be\begin{split}
-\frac{1}{c}\frac{\psi^{\pm,k+1}-\psi^{\pm,n}}{\dt} = &
-  -\third\mu^\pm\dydx{\psi^{\pm,n}}
-  -\third\mu^\pm\dydx{\psi^{\pm,n+\half}}
-  -\third\mu^\pm\dydx{\psi^{\pm,k+1}}\\
-  &-\third\sigma_t^n\psi^{\pm,n}
-   -\third\sigma_t^{n+\half}\psi^{\pm,n+\half}
-   -\third\sigma_t^k\psi^{\pm,k+1}\\
-  &+\third\frac{\sigma_s^n}{4\pi}\phi^n
-   +\third\frac{\sigma_s^{n+\half}}{4\pi}\phi^{n+\half}
-   +\third\frac{\sigma_s^k}{4\pi}\phi^{k+1}\\
-  &+\third\frac{1}{4\pi}Q_0^n
-   +\third\frac{1}{4\pi}Q_0^{n+\half}
-   +\third\frac{1}{4\pi}Q_0^{k+1}\\
-  &+\third\frac{3\mu^\pm}{4\pi}Q_1^n
-   +\third\frac{3\mu^\pm}{4\pi}Q_1^{n+\half}
-   +\third\frac{3\mu^\pm}{4\pi}Q_1^{k+1} \pec
+\frac{1}{c}\frac{\psi^{\pm,k+1}-\psi^{\pm,n+\half}}{\half\dt} = &
+  -\sixth\mu^\pm\dydx{\psi^{\pm,n}}
+  -\sixth\mu^\pm\dydx{\psi^{\pm,n+\half}}
+  -\frac{2}{3}\mu^\pm\dydx{\psi^{\pm,k+1}}\\
+  &-\sixth\sigma_t^n\psi^{\pm,n}
+   -\sixth\sigma_t^{n+\half}\psi^{\pm,n+\half}
+   -\frac{2}{3}\sigma_t^k\psi^{\pm,k+1}\\
+  &+\sixth\frac{\sigma_s^n}{4\pi}\phi^n
+   +\sixth\frac{\sigma_s^{n+\half}}{4\pi}\phi^{n+\half}
+   +\frac{2}{3}\frac{\sigma_s^k}{4\pi}\phi^{k+1}\\
+  &+\sixth\frac{1}{4\pi}Q_0^n
+   +\sixth\frac{1}{4\pi}Q_0^{n+\half}
+   +\frac{2}{3}\frac{1}{4\pi}Q_0^{k+1}\\
+  &+\sixth\frac{3\mu^\pm}{4\pi}Q_1^n
+   +\sixth\frac{3\mu^\pm}{4\pi}Q_1^{n+\half}
+   +\frac{2}{3}\frac{3\mu^\pm}{4\pi}Q_1^{k+1} \pec
 \lequ{S2BDF2}
 \end{split}\ee
 where $k$ represents the $k$th iteration of a quantity at time $t^{n+1}$.
@@ -290,7 +286,7 @@ The fully discretized equations are given in Section \rsec{full}.
 %===============================================================================
 \subsection{Fluid Momentum Source Update Equation}
 %-------------------------------------------------------------------------------
-\subsubsection{Crank-Nicolson}
+\subsubsection{Crank-Nicolson, $t^n\rightarrow t^{n+1}$}
 %-------------------------------------------------------------------------------
 \begin{equation}
   \frac{\rho_i^{n+1}\left(u_i^{k+1}-u_i^*\right)}{\dt} = 
@@ -299,7 +295,7 @@ The fully discretized equations are given in Section \rsec{full}.
 \lequ{hydromCNfull}
 \end{equation}
 
-\subsubsection{TR/BDF-2, Conservative Form}
+\subsubsection{TR/BDF-2, $t^{n+\half}\rightarrow t^{n+1}$}
 %-------------------------------------------------------------------------------
 \begin{equation}\begin{split}
   \frac{\rho_i^{n+1}\left(u_i^{k+1}-u_i^*\right)}{\half\dt} =  
@@ -312,7 +308,7 @@ The fully discretized equations are given in Section \rsec{full}.
 %-------------------------------------------------------------------------------
 \subsection{Fluid Energy Source Update Equation}
 %-------------------------------------------------------------------------------
-\subsubsection{Crank-Nicolson}
+\subsubsection{Crank-Nicolson, $t^n\rightarrow t^{n+1}$}
 %-------------------------------------------------------------------------------
 \begin{equation}\begin{split}
   \frac{E_i^{k+1}-E_i^*}{\dt} = &
@@ -323,7 +319,7 @@ The fully discretized equations are given in Section \rsec{full}.
 \lequ{hydroECNfull}
 \end{split}\end{equation}
 
-\subsubsection{TR/BDF-2, Conservative Form}
+\subsubsection{TR/BDF-2, $t^{n+\half}\rightarrow t^{n+1}$}
 %-------------------------------------------------------------------------------
 \begin{equation}\begin{split}
   \frac{E_i^{k+1}-E_i^*}{\half\dt} = &
@@ -339,7 +335,7 @@ The fully discretized equations are given in Section \rsec{full}.
 %-------------------------------------------------------------------------------
 \subsection{S$_2$ Equations}
 %-------------------------------------------------------------------------------
-\subsubsection{Crank-Nicolson}
+\subsubsection{Crank-Nicolson, $t^n\rightarrow t^{n+1}$}
 %-------------------------------------------------------------------------------
 The fully discretized S$_2$ equations for a Crank-Nicolson step are
 \be\begin{split}
@@ -392,46 +388,46 @@ Q_{1,i,L}^{k+1}=\frac{4}{3}\sigma_{t,i,L}^k \E_{i,L}^{k+1} u_{i,L}^k \pec
 \ee
 and quantities at the right state $i,R$ are similarly defined.
 
-\subsubsection{BDF-2}
+\subsubsection{TR/BDF-2, $t^{n+\half}\rightarrow t^{n+1}$}
 %-------------------------------------------------------------------------------
 The fully discretized S$_2$ equations for a BDF-2 step are
 \be\begin{split}
-\frac{1}{c}\frac{\psi\iL^{\pm,k+1}-\psi\iL^{\pm,n}}{\dt} = &
-   -\third\mu^\pm\fn{\psi^{\pm,n}_i - \psi^{\pm,n}_{i-\half}}
-   -\third\mu^\pm\fn{\psi^{\pm,n+\half}_i - \psi^{\pm,n+\half}_{i-\half}}\\
-  &-\third\mu^\pm\fn{\psi^{\pm,k+1}_i - \psi^{\pm,k+1}_{i-\half}}\\
-  &-\third\sigma_{t,i,L}^n\frac{h_i}{2}\psi\iL^{\pm,n}
-   -\third\sigma_{t,i,L}^{n+\half}\frac{h_i}{2}\psi\iL^{\pm,n+\half}
-   -\third\sigma_{t,i,L}^k\frac{h_i}{2}\psi\iL^{\pm,k+1}\\
-  &+\third\frac{\sigma_{s,i,L}^n}{4\pi}\frac{h_i}{2}\phi\iL^n
-   +\third\frac{\sigma_{s,i,L}^{n+\half}}{4\pi}\frac{h_i}{2}\phi\iL^{n+\half}
-   +\third\frac{\sigma_{s,i,L}^k}{4\pi}\frac{h_i}{2}\phi\iL^{k+1}\\
-  &+\third\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^n
-   +\third\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^{n+\half}
-   +\third\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^{k+1}\\
-  &+\third\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^n
-   +\third\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^{n+\half}
-   +\third\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^{k+1} \pec
+\frac{1}{c}\frac{\psi\iL^{\pm,k+1}-\psi\iL^{\pm,n+\half}}{\half\dt} = &
+   -\sixth\mu^\pm\fn{\psi^{\pm,n}_i - \psi^{\pm,n}_{i-\half}}
+   -\sixth\mu^\pm\fn{\psi^{\pm,n+\half}_i - \psi^{\pm,n+\half}_{i-\half}}\\
+  &-\frac{2}{3}\mu^\pm\fn{\psi^{\pm,k+1}_i - \psi^{\pm,k+1}_{i-\half}}\\
+  &-\sixth\sigma_{t,i,L}^n\frac{h_i}{2}\psi\iL^{\pm,n}
+   -\sixth\sigma_{t,i,L}^{n+\half}\frac{h_i}{2}\psi\iL^{\pm,n+\half}
+   -\frac{2}{3}\sigma_{t,i,L}^k\frac{h_i}{2}\psi\iL^{\pm,k+1}\\
+  &+\sixth\frac{\sigma_{s,i,L}^n}{4\pi}\frac{h_i}{2}\phi\iL^n
+   +\sixth\frac{\sigma_{s,i,L}^{n+\half}}{4\pi}\frac{h_i}{2}\phi\iL^{n+\half}
+   +\frac{2}{3}\frac{\sigma_{s,i,L}^k}{4\pi}\frac{h_i}{2}\phi\iL^{k+1}\\
+  &+\sixth\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^n
+   +\sixth\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^{n+\half}
+   +\frac{2}{3}\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^{k+1}\\
+  &+\sixth\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^n
+   +\sixth\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^{n+\half}
+   +\frac{2}{3}\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^{k+1} \pec
 \lequ{S2BDF2fullL}
 \end{split}\ee
 
 \be\begin{split}
-\frac{1}{c}\frac{\psi\iR^{\pm,k+1}-\psi\iR^{\pm,n}}{\dt} = &
-   -\third\mu^\pm\fn{\psi^{\pm,n}_{i+\half}       - \psi^{\pm,n}_i}
-   -\third\mu^\pm\fn{\psi^{\pm,n+\half}_{i+\half} - \psi^{\pm,n+\half}_i}\\
-  &-\third\mu^\pm\fn{\psi^{\pm,k+1}_{i+\half}     - \psi^{\pm,k+1}_i}\\
-  &-\third\sigma_{t,i,R}^n\frac{h_i}{2}\psi\iR^{\pm,n}
-   -\third\sigma_{t,i,R}^{n+\half}\frac{h_i}{2}\psi\iR^{\pm,n+\half}
-   -\third\sigma_{t,i,R}^k\frac{h_i}{2}\psi\iR^{\pm,k+1}\\
-  &+\third\frac{\sigma_{s,i,R}^n}{4\pi}\frac{h_i}{2}\phi\iR^n
-   +\third\frac{\sigma_{s,i,R}^{n+\half}}{4\pi}\frac{h_i}{2}\phi\iR^{n+\half}
-   +\third\frac{\sigma_{s,i,R}^k}{4\pi}\frac{h_i}{2}\phi\iR^{k+1}\\
-  &+\third\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^n
-   +\third\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^{n+\half}
-   +\third\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^{k+1}\\
-  &+\third\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^n
-   +\third\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^{n+\half}
-   +\third\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^{k+1} \pep
+\frac{1}{c}\frac{\psi\iR^{\pm,k+1}-\psi\iR^{\pm,n+\half}}{\half\dt} = &
+   -\sixth\mu^\pm\fn{\psi^{\pm,n}_{i+\half}       - \psi^{\pm,n}_i}
+   -\sixth\mu^\pm\fn{\psi^{\pm,n+\half}_{i+\half} - \psi^{\pm,n+\half}_i}\\
+  &-\frac{2}{3}\mu^\pm\fn{\psi^{\pm,k+1}_{i+\half}     - \psi^{\pm,k+1}_i}\\
+  &-\sixth\sigma_{t,i,R}^n\frac{h_i}{2}\psi\iR^{\pm,n}
+   -\sixth\sigma_{t,i,R}^{n+\half}\frac{h_i}{2}\psi\iR^{\pm,n+\half}
+   -\frac{2}{3}\sigma_{t,i,R}^k\frac{h_i}{2}\psi\iR^{\pm,k+1}\\
+  &+\sixth\frac{\sigma_{s,i,R}^n}{4\pi}\frac{h_i}{2}\phi\iR^n
+   +\sixth\frac{\sigma_{s,i,R}^{n+\half}}{4\pi}\frac{h_i}{2}\phi\iR^{n+\half}
+   +\frac{2}{3}\frac{\sigma_{s,i,R}^k}{4\pi}\frac{h_i}{2}\phi\iR^{k+1}\\
+  &+\sixth\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^n
+   +\sixth\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^{n+\half}
+   +\frac{2}{3}\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^{k+1}\\
+  &+\sixth\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^n
+   +\sixth\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^{n+\half}
+   +\frac{2}{3}\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^{k+1} \pep
 \lequ{S2BDF2fullR}
 \end{split}\ee
 
