@@ -4,6 +4,12 @@
 \usepackage{color}
 \usepackage[colorlinks]{hyperref}
 \input{newcommands}
+\newcommand{\sigsL}{\frac{\sigma_{s,i,L}^k}{2}}
+\newcommand{\sigsR}{\frac{\sigma_{s,i,R}^k}{2}}
+\newcommand{\sigtL}{\sigma_{t,i,L}^k}
+\newcommand{\sigtR}{\sigma_{t,i,R}^k}
+\newcommand{\halfh}{\frac{h_i}{2}}
+
 \begin{document}
 \tableofcontents
 \newpage
@@ -182,6 +188,71 @@ to compute the fluxes at time $n+\half$:
 \ee
 
 %===============================================================================
+\section{Steady-State S$_2$ Equations}
+%===============================================================================
+The spatially discretized steady-state S$_2$ equations are
+\begin{equation}
+  \mu^\pm\fn{\psi^{\pm,k+1}_i - \psi^{\pm,k+1}_{i-\half}}
+  +\sigma_{t,i,L}^k\frac{h_i}{2}\psi\iL^{\pm,k+1}=
+  \frac{\sigma_{s,i,L}^k}{4\pi}\frac{h_i}{2}\phi\iL^{k+1}
+  +\frac{1}{4\pi}\frac{h_i}{2}Q_{i,L}^{\pm,k} \pec
+\lequ{S2ssL}
+\end{equation}
+\begin{equation}
+  \mu^\pm\fn{\psi^{\pm,k+1}_{i+\half} - \psi^{\pm,k+1}_i}
+  +\sigma_{t,i,R}^k\frac{h_i}{2}\psi\iR^{\pm,k+1}=
+  \frac{\sigma_{s,i,R}^k}{4\pi}\frac{h_i}{2}\phi\iR^{k+1}
+  +\frac{1}{4\pi}\frac{h_i}{2}Q_{i,R}^{\pm,k} \pec
+\lequ{S2ssR}
+\end{equation}
+where
+\begin{equation}
+  \psi_i^\pm=\half\fn{\psi_{i,L}^\pm + \psi_{i,R}^\pm} \pec
+\end{equation}
+\begin{equation}
+  \psi_{i+\half}^+=\psi_{i,R}^+ \pec\qquad \psi_{i+\half}^-=\psi_{i+1,L}^- \pec
+\end{equation}
+and the total source term is
+\begin{equation}
+  Q_{i,L}^{\pm,k} = Q_{0,i,L}^k + 3\mu^\pm Q_{1,i,L}^k \pep
+\end{equation}
+Coefficients of the resulting linear system matrix are the following:
+\begin{center}
+\begin{tabular}{|l||c|c|c|}\hline
+          & $i-1,R,+$ & $i,L,-$ & $i,L,+$\\\hline\hline
+  $i,L,-$ &
+          & $-\half\mu^- + \sigtL\halfh - \sigsL\halfh$
+          & $-\sigsL\halfh$ \\\hline
+  $i,L,+$ & $-\mu^+$
+          & $-\sigsL\halfh$
+          & $\half\mu^+ + \sigtL\halfh - \sigsL\halfh$ \\\hline
+  $i,R,-$ &
+          & $-\half\mu^-$
+          & \\\hline
+  $i,R,+$ &
+          &
+          & $-\half\mu^+$ \\\hline
+\end{tabular}
+\end{center}
+\begin{center}
+\begin{tabular}{|l||c|c|c|}\hline
+          & $i,R,-$ & $i,R,+$ & $i+1,L,-$\\\hline\hline
+  $i,L,-$ & $\half\mu^-$
+          &
+          & \\\hline
+  $i,L,+$ &
+          & $\half\mu^+$
+          & \\\hline
+  $i,R,-$ & $-\half\mu^- + \sigtR\halfh - \sigsR\halfh$
+          & $-\sigsR\halfh$
+          & $\mu^-$ \\\hline
+  $i,R,+$ & $-\sigsR\halfh$
+          & $\half\mu^+ + \sigtR\halfh - \sigsR\halfh$
+          & \\\hline
+\end{tabular}
+\end{center}
+
+%===============================================================================
 \section{Temporal Discretization}
 %===============================================================================
 \subsection{Fluid Momentum Source Update Equation}
@@ -238,8 +309,8 @@ Applying the Crank-Nicolson scheme to Equation \requ{S2Q}, the S-2 equations bec
   -\half\mu^\pm\dydx{\psi^{\pm,n}} -\half\mu^\pm\dydx{\psi^{\pm,k+1}}\\
   &-\half\sigma_t^n\psi^{\pm,n} -\half\sigma_t^k\psi^{\pm,k+1}\\
   &+\half\frac{\sigma_s^n}{4\pi}\phi^n +\half\frac{\sigma_s^k}{4\pi}\phi^{k+1}\\
-  &+\half\frac{1}{4\pi}Q_0^n +\half\frac{1}{4\pi}Q_0^{k+1}\\
-  &+\half\frac{3\mu^\pm}{4\pi}Q_1^n +\half\frac{3\mu^\pm}{4\pi}Q_1^{k+1} \pec
+  &+\half\frac{1}{4\pi}Q_0^n +\half\frac{1}{4\pi}Q_0^k\\
+  &+\half\frac{3\mu^\pm}{4\pi}Q_1^n +\half\frac{3\mu^\pm}{4\pi}Q_1^k \pec
 \lequ{S2CN}
 \end{split}\ee
 where $k$ represents the $k$th iteration of a quantity at time $t^{n+1}$.
@@ -260,10 +331,10 @@ Applying the BDF-2 scheme to Equation \requ{S2Q}, the S-2 equations become
    +\frac{2}{3}\frac{\sigma_s^k}{4\pi}\phi^{k+1}\\
   &+\sixth\frac{1}{4\pi}Q_0^n
    +\sixth\frac{1}{4\pi}Q_0^{n+\half}
-   +\frac{2}{3}\frac{1}{4\pi}Q_0^{k+1}\\
+   +\frac{2}{3}\frac{1}{4\pi}Q_0^k\\
   &+\sixth\frac{3\mu^\pm}{4\pi}Q_1^n
    +\sixth\frac{3\mu^\pm}{4\pi}Q_1^{n+\half}
-   +\frac{2}{3}\frac{3\mu^\pm}{4\pi}Q_1^{k+1} \pec
+   +\frac{2}{3}\frac{3\mu^\pm}{4\pi}Q_1^k \pec
 \lequ{S2BDF2}
 \end{split}\ee
 where $k$ represents the $k$th iteration of a quantity at time $t^{n+1}$.
@@ -347,9 +418,9 @@ The fully discretized S$_2$ equations for a Crank-Nicolson step are
   &+\half\frac{\sigma_{s,i,L}^n}{4\pi}\frac{h_i}{2}\phi\iL^n
    +\half\frac{\sigma_{s,i,L}^k}{4\pi}\frac{h_i}{2}\phi\iL^{k+1}\\
   &+\half\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^n
-   +\half\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^{k+1}\\
+   +\half\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^k\\
   &+\half\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^n
-   +\half\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^{k+1} \pec
+   +\half\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^k \pec
 \lequ{S2CNfullL}
 \end{split}\ee
 where $\psi_i^\pm=\half\fn{\psi_{i,L}^\pm + \psi_{i,R}^\pm}$,
@@ -364,27 +435,27 @@ $\psi_{i+\half}^+=\psi_{i,R}^+$, and $\psi_{i+\half}^-=\psi_{i+1,L}^-$.
   &+\half\frac{\sigma_{s,i,R}^n}{4\pi}\frac{h_i}{2}\phi\iR^n
    +\half\frac{\sigma_{s,i,R}^k}{4\pi}\frac{h_i}{2}\phi\iR^{k+1}\\
   &+\half\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^n
-   +\half\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^{k+1}\\
+   +\half\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^k\\
   &+\half\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^n
-   +\half\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^{k+1} \pec
+   +\half\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^k \pec
 \lequ{S2CNfullR}
 \end{split}\ee
 where
 \be
-Q_{0,i,L}^{k+1}=\sigma_{a,i,L}^k a c \fn{T_{i,L}^k}^4
-  -\sigma_{t,i,L}^k\frac{u_{i,L}^k}{c}\F_{0,i,L}^{k+1} \pec
+Q_{0,i,L}^k=\sigma_{a,i,L}^k a c \fn{T_{i,L}^k}^4
+  -\sigma_{t,i,L}^k\frac{u_{i,L}^k}{c}\F_{0,i,L}^k \pec
 \ee
 \be
-Q_{1,i,L}^{k+1}=\frac{4}{3}\sigma_{t,i,L}^k \E_{i,L}^{k+1} u_{i,L}^k \pec
+Q_{1,i,L}^k=\frac{4}{3}\sigma_{t,i,L}^k \E_{i,L}^k u_{i,L}^k \pec
 \ee
 \be
-\F_{0,i,L}^{k+1}=\F_{i,L}^{k+1} - \frac{4}{3}\E_{i,L}^{k+1}u_{i,L}^k \pec
+\F_{0,i,L}^k=\F_{i,L}^k - \frac{4}{3}\E_{i,L}^k u_{i,L}^k \pec
 \ee
 \be
-\F\iL^{k+1} = \frac{2\pi}{\sqrt{3}}\fn{\psi\iL^{+,k+1}-\psi\iL^{-,k+1}} \pec
+\F\iL^k = \frac{2\pi}{\sqrt{3}}\fn{\psi\iL^{+,k}-\psi\iL^{-,k}} \pec
 \ee
 \be
-\E\iL^{k+1} = \frac{2\pi}{c}\fn{\psi\iL^{+,k+1}+\psi\iL^{-,k+1}} \pec
+\E\iL^k = \frac{2\pi}{c}\fn{\psi\iL^{+,k}+\psi\iL^{-,k}} \pec
 \ee
 and quantities at the right state $i,R$ are similarly defined.
 
@@ -404,10 +475,10 @@ The fully discretized S$_2$ equations for a BDF-2 step are
    +\frac{2}{3}\frac{\sigma_{s,i,L}^k}{4\pi}\frac{h_i}{2}\phi\iL^{k+1}\\
   &+\sixth\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^n
    +\sixth\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^{n+\half}
-   +\frac{2}{3}\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^{k+1}\\
+   +\frac{2}{3}\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,L}^k\\
   &+\sixth\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^n
    +\sixth\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^{n+\half}
-   +\frac{2}{3}\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^{k+1} \pec
+   +\frac{2}{3}\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,L}^k \pec
 \lequ{S2BDF2fullL}
 \end{split}\ee
 
@@ -424,10 +495,10 @@ The fully discretized S$_2$ equations for a BDF-2 step are
    +\frac{2}{3}\frac{\sigma_{s,i,R}^k}{4\pi}\frac{h_i}{2}\phi\iR^{k+1}\\
   &+\sixth\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^n
    +\sixth\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^{n+\half}
-   +\frac{2}{3}\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^{k+1}\\
+   +\frac{2}{3}\frac{1}{4\pi}\frac{h_i}{2}Q_{0,i,R}^k\\
   &+\sixth\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^n
    +\sixth\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^{n+\half}
-   +\frac{2}{3}\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^{k+1} \pep
+   +\frac{2}{3}\frac{3\mu^\pm}{4\pi}\frac{h_i}{2}Q_{1,i,R}^k \pep
 \lequ{S2BDF2fullR}
 \end{split}\ee
 
