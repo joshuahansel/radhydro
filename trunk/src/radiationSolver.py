@@ -1,19 +1,11 @@
+## @package src.radiationSolver
+#  Provides functions to solve the steady-state S-2 equations. Also provides
+#  means of employing solver to be used in temporal discretizations.
+
 import math
 import numpy as np
 from numpy import array
-from Mesh import Mesh
-
-## Index function for 1-D LD S-2.
-#
-#  @param[in] i     cell index, from 1 to n-1, where n is number of cells
-#  @param[in] side  string, either "L" or "R", corresponding to left or right dof
-#  @param[in] dir   string, either "-" or "+", corresponding to - or + direction
-#
-#  @return    global dof index
-def index(i, side, dir):
-  side_shift = {"L" : 0, "R" : 2}
-  dir_shift  = {"-" : 0, "+" : 1}
-  return 4*i + side_shift[side] + dir_shift[dir]
+from mesh import Mesh
 
 ## Steady-state solve function for the S-2 equations.
 #
@@ -132,3 +124,16 @@ def radiationSolver(mesh, cross_x, Q_minus, Q_plus, stream_scale_factor=1.0,
     F = [(0, 0) for i in range(mesh.n_elems)]
 
     return psi_minus, psi_plus, E, F
+
+## Index function for 1-D LD S-2.
+#
+#  @param[in] i     cell index, from 1 to n-1, where n is number of cells
+#  @param[in] side  string, either "L" or "R", corresponding to left or right dof
+#  @param[in] dir   string, either "-" or "+", corresponding to - or + direction
+#
+#  @return    global dof index
+#
+def index(i, side, dir):
+  side_shift = {"L" : 0, "R" : 2}
+  dir_shift  = {"-" : 0, "+" : 1}
+  return 4*i + side_shift[side] + dir_shift[dir]

@@ -1,7 +1,11 @@
-from src.Mesh import Mesh
-from src.CrossXInterface import *
-from src.radiationSolver import *
-from src.plotS2Solution import plotS2Solution
+# add source directory to module search path
+import sys
+sys.path.append('src')
+
+from mesh import Mesh
+from crossXInterface import CrossXInterface
+from radiationSolver import radiationSolver
+from plotUtilities import plotS2Solution
 
 ## Main function.
 #

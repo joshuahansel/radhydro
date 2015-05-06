@@ -1,7 +1,5 @@
-## @package This module contains helper functions
-#
-# These functions are useful throughout the code but do not belong in any particular
-# class
+## @package src.utilityFunctions
+#  Contains helper functions that do not belong in any particular class.
 
 #-----------------------------------------------------------------------------------
 ## Converge f_L and f_R to f_a and f_x

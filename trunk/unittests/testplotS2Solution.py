@@ -1,11 +1,15 @@
-# add parent directory to module search path
-import sys
-sys.path.append('..')
+## @package testplotS2Solution
+#  Tests the S-2 plot utilities.
 
-from src.plotS2Solution import plotS2Solution
-from src.Mesh import Mesh
+# add source directory to module search path
+import sys
+sys.path.append('../src')
+
+from plotUtilities import plotS2Solution
+from mesh import Mesh
 import unittest
 
+## Derived unittest class to test S-2 plot utilities
 class TestPlotS2Solution(unittest.TestCase):
    def setUp(self):
       pass

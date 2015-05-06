@@ -1,17 +1,22 @@
-# add parent directory to module search path
-import sys
-sys.path.append('..')
+## @package testPureAbsorberProblem
+#  Runs a pure absorber problem and compares to exact solution.
 
-from src.Mesh import Mesh
-from src.CrossXInterface import *
-from src.radiationSolver import *
-from src.plotS2Solution import *
+# add source directory to module search path
+import sys
+sys.path.append('../src')
+
+from math import sqrt, exp
+from mesh import Mesh
+from crossXInterface import CrossXInterface
+from radiationSolver import radiationSolver
+from plotUtilities import plotS2Solution, makeContinuousXPoints
 import matplotlib.pyplot as plt
 
+## Function to run a pure absorber problem and compare to exact solution.
 def main():
 
    # set directions
-   mu = {"-" : -1/math.sqrt(3), "+" : 1/math.sqrt(3)}
+   mu = {"-" : -1/sqrt(3), "+" : 1/sqrt(3)}
 
    # physics data
    sig_t = 1.0   # total cross section
@@ -43,9 +48,9 @@ def main():
    xlist = makeContinuousXPoints(mesh)
 
    # compute exact solutions
-   psi_minus_exact = [inc_minus*math.exp(-sig_t/mu["-"]*(x-L))
+   psi_minus_exact = [inc_minus*exp(-sig_t/mu["-"]*(x-L))
       for x in xlist]
-   psi_plus_exact  = [inc_plus *math.exp(-sig_t/mu["+"]*x)
+   psi_plus_exact  = [inc_plus *exp(-sig_t/mu["+"]*x)
       for x in xlist]
 
    # plot solutions
