@@ -1,12 +1,7 @@
-## @package main
-#  Contains main function.
-#
-#  This file contains the main function. To execute the program type 'python main.py'.
-
-# Import files from built in libraries and user-defined classes
 from src.Mesh import Mesh
 from src.CrossXInterface import *
 from src.radiationSolver import *
+from src.plotS2Solution import plotS2Solution
 
 ## Main function.
 #
@@ -23,6 +18,9 @@ def main():
     Q_plus  = [(0,0) for i in xrange(mesh.n_elems)]
     Q_minus = [(0,0) for i in xrange(mesh.n_elems)]
     psi_minus, psi_plus, E, F = radiationSolver(mesh, cross_sects, Q_minus, Q_plus)
+
+    # plot S-2 solution
+    plotS2Solution(mesh, psi_minus, psi_plus)
 
 
 # run main function
