@@ -9,7 +9,7 @@ from math import sqrt, exp
 from mesh import Mesh
 from crossXInterface import CrossXInterface
 from radiationSolver import radiationSolver
-from plotUtilities import plotS2Solution, makeContinuousXPoints
+from plotUtilities import plotAngularFlux, makeContinuousXPoints
 import matplotlib.pyplot as plt
 
 ## Function to run a pure absorber problem and compare to exact solution.
@@ -54,7 +54,7 @@ def main():
       for x in xlist]
 
    # plot solutions
-   plotS2Solution(mesh, psi_minus, psi_plus, False, psi_minus_exact, psi_plus_exact)
+   plotAngularFlux(mesh,psi_minus,psi_plus,False,psi_minus_exact,psi_plus_exact)
 
 
 # run main function
