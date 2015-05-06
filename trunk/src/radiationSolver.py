@@ -32,8 +32,8 @@ def index(i, side, dir):
 #                                 time-dependent solvers, e.g., alpha*sigma_t*psi_L
 #                                 -> (alpha*sigma_t + 1/c*delta_t)psi_L. Must be
 #                                 done after scale
-#  @param[in] bound_curr_lt       left boundary current
-#  @param[in] bound_curr_rt       right boundary current
+#  @param[in] bound_curr_lt       left boundary current  (plus)
+#  @param[in] bound_curr_rt       right boundary current (minus)
 #
 #  @return 
 #          -# \f$\psi^+\f$, angular flux in plus directions
@@ -56,7 +56,7 @@ def radiationSolver(mesh, cross_x, Q_minus, Q_plus, stream_scale_factor=1.0,
     rhs    = np.zeros(n)
 
     # loop over interior cells
-    for i in xrange(1,mesh.n_elems-1):
+    for i in xrange(mesh.n_elems):
        # compute indices
        iprevRplus  = index(i-1,"R","+") # dof i-1,R,+
        iLminus     = index(i,  "L","-") # dof i,  L,-
@@ -82,17 +82,52 @@ def radiationSolver(mesh, cross_x, Q_minus, Q_plus, stream_scale_factor=1.0,
 
        # Left control volume, minus direction
        row = np.zeros(n)
-       row[iLminus] = -0.5*mu["-"] + 0.5*cx_tL*h - 0.25*cx_sL*h
-       row[iLplus]  = -0.25*cx_sL*h
-       row[iRminus] = 0.5*mu["-"]
+       row[iLminus]    = -0.5*mu["-"] + 0.5*cx_tL*h - 0.25*cx_sL*h
+       row[iLplus]     = -0.25*cx_sL*h
+       row[iRminus]    = 0.5*mu["-"]
        matrix[iLminus] = row
-       rhs[iLminus] = 0.5*c_Q*h*QLplus
+       rhs[iLminus]    = 0.5*c_Q*h*QLplus
       
+       # Left control volume, plus direction
+       row = np.zeros(n)
+       if i == 0:
+          rhs[iLplus] = mu["+"]*bound_curr_lt
+       else:
+          row[iprevRplus] = -mu["+"]
+       row[iLminus]    = -0.25*cx_sL*h
+       row[iLplus]     = 0.5*mu["+"] + 0.5*cx_tL*h - 0.25*cx_sL*h
+       row[iRplus]     = 0.5*mu["+"]
+       matrix[iLplus]  = row
+       rhs[iLplus]    += 0.5*c_Q*h*QLminus
 
+       # Right control volume, minus direction
+       row = np.zeros(n)
+       row[iLminus]     = -0.5*mu["-"]
+       row[iRminus]     = -0.5*mu["-"] + 0.5*cx_tR*h - 0.25*cx_sR*h
+       row[iRplus]      = -0.25*cx_sR*h
+       if i == mesh.n_elems-1:
+          rhs[iRminus] = -mu["-"]*bound_curr_rt
+       else:
+          row[inextLminus] = mu["-"]
+       matrix[iRminus]  = row
+       rhs[iRminus]    += 0.5*c_Q*h*QRminus
+
+       # Right control volume, plus direction
+       row = np.zeros(n)
+       row[iLplus]      = -0.5*mu["+"]
+       row[iRminus]     = -0.25*cx_sR*h
+       row[iRplus]      = 0.5*mu["+"] + 0.5*cx_tR*h - 0.25*cx_sR*h
+       matrix[iRplus]   = row
+       rhs[iRplus]      = 0.5*c_Q*h*QRplus
+
+    # solve linear system
+    solution = np.linalg.solve(matrix, rhs)
+
+    # extract solution from global vector
+    psi_minus = [(solution[4*i],  solution[4*i+2]) for i in xrange(mesh.n_elems)]
+    psi_plus  = [(solution[4*i+1],solution[4*i+3]) for i in xrange(mesh.n_elems)]
 
     # return zeros for time being
-    psi_minus = [(0, 0) for i in range(mesh.n_elems)]
-    psi_plus = [(0, 0) for i in range(mesh.n_elems)]
     E = [(0, 0) for i in range(mesh.n_elems)]
     F = [(0, 0) for i in range(mesh.n_elems)]
 
