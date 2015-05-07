@@ -24,8 +24,8 @@ from mesh import Mesh
 #                                 time-dependent solvers, e.g., alpha*sigma_t*psi_L
 #                                 -> (alpha*sigma_t + 1/c*delta_t)psi_L. Must be
 #                                 done after scale
-#  @param[in] bound_curr_lt       left boundary current  (plus)
-#  @param[in] bound_curr_rt       right boundary current (minus)
+#  @param[in] bound_curr_lt       left  boundary current data, \f$j^+\f$
+#  @param[in] bound_curr_rt       right boundary current data, \f$j^-\f$
 #
 #  @return 
 #          -# \f$\psi^+\f$, angular flux in plus directions
@@ -41,6 +41,10 @@ def radiationSolver(mesh, cross_x, Q_minus, Q_plus, stream_scale_factor=1.0,
 
     # 1/(4*pi) constant for isotropic source Q
     c_Q = 1/(4*math.pi)
+
+    # compute boundary fluxes based on incoming currents
+    boundary_flux_plus  =  bound_curr_lt / (2*math.pi*mu["+"])
+    boundary_flux_minus = -bound_curr_rt / (2*math.pi*mu["-"])
 
     # initialize numpy arrays for system matrix and rhs
     n = 4*mesh.n_elems
@@ -83,7 +87,7 @@ def radiationSolver(mesh, cross_x, Q_minus, Q_plus, stream_scale_factor=1.0,
        # Left control volume, plus direction
        row = np.zeros(n)
        if i == 0:
-          rhs[iLplus] = mu["+"]*bound_curr_lt
+          rhs[iLplus] = mu["+"]*boundary_flux_plus
        else:
           row[iprevRplus] = -mu["+"]
        row[iLminus]    = -0.25*cx_sL*h
@@ -98,7 +102,7 @@ def radiationSolver(mesh, cross_x, Q_minus, Q_plus, stream_scale_factor=1.0,
        row[iRminus]     = -0.5*mu["-"] + 0.5*cx_tR*h - 0.25*cx_sR*h
        row[iRplus]      = -0.25*cx_sR*h
        if i == mesh.n_elems-1:
-          rhs[iRminus] = -mu["-"]*bound_curr_rt
+          rhs[iRminus] = -mu["-"]*boundary_flux_minus
        else:
           row[inextLminus] = mu["-"]
        matrix[iRminus]  = row
