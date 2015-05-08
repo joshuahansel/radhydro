@@ -8,7 +8,7 @@ sys.path.append('../src')
 from math import sqrt, exp, pi
 from mesh import Mesh
 from crossXInterface import CrossXInterface
-from radiationSolver import radiationSolver
+from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotAngularFlux, makeContinuousXPoints
 import matplotlib.pyplot as plt
 
@@ -19,10 +19,10 @@ def main():
    mu = {"-" : -1/sqrt(3), "+" : 1/sqrt(3)}
 
    # physics data
-   sig_t = 1.0   # total cross section
-   L = 10.0      # domain length
-   inc_minus = 3 # isotropic incoming angular flux for minus direction
-   inc_plus = 2  # isotropic incoming angular flux for plus  direction
+   sig_t = 0.1    # total cross section
+   L = 10.0       # domain length
+   inc_minus = 10 # isotropic incoming angular flux for minus direction
+   inc_plus = 20  # isotropic incoming angular flux for plus  direction
 
    j_minus = pi*inc_minus # incoming current in minus direction
    j_plus  = pi*inc_plus  # incoming current in plus  direction
@@ -40,12 +40,12 @@ def main():
    Q_minus = [(0,0) for i in xrange(mesh.n_elems)]
 
    # compute LD solution
-   psi_minus, psi_plus, E, F = radiationSolver(mesh,
-                                               cross_sects,
-                                               Q_minus,
-                                               Q_plus,
-                                               bound_curr_lt=j_plus,
-                                               bound_curr_rt=j_minus)
+   psi_minus, psi_plus, E, F = radiationSolveSS(mesh,
+                                                cross_sects,
+                                                Q_minus,
+                                                Q_plus,
+                                                bound_curr_lt=j_plus,
+                                                bound_curr_rt=j_minus)
 
    # get continuous x-points
    xlist = makeContinuousXPoints(mesh)

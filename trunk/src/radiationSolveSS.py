@@ -1,4 +1,4 @@
-## @package src.radiationSolver
+## @package src.radiationSolveSS
 #  Provides functions to solve the steady-state S-2 equations. Also provides
 #  means of employing solver to be used in temporal discretizations.
 
@@ -16,10 +16,6 @@ from mesh import Mesh
 #                      \f$Q = Q_0 + 3\mu^-Q_1\f$
 #  @param[in] Q_plus   total isotropic source in plus direction:
 #                      \f$Q = Q_0 + 3\mu^+Q_1\f$
-#  @param[in] stream_scale_factor scale factor \f$\alpha\f$for reaction and
-#                                 streaming terms; sigma_t psi + mu \dpsi/dx ->
-#                                 alpha*(sigma_t psi + mu \dpsi/dx). This is
-#                                 used with various time dependent solvers.
 #  @param[in] diag_add_term       term to add to reaction term for use in
 #                                 time-dependent solvers, e.g., alpha*sigma_t*psi_L
 #                                 -> (alpha*sigma_t + 1/c*delta_t)psi_L. Must be
@@ -33,8 +29,8 @@ from mesh import Mesh
 #          -# \f$\mathcal{E}\f$: radiation energy
 #          -# \f$\mathcal{F}\f$: radiation flux
 #
-def radiationSolver(mesh, cross_x, Q_minus, Q_plus, stream_scale_factor=1.0,
-        diag_add_term=0.0, bound_curr_lt=0.0, bound_curr_rt=0.0):
+def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
+    bound_curr_lt=0.0, bound_curr_rt=0.0):
 
     # set directions
     mu = {"-" : -1/math.sqrt(3), "+" : 1/math.sqrt(3)}
@@ -78,7 +74,7 @@ def radiationSolver(mesh, cross_x, Q_minus, Q_plus, stream_scale_factor=1.0,
 
        # Left control volume, minus direction
        row = np.zeros(n)
-       row[iLminus]    = -0.5*mu["-"] + 0.5*cx_tL*h - 0.25*cx_sL*h
+       row[iLminus]    = -0.5*mu["-"] + 0.5*(cx_tL+diag_add_term)*h - 0.25*cx_sL*h
        row[iLplus]     = -0.25*cx_sL*h
        row[iRminus]    = 0.5*mu["-"]
        matrix[iLminus] = row
@@ -91,7 +87,7 @@ def radiationSolver(mesh, cross_x, Q_minus, Q_plus, stream_scale_factor=1.0,
        else:
           row[iprevRplus] = -mu["+"]
        row[iLminus]    = -0.25*cx_sL*h
-       row[iLplus]     = 0.5*mu["+"] + 0.5*cx_tL*h - 0.25*cx_sL*h
+       row[iLplus]     = 0.5*mu["+"] + 0.5*(cx_tL+diag_add_term)*h - 0.25*cx_sL*h
        row[iRplus]     = 0.5*mu["+"]
        matrix[iLplus]  = row
        rhs[iLplus]    += 0.5*c_Q*h*QLminus
@@ -99,7 +95,7 @@ def radiationSolver(mesh, cross_x, Q_minus, Q_plus, stream_scale_factor=1.0,
        # Right control volume, minus direction
        row = np.zeros(n)
        row[iLminus]     = -0.5*mu["-"]
-       row[iRminus]     = -0.5*mu["-"] + 0.5*cx_tR*h - 0.25*cx_sR*h
+       row[iRminus]     = -0.5*mu["-"] + 0.5*(cx_tR+diag_add_term)*h - 0.25*cx_sR*h
        row[iRplus]      = -0.25*cx_sR*h
        if i == mesh.n_elems-1:
           rhs[iRminus] = -mu["-"]*boundary_flux_minus
@@ -112,7 +108,7 @@ def radiationSolver(mesh, cross_x, Q_minus, Q_plus, stream_scale_factor=1.0,
        row = np.zeros(n)
        row[iLplus]      = -0.5*mu["+"]
        row[iRminus]     = -0.25*cx_sR*h
-       row[iRplus]      = 0.5*mu["+"] + 0.5*cx_tR*h - 0.25*cx_sR*h
+       row[iRplus]      = 0.5*mu["+"] + 0.5*(cx_tR+diag_add_term)*h - 0.25*cx_sR*h
        matrix[iRplus]   = row
        rhs[iRplus]      = 0.5*c_Q*h*QRplus
 

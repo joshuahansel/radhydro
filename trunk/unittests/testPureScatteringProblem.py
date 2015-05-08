@@ -8,7 +8,7 @@ sys.path.append('../src')
 from math import sqrt
 from mesh import Mesh
 from crossXInterface import CrossXInterface
-from radiationSolver import radiationSolver
+from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotScalarFlux, makeContinuousXPoints
 import matplotlib.pyplot as plt
 
@@ -43,12 +43,12 @@ def main():
    Q_minus = [(Q,Q) for i in xrange(mesh.n_elems)]
 
    # compute LD solution
-   psi_minus, psi_plus, E, F = radiationSolver(mesh,
-                                               cross_sects,
-                                               Q_minus,
-                                               Q_plus,
-                                               bound_curr_lt=inc_j_plus,
-                                               bound_curr_rt=inc_j_minus)
+   psi_minus, psi_plus, E, F = radiationSolveSS(mesh,
+                                                cross_sects,
+                                                Q_minus,
+                                                Q_plus,
+                                                bound_curr_lt=inc_j_plus,
+                                                bound_curr_rt=inc_j_minus)
 
    # get continuous x-points
    xlist = makeContinuousXPoints(mesh)

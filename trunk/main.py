@@ -4,7 +4,7 @@ sys.path.append('src')
 
 from mesh import Mesh
 from crossXInterface import CrossXInterface
-from radiationSolver import radiationSolver
+from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotAngularFlux, plotScalarFlux
 
 ## Main function.
@@ -21,7 +21,7 @@ def main():
     # call radiation solver
     Q_plus  = [(0,0) for i in xrange(mesh.n_elems)]
     Q_minus = [(0,0) for i in xrange(mesh.n_elems)]
-    psi_minus, psi_plus, E, F = radiationSolver(mesh, cross_sects, Q_minus, Q_plus)
+    psi_minus, psi_plus, E, F = radiationSolveSS(mesh, cross_sects, Q_minus, Q_plus)
 
     # plot solution
     plotScalarFlux(mesh, psi_minus, psi_plus)
