@@ -290,6 +290,18 @@ correspond:
           & $\frac{1}{4\pi}\frac{h_i}{2}Q^+_{i,R}$ \\\hline
 \end{tabular}
 \end{center}
+The incoming boundary fluxes $\psi^\pm_{inc}$ are computed from the
+user-supplied boundary half-range currents $j^\pm$ using quadrature:
+\begin{equation}
+   j^+(x_L) = 2\pi\int\limits_0^1 \psi(x_L,\mu)\mu d\mu
+   \approx \sum\limits_{\mu_d>0}\psi(x_L,\mu_d)\mu_d w_d
+   = 2\pi\mu^+\psi^+_{inc} \pec
+\end{equation}
+\begin{equation}
+   j^-(x_R) = -2\pi\int\limits_{-1}^0 \psi(x_R,\mu)\mu d\mu
+   \approx -\sum\limits_{\mu_d<0}\psi(x_R,\mu_d)\mu_d w_d
+   = -2\pi\mu^-\psi^-_{inc} \pep
+\end{equation}
 
 Transient S$_2$ solvers can employ a steady-state solver if
 the following generalization is made to Equations \requ{S2ssL}
@@ -660,5 +672,46 @@ $\R^{k+1} =$ radiationSolveTRBDF2($\U^{n-1},\U^n,\U^k,\dt$)
 }
 \end{lstlisting}
 
+%===============================================================================
+\section{Test Problems}
+%===============================================================================
+\subsection{Steady-State Diffusion Test Problem}
+%-------------------------------------------------------------------------------
+The following parameters were used:
+\[
+   x\in(0,3),
+   \quad \sigma_a = 0.25,
+   \quad \sigma_s = 0.75,
+   \quad j^+(0) = j^-(3) = 0,
+   \quad Q = 1
+\]
+The exact solution to this problem is the following:
+\[
+   \phi(x) = A\sinh\fn{\frac{x}{L}} + B\cosh\fn{\frac{x}{L}} + Q\frac{L^2}{D} \pec
+\]
+where $D=\frac{1}{3\sigma_t}$, $L=\sqrt{\frac{D}{\sigma_a}}$, and $A$ and $B$ are
+complicated expressions that come out to the following values:
+\[
+   A=2.4084787907,\quad B=-2.7957606046 \pep
+\]
+
+\subsection{Steady-State Pure Absorber Test Problem}
+%-------------------------------------------------------------------------------
+The following parameters were used:
+\begin{gather*}
+   x\in(x_L,x_R)=(0,10),
+   \quad \sigma_a = 0.1,
+   \quad \sigma_s = 0,\\
+   \psi^+(x_L) = 20,
+   \quad \psi^-(x_R) = 30,
+   \quad Q^\pm = 0
+\end{gather*}
+The exact solution to this problem is the following:
+\[
+   \psi^-(x) = \psi^-(x_R)e^{-\frac{\sigma_a}{\mu^-}\fn{x-x_R}} \pec
+\]
+\[
+   \psi^+(x) = \psi^+(x_L)e^{-\frac{\sigma_a}{\mu^-}\fn{x-x_L}} \pep
+\]
 
 \end{document}
