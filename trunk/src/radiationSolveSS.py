@@ -6,6 +6,7 @@ import math
 import numpy as np
 from numpy import array
 from mesh import Mesh
+from utilityFunctions import getIndex
 
 ## Steady-state solve function for the S-2 equations.
 #
@@ -50,12 +51,12 @@ def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
     # loop over interior cells
     for i in xrange(mesh.n_elems):
        # compute indices
-       iprevRplus  = index(i-1,"R","+") # dof i-1,R,+
-       iLminus     = index(i,  "L","-") # dof i,  L,-
-       iLplus      = index(i,  "L","+") # dof i,  L,+
-       iRminus     = index(i,  "R","-") # dof i,  R,-
-       iRplus      = index(i,  "R","+") # dof i,  R,+
-       inextLminus = index(i+1,"L","-") # dof i+1,L,-
+       iprevRplus  = getIndex(i-1,"R","+") # dof i-1,R,+
+       iLminus     = getIndex(i,  "L","-") # dof i,  L,-
+       iLplus      = getIndex(i,  "L","+") # dof i,  L,+
+       iRminus     = getIndex(i,  "R","-") # dof i,  R,-
+       iRplus      = getIndex(i,  "R","+") # dof i,  R,+
+       inextLminus = getIndex(i+1,"L","-") # dof i+1,L,-
 
        # get cell size
        h = mesh.getElement(i).dx
@@ -125,15 +126,3 @@ def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
 
     return psi_minus, psi_plus, E, F
 
-## Index function for 1-D LD S-2.
-#
-#  @param[in] i     cell index, from 1 to n-1, where n is number of cells
-#  @param[in] side  string, either "L" or "R", corresponding to left or right dof
-#  @param[in] dir   string, either "-" or "+", corresponding to - or + direction
-#
-#  @return    global dof index
-#
-def index(i, side, dir):
-  side_shift = {"L" : 0, "R" : 2}
-  dir_shift  = {"-" : 0, "+" : 1}
-  return 4*i + side_shift[side] + dir_shift[dir]

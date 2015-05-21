@@ -12,7 +12,7 @@ class Mesh:
     ## Constructor. Takes number of elements, domain width, and x position of
     #  left edge of domain.
     #
-    #  @param[in] n_elements  number of elements
+    #  @param[in] n_elems     number of elements
     #  @param[in] width       width of domain
     #  @param[in] x_left      x position of left edge of domain. Default is zero.
     #----------------------------------------------------------------------------

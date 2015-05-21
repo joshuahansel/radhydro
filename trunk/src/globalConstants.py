@@ -5,7 +5,7 @@
 # import globalConstants as GC
 #
 # a = GC.RAD_CONST #get radiation constant
-# c = GC.SPD_OF_LIGHT #get speed of light, etc.
+# c = GC.SPD_OF_LGT #get speed of light, etc.
 #
 # Our standard units are length - cm, time - shakes (sh),
 # energy and temperature - keV, mass - g, volume - cm^3
@@ -25,7 +25,7 @@
 SH_PER_S = 1.E+8  
 
 ##Speed of light in units of cm/shake
-SPD_OF_LGT = 299.792458L 
+SPD_OF_LGT = 299.7924580
 
 ##Boltzman constant k in keV/K, for converting to equivalent energy of T
 BOLTZMAN_CONSTANT = 8.617343E-08 
