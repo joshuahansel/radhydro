@@ -35,26 +35,31 @@ from utilityFunctions import getIndex
 #          -# \f$\mathcal{E}\f$: radiation energy
 #          -# \f$\mathcal{F}\f$: radiation flux
 #
-def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0,
+def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, diag_scale=1.0,
     bound_curr_lt=0.0, bound_curr_rt=0.0,
-    bc_psi_plus = None, bc_psi_minus = None):
+    bc_psi_left = None, bc_psi_right = None):
 
     # set directions
     mu = {"-" : -1/math.sqrt(3), "+" : 1/math.sqrt(3)}
 
+    #abbreviation for the scale term. This scale is a result of a time stepping
+    #algorithm. For instance, in CN, it is 0.5*(\mu dpsi/dx + \sigma_t \psi - \sigma_s/2*phi)
+    #so the diag_scale is 0.5
+    ds = diag_scale
+
     # compute boundary fluxes based on incoming currents if there is no specified
     # fluxes.  If fluxes are specified, they will overwrite current value. Default 
     # is zero current
-    if bc_psi_plus != None and bound_curr_lt != 0.0:
+    if bc_psi_left != None and bound_curr_lt != 0.0:
         raise ValueError("You cannot specify a current and boundary flux, on left")
-    if bc_psi_minus != None and bound_curr_rt != 0.0:
+    if bc_psi_right != None and bound_curr_rt != 0.0:
         raise ValueError("You cannot specify a current and boundary flux, on right")
 
-    if bc_psi_plus == None:
-        bc_psi_plus  =  bound_curr_lt / (0.5)
+    if bc_psi_left == None:
+        bc_psi_left  =  bound_curr_lt / (0.5)
 
-    if bc_psi_minus == None:
-        bc_psi_minus = bound_curr_rt / (0.5)
+    if bc_psi_right == None:
+        bc_psi_right = bound_curr_rt / (0.5)
 
 
     # initialize numpy arrays for system matrix and rhs
@@ -89,41 +94,41 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0,
 
        # Left control volume, minus direction
        row = np.zeros(n)
-       row[iLminus]    = -0.5*mu["-"] + 0.5*(cx_tL+diag_add_term)*h - 0.25*cx_sL*h
-       row[iLplus]     = -0.25*cx_sL*h
-       row[iRminus]    = 0.5*mu["-"]
+       row[iLminus]    = -0.5*ds*mu["-"] + 0.5*(ds*cx_tL+diag_add_term)*h - 0.25*ds*cx_sL*h
+       row[iLplus]     = -0.25*ds*cx_sL*h
+       row[iRminus]    = 0.5*ds*mu["-"]
        matrix[iLminus] = row
        rhs[iLminus]    = 0.5*h*QLplus
       
        # Left control volume, plus direction
        row = np.zeros(n)
        if i == 0:
-          rhs[iLplus] = mu["+"]*bc_psi_plus
+          rhs[iLplus] = ds*mu["+"]*bc_psi_left
        else:
-          row[iprevRplus] = -mu["+"]
-       row[iLminus]    = -0.25*cx_sL*h
-       row[iLplus]     = 0.5*mu["+"] + 0.5*(cx_tL+diag_add_term)*h - 0.25*cx_sL*h
-       row[iRplus]     = 0.5*mu["+"]
+          row[iprevRplus] = -ds*mu["+"]
+       row[iLminus]    = -0.25*ds*cx_sL*h
+       row[iLplus]     = 0.5*ds*mu["+"] + 0.5*(ds*cx_tL+diag_add_term)*h - 0.25*ds*cx_sL*h
+       row[iRplus]     = 0.5*ds*mu["+"]
        matrix[iLplus]  = row
        rhs[iLplus]    += 0.5*h*QLminus
 
        # Right control volume, minus direction
        row = np.zeros(n)
-       row[iLminus]     = -0.5*mu["-"]
-       row[iRminus]     = -0.5*mu["-"] + 0.5*(cx_tR+diag_add_term)*h - 0.25*cx_sR*h
-       row[iRplus]      = -0.25*cx_sR*h
+       row[iLminus]     = -0.5*ds*mu["-"]
+       row[iRminus]     = -0.5*ds*mu["-"] + 0.5*(ds*cx_tR+diag_add_term)*h - 0.25*ds*cx_sR*h
+       row[iRplus]      = -0.25*ds*cx_sR*h
        if i == mesh.n_elems-1:
-          rhs[iRminus] = -mu["-"]*bc_psi_minus
+          rhs[iRminus] = -ds*mu["-"]*bc_psi_right
        else:
-          row[inextLminus] = mu["-"]
+          row[inextLminus] = ds*mu["-"]
        matrix[iRminus]  = row
        rhs[iRminus]    += 0.5*h*QRminus
 
        # Right control volume, plus direction
        row = np.zeros(n)
-       row[iLplus]      = -0.5*mu["+"]
-       row[iRminus]     = -0.25*cx_sR*h
-       row[iRplus]      = 0.5*mu["+"] + 0.5*(cx_tR+diag_add_term)*h - 0.25*cx_sR*h
+       row[iLplus]      = -0.5*ds*mu["+"]
+       row[iRminus]     = -0.25*ds*cx_sR*h
+       row[iRplus]      = 0.5*ds*mu["+"] + 0.5*(ds*cx_tR+diag_add_term)*h - 0.25*ds*cx_sR*h
        matrix[iRplus]   = row
        rhs[iRplus]      = 0.5*h*QRplus
 
