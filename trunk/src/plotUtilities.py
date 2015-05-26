@@ -4,7 +4,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import array
-from math import pi
 import operator           # for adding tuples to each other elementwise
 from matplotlib import rc # for rendering tex in plots
 
@@ -120,7 +119,7 @@ def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, scalar_flux_exact=None
 #           and right values, e.g., scalar_flux[i]\f$=(\phi_{i,L},\phi_{i,R})\f$
 #
 def computeScalarFlux(psi_minus, psi_plus):
-   scalar_flux = [tuple(2*pi*y for y in tuple(map(operator.add, psi_minus[i], psi_plus[i]))
+   scalar_flux = [tuple(y for y in tuple(map(operator.add, psi_minus[i], psi_plus[i]))
                        ) for i in xrange(len(psi_minus))]
    return scalar_flux
 

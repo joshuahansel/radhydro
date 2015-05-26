@@ -204,6 +204,18 @@ class myGoodClass:
             sections, and $\sigma_t + 1/c \Delta t$.  Then pass a list of cross
             sections objects, for all elements, to solvers.
     \end{itemize}
+    \item SourceHandler Class:
+    \begin{itemize}
+        \item This class is a base class for implementing derived class sources in
+            building the radiation system. 
+        \item Each term that goes on the RHS of the equation (anything other than
+            implicit streaming, interaction terms) is responsible for implementing
+            how to evaluate their $Q$ contribution for BE, CN, and BDF2 time
+            differencing schemes.
+        \item These are all located in sourceHandler source file
+        \item See source code for more details.
+    \end{itemize}
+
 \end{enumerate}
 
 \subsection{Method Classes}

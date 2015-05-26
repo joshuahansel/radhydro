@@ -23,6 +23,8 @@ from utilityFunctions import getIndex
 #                                 done after scale
 #  @param[in] bound_curr_lt       left  boundary current data, \f$j^+\f$
 #  @param[in] bound_curr_rt       right boundary current data, \f$j^-\f$
+#  @param[in] bound_flux_plus     left  boundary psi
+#  @param[in] bound_flux_minus    right boundary psi
 #
 #  @return 
 #          -# \f$\psi^+\f$, angular flux in plus directions
@@ -31,17 +33,32 @@ from utilityFunctions import getIndex
 #          -# \f$\mathcal{F}\f$: radiation flux
 #
 def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
-    bound_curr_lt=0.0, bound_curr_rt=0.0):
+    bound_curr_lt=0.0, bound_curr_rt=0.0,
+    bc_psi_plus = None, bc_psi_minus = None):
 
     # set directions
     mu = {"-" : -1/math.sqrt(3), "+" : 1/math.sqrt(3)}
 
     # 1/(4*pi) constant for isotropic source Q
-    c_Q = 1/(4*math.pi)
+    c_Q = 1/2.
 
-    # compute boundary fluxes based on incoming currents
-    boundary_flux_plus  =  bound_curr_lt / (2*math.pi*mu["+"])
-    boundary_flux_minus = -bound_curr_rt / (2*math.pi*mu["-"])
+    # compute boundary fluxes based on incoming currents if there is no specified
+    # fluxes.  If fluxes are specified, they will overwrite current value. Default 
+    # is zero current
+    if bc_psi_plus != None and bound_curr_lt != 0.0:
+        raise ValueError("You cannot specify a current and boundary flux, on left")
+    if bc_psi_minus != None and bound_curr_rt != 0.0:
+        raise ValueError("You cannot specify a current and boundary flux, on right")
+
+    if bc_psi_plus == None:
+        bc_psi_plus  =  bound_curr_lt / (0.5)
+
+    if bc_psi_minus == None:
+        bc_psi_minus = bound_curr_rt / (0.5)
+
+
+    print "This is the bc flux", bc_psi_plus
+    
 
     # initialize numpy arrays for system matrix and rhs
     n = 4*mesh.n_elems
@@ -84,7 +101,7 @@ def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
        # Left control volume, plus direction
        row = np.zeros(n)
        if i == 0:
-          rhs[iLplus] = mu["+"]*boundary_flux_plus
+          rhs[iLplus] = mu["+"]*bc_psi_plus
        else:
           row[iprevRplus] = -mu["+"]
        row[iLminus]    = -0.25*cx_sL*h
@@ -99,7 +116,7 @@ def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
        row[iRminus]     = -0.5*mu["-"] + 0.5*(cx_tR+diag_add_term)*h - 0.25*cx_sR*h
        row[iRplus]      = -0.25*cx_sR*h
        if i == mesh.n_elems-1:
-          rhs[iRminus] = -mu["-"]*boundary_flux_minus
+          rhs[iRminus] = -mu["-"]*bc_psi_minus
        else:
           row[inextLminus] = mu["-"]
        matrix[iRminus]  = row
