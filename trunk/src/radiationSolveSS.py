@@ -13,25 +13,21 @@ from utilityFunctions import getIndex
 #  @param[in] mesh     a mesh object
 #  @param[in] cross_x  list of cross sections for each element, stored as tuple
 #                      for each cell.
-#  @param[in] Q        total source (note there is no division by 4 pi in the solver,
-#                      so an isotropic source should divide by 2. before passing to
-#                      this function). This may include Q1 sources, but those are
-#                      built in to the source vector. This vector contains the Q for 
-#                      each DOF, i.e., for element i, Q_L+, Q_R+, Q_L-, Q_R-, using
-#                      the same ordering as the equations for psi, accessed through
-#                      getIndex()
-#  @param[in] diag_add_term       term to add to reaction term for use in
-#                                 time-dependent solvers, e.g., alpha*sigma_t*psi_L
-#                                 -> (alpha*sigma_t + 1/c*delta_t)psi_L. Must be
-#                                 done after scale
+#  @param[in] Q        \f$\tilde{\mathcal{Q}}\f$ as defined in documentation
+#                      for time-dependent solvers. This is passed in as a vector
+#                      with the same global numbering as $\Psi$ unknowns.
+#  @param[in] diag_add_term       \f$\alpha\f$ as defined in documentation for
+#                                 time-dependent solvers
+#  @param[in] diag_scale          \f$\beta\f$ as defined in documentation for
+#                                 time-dependent solvers
 #  @param[in] bound_curr_lt       left  boundary current data, \f$j^+\f$
 #  @param[in] bound_curr_rt       right boundary current data, \f$j^-\f$
-#  @param[in] bound_flux_plus     left  boundary psi
-#  @param[in] bound_flux_minus    right boundary psi
+#  @param[in] bound_flux_left     left  boundary psi
+#  @param[in] bound_flux_right    right boundary psi
 #
 #  @return 
-#          -# \f$\psi^+\f$, angular flux in plus directions
-#          -# \f$\psi^-\f$, angular flux in minus directions
+#          -# \f$\Psi^+\f$, angular flux in plus directions multiplied by \f$2\pi\f$
+#          -# \f$\Psi^-\f$, angular flux in minus directions multiplied by \f$2\pi\f$
 #          -# \f$\mathcal{E}\f$: radiation energy
 #          -# \f$\mathcal{F}\f$: radiation flux
 #
@@ -42,9 +38,7 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, diag_scale=1.0,
     # set directions
     mu = {"-" : -1/math.sqrt(3), "+" : 1/math.sqrt(3)}
 
-    #abbreviation for the scale term. This scale is a result of a time stepping
-    #algorithm. For instance, in CN, it is 0.5*(\mu dpsi/dx + \sigma_t \psi - \sigma_s/2*phi)
-    #so the diag_scale is 0.5
+    # abbreviation for the scale term
     ds = diag_scale
 
     # compute boundary fluxes based on incoming currents if there is no specified

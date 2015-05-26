@@ -10,14 +10,16 @@ from matplotlib import rc # for rendering tex in plots
 ## Function to plot angular flux.
 #
 #  @param[in] mesh      mesh data
-#  @param[in] psi_minus S-2 angular flux solution for the minus direction,
-#                       \f$\psi^-\f$, passed as an array of tuples of left
-#                       and right values, e.g., psi_minus[i]\f$=(\psi^-_{i,L},
-#                       \psi^-_{i,R})\f$
-#  @param[in] psi_plus  S-2 angular flux solution for the plus direction,
-#                       \f$\psi^+\f$, passed as an array of tuples of left
-#                       and right values, e.g., psi_plus[i]\f$=(\psi^+_{i,L},
-#                       \psi^+_{i,R})\f$
+#  @param[in] psi_minus S-2 angular flux solution for the minus direction
+#                       multiplied by \f$2\pi\f$, i.e.,
+#                       \f$\Psi^-\f$, passed as an array of tuples of left
+#                       and right values, e.g., psi_minus[i]\f$=(\Psi^-_{i,L},
+#                       \Psi^-_{i,R})\f$
+#  @param[in] psi_plus  S-2 angular flux solution for the plus direction
+#                       multiplied by \f$2\pi\f$, i.e.,
+#                       \f$\Psi^+\f$, passed as an array of tuples of left
+#                       and right values, e.g., psi_plus[i]\f$=(\Psi^+_{i,L},
+#                       \Psi^+_{i,R})\f$
 #  @param[in] save      boolean flag for saving the plot as a .pdf file
 #  @param[in] psi_minus_exact  exact angular flux solution for minus direction,
 #                              passed as an array of values at each edge.
@@ -38,14 +40,14 @@ def plotAngularFlux(mesh, psi_minus, psi_plus, save=False,
    # plot
    plt.rc('text', usetex=True)         # use tex to generate text
    plt.rc('font', family='sans-serif') # use sans-serif font family
-   plt.plot(x, psi_minus_array, 'r-o', label='$\psi^-$')
-   plt.plot(x, psi_plus_array,  'b-x', label='$\psi^+$')
+   plt.plot(x, psi_minus_array, 'r-o', label='$\Psi^-$')
+   plt.plot(x, psi_plus_array,  'b-x', label='$\Psi^+$')
     
    # plot exact solutions if there are any
    if psi_minus_exact is not None:
-      plt.plot(x_continuous, psi_minus_exact, 'k--', label='$\psi^-$, exact')
+      plt.plot(x_continuous, psi_minus_exact, 'k--', label='$\Psi^-$, exact')
    if psi_plus_exact  is not None:
-      plt.plot(x_continuous, psi_plus_exact,  'k-',  label='$\psi^+$, exact')
+      plt.plot(x_continuous, psi_plus_exact,  'k-',  label='$\Psi^+$, exact')
 
    # annotations
    plt.xlabel('$x$')
@@ -61,14 +63,16 @@ def plotAngularFlux(mesh, psi_minus, psi_plus, save=False,
 ## Function to plot scalar flux.
 #
 #  @param[in] mesh      mesh data
-#  @param[in] psi_minus S-2 angular flux solution for the minus direction,
-#                       \f$\psi^-\f$, passed as an array of tuples of left
-#                       and right values, e.g., psi_minus[i]\f$=(\psi^-_{i,L},
-#                       \psi^-_{i,R})\f$
-#  @param[in] psi_plus  S-2 angular flux solution for the plus direction,
-#                       \f$\psi^+\f$, passed as an array of tuples of left
-#                       and right values, e.g., psi_plus[i]\f$=(\psi^+_{i,L},
-#                       \psi^+_{i,R})\f$
+#  @param[in] psi_minus S-2 angular flux solution for the minus direction
+#                       multiplied by \f$2\pi\f$, i.e.,
+#                       \f$\Psi^-\f$, passed as an array of tuples of left
+#                       and right values, e.g., psi_minus[i]\f$=(\Psi^-_{i,L},
+#                       \Psi^-_{i,R})\f$
+#  @param[in] psi_plus  S-2 angular flux solution for the plus direction
+#                       multiplied by \f$2\pi\f$, i.e.,
+#                       \f$\Psi^+\f$, passed as an array of tuples of left
+#                       and right values, e.g., psi_plus[i]\f$=(\Psi^+_{i,L},
+#                       \Psi^+_{i,R})\f$
 #  @param[in] save      boolean flag for saving the plot as a .pdf file
 #  @param[in] scalar_flux_exact  exact scalar flux solution, passed as an
 #                                array of values at each edge.
@@ -107,14 +111,16 @@ def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, scalar_flux_exact=None
 
 ## Function to compute scalar flux from angular fluxes.
 #
-#  @param[in] psi_minus S-2 angular flux solution for the minus direction,
-#                       \f$\psi^-\f$, passed as an array of tuples of left
-#                       and right values, e.g., psi_minus[i]\f$=(\psi^-_{i,L},
-#                       \psi^-_{i,R})\f$
-#  @param[in] psi_plus  S-2 angular flux solution for the plus direction,
-#                       \f$\psi^+\f$, passed as an array of tuples of left
-#                       and right values, e.g., psi_plus[i]\f$=(\psi^+_{i,L},
-#                       \psi^+_{i,R})\f$
+#  @param[in] psi_minus S-2 angular flux solution for the minus direction
+#                       multiplied by \f$2\pi\f$, i.e.,
+#                       \f$\Psi^-\f$, passed as an array of tuples of left
+#                       and right values, e.g., psi_minus[i]\f$=(\Psi^-_{i,L},
+#                       \Psi^-_{i,R})\f$
+#  @param[in] psi_plus  S-2 angular flux solution for the plus direction
+#                       multiplied by \f$2\pi\f$, i.e.,
+#                       \f$\Psi^+\f$, passed as an array of tuples of left
+#                       and right values, e.g., psi_plus[i]\f$=(\Psi^+_{i,L},
+#                       \Psi^+_{i,R})\f$
 #  @return  scalar flux solution, \f$\phi\f$, as an array of tuples of left
 #           and right values, e.g., scalar_flux[i]\f$=(\phi_{i,L},\phi_{i,R})\f$
 #
