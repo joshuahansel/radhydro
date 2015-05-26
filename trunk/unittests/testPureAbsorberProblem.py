@@ -5,7 +5,7 @@
 import sys
 sys.path.append('../src')
 
-from math import sqrt, exp, pi
+from math import sqrt, exp
 from mesh import Mesh
 from crossXInterface import CrossXInterface
 from radiationSolveSS import radiationSolveSS
@@ -24,8 +24,8 @@ def main():
    inc_minus = 10 # isotropic incoming angular flux for minus direction
    inc_plus = 20  # isotropic incoming angular flux for plus  direction
 
-   j_minus = pi*inc_minus # incoming current in minus direction
-   j_plus  = pi*inc_plus  # incoming current in plus  direction
+   j_minus = 0.5*inc_minus # incoming current in minus direction
+   j_plus  = 0.5*inc_plus  # incoming current in plus  direction
 
    # number of elements
    n_elems = 50
