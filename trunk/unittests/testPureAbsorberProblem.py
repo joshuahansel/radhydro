@@ -36,14 +36,12 @@ def main():
    cross_sects = [(CrossXInterface(sig_t,0),CrossXInterface(sig_t,0))
       for i in xrange(n_elems)]
    # sources
-   Q_plus  = [(0,0) for i in xrange(mesh.n_elems)]
-   Q_minus = [(0,0) for i in xrange(mesh.n_elems)]
+   Q  = [0.0 for i in xrange(mesh.n_elems*4)]
 
    # compute LD solution
    psi_minus, psi_plus, E, F = radiationSolveSS(mesh,
                                                 cross_sects,
-                                                Q_minus,
-                                                Q_plus,
+                                                Q,
                                                 bound_curr_lt=j_plus,
                                                 bound_curr_rt=j_minus)
 

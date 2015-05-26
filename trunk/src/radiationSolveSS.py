@@ -13,10 +13,13 @@ from utilityFunctions import getIndex
 #  @param[in] mesh     a mesh object
 #  @param[in] cross_x  list of cross sections for each element, stored as tuple
 #                      for each cell.
-#  @param[in] Q_minus  total isotropic source in minus direction:
-#                      \f$Q = Q_0 + 3\mu^-Q_1\f$
-#  @param[in] Q_plus   total isotropic source in plus direction:
-#                      \f$Q = Q_0 + 3\mu^+Q_1\f$
+#  @param[in] Q        total source (note there is no division by 4 pi in the solver,
+#                      so an isotropic source should divide by 2. before passing to
+#                      this function). This may include Q1 sources, but those are
+#                      built in to the source vector. This vector contains the Q for 
+#                      each DOF, i.e., for element i, Q_L+, Q_R+, Q_L-, Q_R-, using
+#                      the same ordering as the equations for psi, accessed through
+#                      getIndex()
 #  @param[in] diag_add_term       term to add to reaction term for use in
 #                                 time-dependent solvers, e.g., alpha*sigma_t*psi_L
 #                                 -> (alpha*sigma_t + 1/c*delta_t)psi_L. Must be
@@ -32,15 +35,12 @@ from utilityFunctions import getIndex
 #          -# \f$\mathcal{E}\f$: radiation energy
 #          -# \f$\mathcal{F}\f$: radiation flux
 #
-def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
+def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0,
     bound_curr_lt=0.0, bound_curr_rt=0.0,
     bc_psi_plus = None, bc_psi_minus = None):
 
     # set directions
     mu = {"-" : -1/math.sqrt(3), "+" : 1/math.sqrt(3)}
-
-    # 1/(4*pi) constant for isotropic source Q
-    c_Q = 1/2.
 
     # compute boundary fluxes based on incoming currents if there is no specified
     # fluxes.  If fluxes are specified, they will overwrite current value. Default 
@@ -56,9 +56,6 @@ def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
     if bc_psi_minus == None:
         bc_psi_minus = bound_curr_rt / (0.5)
 
-
-    print "This is the bc flux", bc_psi_plus
-    
 
     # initialize numpy arrays for system matrix and rhs
     n = 4*mesh.n_elems
@@ -85,10 +82,10 @@ def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
        cx_tR = cross_x[i][1].sig_t # Right total
 
        # get sources
-       QLminus = Q_minus[i][0] # minus direction, Left
-       QLplus  = Q_plus [i][0] # plus  direction, Left
-       QRminus = Q_minus[i][1] # minus direction, Right
-       QRplus  = Q_plus [i][1] # plus  direction, Right
+       QLminus = Q[iLminus] # minus direction, Left
+       QLplus  = Q[iLplus] # plus  direction, Left
+       QRminus = Q[iRminus] # minus direction, Right
+       QRplus  = Q[iRplus] # plus  direction, Right
 
        # Left control volume, minus direction
        row = np.zeros(n)
@@ -96,7 +93,7 @@ def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
        row[iLplus]     = -0.25*cx_sL*h
        row[iRminus]    = 0.5*mu["-"]
        matrix[iLminus] = row
-       rhs[iLminus]    = 0.5*c_Q*h*QLplus
+       rhs[iLminus]    = 0.5*h*QLplus
       
        # Left control volume, plus direction
        row = np.zeros(n)
@@ -108,7 +105,7 @@ def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
        row[iLplus]     = 0.5*mu["+"] + 0.5*(cx_tL+diag_add_term)*h - 0.25*cx_sL*h
        row[iRplus]     = 0.5*mu["+"]
        matrix[iLplus]  = row
-       rhs[iLplus]    += 0.5*c_Q*h*QLminus
+       rhs[iLplus]    += 0.5*h*QLminus
 
        # Right control volume, minus direction
        row = np.zeros(n)
@@ -120,7 +117,7 @@ def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
        else:
           row[inextLminus] = mu["-"]
        matrix[iRminus]  = row
-       rhs[iRminus]    += 0.5*c_Q*h*QRminus
+       rhs[iRminus]    += 0.5*h*QRminus
 
        # Right control volume, plus direction
        row = np.zeros(n)
@@ -128,7 +125,7 @@ def radiationSolveSS(mesh, cross_x, Q_minus, Q_plus, diag_add_term=0.0,
        row[iRminus]     = -0.25*cx_sR*h
        row[iRplus]      = 0.5*mu["+"] + 0.5*(cx_tR+diag_add_term)*h - 0.25*cx_sR*h
        matrix[iRplus]   = row
-       rhs[iRplus]      = 0.5*c_Q*h*QRplus
+       rhs[iRplus]      = 0.5*h*QRplus
 
     # solve linear system
     solution = np.linalg.solve(matrix, rhs)
