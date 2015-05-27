@@ -55,9 +55,13 @@ def solveRadProblem():
     diag_terms = {"CN":0.5, "BDF2":2./3., "BE":1.}
     plotScalarFlux(mesh, psi_minusSS, psi_plusSS)
 
-    #now run transient solution and see if it gives back the same answera    = n
-    psi_plus_old   = np.array(psi_plusSS)*0.5
-    psi_minus_old  = np.array(psi_minusSS)*0.5
+    #now run transient solution from arbitrary starting and see if it gives back the same answera    = n
+    psi_plus_old   = np.array([psi_plusSS[mesh.n_elems/2]*0.5 for i in
+        range(mesh.n_elems) ] )
+    psi_minus_old  =  np.array([psi_plusSS[mesh.n_elems/2]*0.25 for i in
+        range(mesh.n_elems) ] ) 
+    E_old = [GC.SPD_OF_LGT*(psi_plus_old[i] + psi_minus_old[i]) for i in
+            range(len(psi_plus_old))]
     while t <= t_end:
 
         t += dt
@@ -80,7 +84,7 @@ def solveRadProblem():
             # build src for this term
             Q_new = src.buildSource(psi_plus_old = psi_plus_old, psi_minus_old = 
                     psi_minus_old, bc_flux_left = psi_left, bc_flux_right = psi_right,
-                    cx_old = cross_sects)
+                    cx_old = cross_sects,)
          #   print "src", src
          #   print "Q_new: "
          #   print Q_new
