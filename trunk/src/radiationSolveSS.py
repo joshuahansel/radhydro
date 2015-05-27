@@ -20,7 +20,7 @@ import globalConstants as GC
 #                      with the same global numbering as $\Psi$ unknowns.
 #  @param[in] diag_add_term       \f$\alpha\f$ as defined in documentation for
 #                                 time-dependent solvers
-#  @param[in] implicit_scale          \f$\beta\f$ as defined in documentation for
+#  @param[in] implicit_scale      \f$\beta\f$ as defined in documentation for
 #                                 time-dependent solvers
 #  @param[in] bound_curr_lt       left  boundary current data, \f$j^+\f$
 #  @param[in] bound_curr_rt       right boundary current data, \f$j^-\f$
@@ -84,13 +84,13 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
 
        # get sources
        QLminus = Q[iLminus] # minus direction, Left
-       QLplus  = Q[iLplus] # plus  direction, Left
+       QLplus  = Q[iLplus]  # plus  direction, Left
        QRminus = Q[iRminus] # minus direction, Right
-       QRplus  = Q[iRplus] # plus  direction, Right
+       QRplus  = Q[iRplus]  # plus  direction, Right
 
        # Left control volume, minus direction
        row = np.zeros(n)
-       row[iLminus]    = -0.5*beta*mu["-"] + 0.5*(beta*cx_tL+diag_add_term)*h - 0.25*beta*cx_sL*h
+       row[iLminus]    = -0.5*beta*mu["-"] + (0.5*h*beta*cx_tL+diag_add_term) - 0.25*beta*cx_sL*h
        row[iLplus]     = -0.25*beta*cx_sL*h
        row[iRminus]    = 0.5*beta*mu["-"]
        matrix[iLminus] = row
@@ -103,7 +103,7 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
        else:
           row[iprevRplus] = -beta*mu["+"]
        row[iLminus]    = -0.25*beta*cx_sL*h
-       row[iLplus]     = 0.5*beta*mu["+"] + 0.5*(beta*cx_tL+diag_add_term)*h - 0.25*beta*cx_sL*h
+       row[iLplus]     = 0.5*beta*mu["+"] + (0.5*h*beta*cx_tL+diag_add_term) - 0.25*beta*cx_sL*h
        row[iRplus]     = 0.5*beta*mu["+"]
        matrix[iLplus]  = row
        rhs[iLplus]    += 0.5*h*QLplus
@@ -111,7 +111,7 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
        # Right control volume, minus direction
        row = np.zeros(n)
        row[iLminus]     = -0.5*beta*mu["-"]
-       row[iRminus]     = -0.5*beta*mu["-"] + 0.5*(beta*cx_tR+diag_add_term)*h - 0.25*beta*cx_sR*h
+       row[iRminus]     = -0.5*beta*mu["-"] + (0.5*h*beta*cx_tR+diag_add_term) - 0.25*beta*cx_sR*h
        row[iRplus]      = -0.25*beta*cx_sR*h
        if i == mesh.n_elems-1:
           rhs[iRminus] = -beta*mu["-"]*bc_psi_right
@@ -124,7 +124,7 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
        row = np.zeros(n)
        row[iLplus]      = -0.5*beta*mu["+"]
        row[iRminus]     = -0.25*beta*cx_sR*h
-       row[iRplus]      = 0.5*beta*mu["+"] + 0.5*(beta*cx_tR+diag_add_term)*h - 0.25*beta*cx_sR*h
+       row[iRplus]      = 0.5*beta*mu["+"] + (0.5*h*beta*cx_tR+diag_add_term) - 0.25*beta*cx_sR*h
        matrix[iRplus]   = row
        rhs[iRplus]      = 0.5*h*QRplus
 

@@ -76,11 +76,17 @@ def plotAngularFlux(mesh, psi_minus, psi_plus, save=False,
 #  @param[in] save      boolean flag for saving the plot as a .pdf file
 #  @param[in] scalar_flux_exact  exact scalar flux solution, passed as an
 #                                array of values at each edge.
+#  @param[in] exact_data_continuous  boolean flag that specifies if the provided
+#                                    exact solution data is continuous (True)
+#                                    or is given as discontinuous tuples (False).
 #
-def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, scalar_flux_exact=None):
+def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, scalar_flux_exact=None,
+   exact_data_continuous=True):
 
+   # create new figure
    plotScalarFlux.count += 1
    plt.figure(plotScalarFlux.count)
+
    # create x-points
    x            = makeXPoints(mesh)           # discontinuous x-points
    x_continuous = makeContinuousXPoints(mesh) # continuous    x-points
@@ -98,7 +104,11 @@ def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, scalar_flux_exact=None
     
    # plot exact solution if there is one
    if scalar_flux_exact is not None:
-      plt.plot(x_continuous, scalar_flux_exact, 'k--', label='$\phi$, exact')
+      if exact_data_continuous:
+         plt.plot(x_continuous, scalar_flux_exact, 'k--', label='$\phi$, exact')
+      else:
+         exact_array = makeYPoints(scalar_flux_exact)
+         plt.plot(x,            exact_array,       'k--', label='$\phi$, exact')
 
    # annotations
    plt.xlabel('$x$')

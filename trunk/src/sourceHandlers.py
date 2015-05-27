@@ -166,8 +166,8 @@ class OldIntensitySrc(SourceHandler):
         return Q
 
     #----------------------------------------------------------------------------
-    ## Time derivative source term is the same in all cases (always just psi/(c dt) ), so just make one function
-    #  called by all forms of build source
+    ## Time derivative source term is the same in all cases (always just psi/(c dt)),
+    #  so just make one function called by all forms of build source
     def evaluate(self, i, psi_minus_old=None, psi_plus_old=None):
         
         #Get all the indices, this is basically redundant
@@ -179,9 +179,11 @@ class OldIntensitySrc(SourceHandler):
         Q  = np.zeros(4)
         Q[iLminus] = psi_minus_old[i][0]    
         Q[iRminus] = psi_minus_old[i][1] 
-        Q[iLplus] = psi_plus_old[i][0]   
-        Q[iRplus] = psi_plus_old[i][1]
-        return Q*(1./self.c_dt)
+        Q[iLplus]  = psi_plus_old[i][0]   
+        Q[iRplus]  = psi_plus_old[i][1]
+        #SIMON return Q*(1./self.c_dt)
+        h = self.mesh.getElement(i).dx
+        return Q*(1./self.c_dt*2.0/h)
 
 
 #====================================================================================
@@ -217,19 +219,22 @@ class StreamingSrc(SourceHandler):
         #Get the edge fluxes
         #for positive mu, upwinding on left term. For neg mu, upwinding on right
         if i == 0: #left boundary special case
-            psi_L_face = kwargs['bc_flux_left']
+            psi_Lface_p = kwargs['bc_flux_left']
         else:
-            psi_L_face = psi_plus_old[i-1][1] #psi_{i-1,r}
+            psi_Lface_p = psi_plus_old[i-1][1] #psi_{i-1,r}
 
         if i == self.mesh.n_elems - 1: #right boundary special case
-            psi_R_face = kwargs['bc_flux_right']
+            psi_Rface_m = kwargs['bc_flux_right']
         else:
-            psi_R_face  = psi_minus_old[i+1][0] #psi_{i+1,l}
+            psi_Rface_m  = psi_minus_old[i+1][0] #psi_{i+1,l}
 
-        psi_L_m = psi_minus_old[i][0] #m for minus
-        psi_L_p = psi_plus_old[i][0]  #p for plus
-        psi_R_m = psi_minus_old[i][1]                
-        psi_R_p = psi_plus_old[i][1]
+        psi_L_m = psi_minus_old[i][0] # psi_{i,L},   minus               
+        psi_L_p = psi_plus_old[i][0]  # psi_{i,L},   plus               
+        psi_R_m = psi_minus_old[i][1] # psi_{i,R},   minus               
+        psi_R_p = psi_plus_old[i][1]  # psi_{i,R},   plus               
+        psi_Lface_m = psi_L_m         # psi_{i-1/2}, minus
+        psi_Rface_p = psi_R_p         # psi_{i+1/2}, plus
+
         mu = {"-" : -1./sqrt(3), "+" : 1./sqrt(3.)}
 
         #compute cell averages
@@ -241,10 +246,10 @@ class StreamingSrc(SourceHandler):
         #need to divide by h/2 to correct for artificial scaling in solver
         h_x_2 = self.mesh.getElement(i).dx/2.
 
-        Q[iLminus] = -1.*mu["-"]*(psi_i_m - psi_L_m)/h_x_2
-        Q[iLplus]  = -1.*mu["+"]*(psi_i_p - psi_L_face)/h_x_2
-        Q[iRminus] = -1.*mu["-"]*(psi_R_face - psi_i_m)/h_x_2
-        Q[iRplus]  = -1.*mu["+"]*(psi_R_p - psi_i_p)/h_x_2
+        Q[iLminus] = -1.*mu["-"]*(psi_i_m     - psi_Lface_m)/h_x_2
+        Q[iLplus]  = -1.*mu["+"]*(psi_i_p     - psi_Lface_p)/h_x_2
+        Q[iRminus] = -1.*mu["-"]*(psi_Rface_m - psi_i_m)    /h_x_2
+        Q[iRplus]  = -1.*mu["+"]*(psi_Rface_p - psi_i_p)    /h_x_2
 
         return Q
 
@@ -253,7 +258,7 @@ class StreamingSrc(SourceHandler):
     #  version
     def evalOlder(self, el, psi_minus_older=None, psi_plus_older=None, **kwargs):
 
-        return evalOld(self,el,psi_minus_old=psi_minus_older,
+        return self.evalOld(self,el,psi_minus_old=psi_minus_older,
                 psi_plus_old=psi_plus_older)
 
 
@@ -293,8 +298,8 @@ class ReactionSrc(SourceHandler):
         #negatives because on RHS of equation
         Q[iLminus] = -1.*psi_minus_old[i][0] * sig_t_l
         Q[iRminus] = -1.*psi_minus_old[i][1] * sig_t_r
-        Q[iLplus] = -1.*psi_plus_old[i][0]   * sig_t_l
-        Q[iRplus] = -1.*psi_plus_old[i][1]   * sig_t_r
+        Q[iLplus]  = -1.*psi_plus_old[i][0]  * sig_t_l
+        Q[iRplus]  = -1.*psi_plus_old[i][1]  * sig_t_r
 
         return Q
 
@@ -304,7 +309,7 @@ class ReactionSrc(SourceHandler):
     def evalOlder(self, el, psi_minus_older=None, psi_plus_older=None, 
                    cx_older = None, **kwargs):
 
-        return evalOld(self,el,psi_minus_old=psi_minus_older,
+        return self.evalOld(self,el,psi_minus_old=psi_minus_older,
                 psi_plus_old=psi_plus_older,cx_old=cx_older,**kwargs)
 
 #====================================================================================
@@ -345,8 +350,8 @@ class ScatteringSrc(SourceHandler):
         Q  = np.zeros(4)
         Q[iLminus] = 0.5*phi_L*sig_s_l
         Q[iRminus] = 0.5*phi_R*sig_s_r
-        Q[iLplus] = 0.5*phi_L*sig_s_r
-        Q[iRplus] = 0.5*phi_R*sig_s_r
+        Q[iLplus]  = 0.5*phi_L*sig_s_l
+        Q[iRplus]  = 0.5*phi_R*sig_s_r
 
         return Q
 
@@ -355,10 +360,5 @@ class ScatteringSrc(SourceHandler):
     #  version
     def evalOlder(self, el, E_older = None, cx_older = None, **kwargs):
 
-        return evalOld(self,el,E_old = E_older,cx_old=cx_older,**kwargs)
-
-
-
-
-
+        return self.evalOld(self,el,E_old = E_older,cx_old=cx_older,**kwargs)
 
