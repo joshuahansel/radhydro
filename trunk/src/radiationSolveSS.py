@@ -7,6 +7,8 @@ import numpy as np
 from numpy import array
 from mesh import Mesh
 from utilityFunctions import getIndex
+from plotUtilities import computeScalarFlux
+import globalConstants as GC
 
 ## Steady-state solve function for the S-2 equations.
 #
@@ -92,7 +94,7 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, diag_scale=1.0,
        row[iLplus]     = -0.25*ds*cx_sL*h
        row[iRminus]    = 0.5*ds*mu["-"]
        matrix[iLminus] = row
-       rhs[iLminus]    = 0.5*h*QLplus
+       rhs[iLminus]    = 0.5*h*QLminus
       
        # Left control volume, plus direction
        row = np.zeros(n)
@@ -104,7 +106,7 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, diag_scale=1.0,
        row[iLplus]     = 0.5*ds*mu["+"] + 0.5*(ds*cx_tL+diag_add_term)*h - 0.25*ds*cx_sL*h
        row[iRplus]     = 0.5*ds*mu["+"]
        matrix[iLplus]  = row
-       rhs[iLplus]    += 0.5*h*QLminus
+       rhs[iLplus]    += 0.5*h*QLplus
 
        # Right control volume, minus direction
        row = np.zeros(n)
@@ -133,8 +135,12 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, diag_scale=1.0,
     psi_minus = [(solution[4*i],  solution[4*i+2]) for i in xrange(mesh.n_elems)]
     psi_plus  = [(solution[4*i+1],solution[4*i+3]) for i in xrange(mesh.n_elems)]
 
-    # return zeros for time being
-    E = [(0, 0) for i in range(mesh.n_elems)]
+    # Calculate E
+    c = GC.SPD_OF_LGT
+    E = computeScalarFlux(psi_minus, psi_plus)
+    E = [(i[0]/c, i[1]/c) for i in E]
+
+    #Return F as a zeros for now
     F = [(0, 0) for i in range(mesh.n_elems)]
 
     return psi_minus, psi_plus, E, F

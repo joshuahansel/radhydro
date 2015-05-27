@@ -60,11 +60,10 @@ class SourceHandler:
 
     #---------------------------------------------------------------------------
     ## Basic constructor
-    def __init__(self, mesh, dt, t, time_stepper):
+    def __init__(self, mesh, dt, time_stepper):
 
         self.mesh = mesh #copy mesh
         self.dt   = dt   #current time step size
-        self.t    = t    #current time in simualtion, may be needed
         self.time_stepper = time_stepper
 
 
@@ -178,12 +177,11 @@ class OldIntensitySrc(SourceHandler):
         iRplus      = getLocalIndex("R","+") # dof i,  R,l+
 
         Q  = np.zeros(4)
-        Q[iLminus] = psi_minus_old[i][0] / self.c_dt
-        Q[iRminus] = psi_minus_old[i][1] / self.c_dt
-        Q[iLplus] = psi_plus_old[i][0] / self.c_dt
-        Q[iRplus] = psi_plus_old[i][1] / self.c_dt
-
-        return Q
+        Q[iLminus] = psi_minus_old[i][0]    
+        Q[iRminus] = psi_minus_old[i][1] 
+        Q[iLplus] = psi_plus_old[i][0]   
+        Q[iRplus] = psi_plus_old[i][1]
+        return Q*(1./self.c_dt)
 
 
 #====================================================================================
@@ -268,7 +266,7 @@ class ReactionSrc(SourceHandler):
         SourceHandler.__init__(self, *args)
 
     #--------------------------------------------------------------------------------
-    ## For Backward euler, there is no streaming term since implicit reaction term on LHS
+    ## For Backward euler, there is no reaction term since implicit reaction term on LHS
     #  of equation is already included in the system
     def evalImplicit(self, el, **kwargs):
 
@@ -290,10 +288,11 @@ class ReactionSrc(SourceHandler):
         sig_t_r = cx_old[i][1].sig_t
 
         Q  = np.zeros(4)
-        Q[iLminus] = psi_minus_old[i][0] * sig_t_l
-        Q[iRminus] = psi_minus_old[i][1] * sig_t_r
-        Q[iLplus] = psi_plus_old[i][0]   * sig_t_l
-        Q[iRplus] = psi_plus_old[i][1]   * sig_t_r
+        #negatives because on RHS of equation
+        Q[iLminus] = -1.*psi_minus_old[i][0] * sig_t_l
+        Q[iRminus] = -1.*psi_minus_old[i][1] * sig_t_r
+        Q[iLplus] = -1.*psi_plus_old[i][0]   * sig_t_l
+        Q[iRplus] = -1.*psi_plus_old[i][1]   * sig_t_r
 
         return Q
 
@@ -306,6 +305,55 @@ class ReactionSrc(SourceHandler):
         return evalOld(self,el,psi_minus_old=psi_minus_older,
                 psi_plus_old=psi_plus_older,cx_old=cx_older,**kwargs)
 
+#====================================================================================
+## Derived class for scattering source term:  \sigma_s phi/2
+class ScatteringSrc(SourceHandler):
+
+    ## Constructor just needs to call base class constructor in this case
+    #-------------------------------------------------------------------------------
+    def __init__(self, *args):
+
+        SourceHandler.__init__(self, *args)
+        self.c = GC.SPD_OF_LGT
+
+    #--------------------------------------------------------------------------------
+    ## For Backward euler, there is no streaming term since implicit reaction term on LHS
+    #  of equation is already included in the system
+    def evalImplicit(self, el, **kwargs):
+
+        return [0.0 for i in xrange(4)]
+
+    #--------------------------------------------------------------------------------
+    ## At time \f$t_n\f$, there is a isotropic scattering source
+    def evalOld(self, i, E_old=None, cx_old = None, **kwargs):
+
+        #Get scattering cross section
+        sig_s_l = cx_old[i][0].sig_s
+        sig_s_r = cx_old[i][1].sig_s
+
+        #Get all the indices, this is basically redundant
+        phi_L = E_old[i][0]*c
+        phi_R = E_old[i][1]*c
+
+        iLminus     = getLocalIndex("L","-") # dof i,  L,-
+        iLplus      = getLocalIndex("L","+") # dof i,  L,+
+        iRminus     = getLocalIndex("R","-") # dof i,  R,-
+        iRplus      = getLocalIndex("R","+") # dof i,  R,l+
+
+        Q  = np.zeros(4)
+        Q[iLminus] = 0.5*phi_L*sig_s_l
+        Q[iRminus] = 0.5*phi_R*sig_s_r
+        Q[iLplus] = 0.5*phi_L*sig_s_r
+        Q[iRplus] = 0.5*phi_R*sig_s_r
+
+        return Q
+
+    #--------------------------------------------------------------------------------
+    ## The older term is the same as old, but with the oldest E. So call old
+    #  version
+    def evalOlder(self, el, E_older = None, cx_older = None, **kwargs):
+
+        return evalOld(self,el,E_old = E_older,cx_old=cx_older,**kwargs)
 
 
 

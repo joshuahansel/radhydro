@@ -79,6 +79,8 @@ def plotAngularFlux(mesh, psi_minus, psi_plus, save=False,
 #
 def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, scalar_flux_exact=None):
 
+   plotScalarFlux.count += 1
+   plt.figure(plotScalarFlux.count)
    # create x-points
    x            = makeXPoints(mesh)           # discontinuous x-points
    x_continuous = makeContinuousXPoints(mesh) # continuous    x-points
@@ -108,6 +110,8 @@ def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, scalar_flux_exact=None
       plt.savefig('scalarflux.pdf')
    else:
       plt.show()
+
+plotScalarFlux.count = 0
 
 ## Function to compute scalar flux from angular fluxes.
 #
