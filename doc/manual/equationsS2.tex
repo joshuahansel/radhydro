@@ -246,16 +246,16 @@ S$_2$ equations (obtained by dropping the $\dydt{\Psi^\pm}$ in Equation
 %  +\frac{1}{4\pi}\frac{h_i}{2}Q_{i,R}^{\pm,k} \pec
 %\end{equation}
 \begin{equation}\lequ{S2ssL}
-  \mu^\pm\fn{\Psi^{\pm,k+1}_i - \Psi^{\pm,k+1}_{i-\half}}
-  +\sigma_{t,i,L}^k\frac{h_i}{2}\Psi\iL^{\pm,k+1}
-  -\frac{\sigma_{s,i,L}^k}{2}\frac{h_i}{2}\phi\iL^{k+1}
-  =\frac{h_i}{2}\Q_{i,L}^{\pm,k} \pec
+  \frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_i - \Psi^{\pm,k+1}_{i-\half}}
+  +\sigma_{t,i,L}^k\Psi\iL^{\pm,k+1}
+  -\frac{\sigma_{s,i,L}^k}{2}\phi\iL^{k+1}
+  =\Q_{i,L}^{\pm,k} \pec
 \end{equation}
 \begin{equation}\lequ{S2ssR}
-  \mu^\pm\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}
-  +\sigma_{t,i,R}^k\frac{h_i}{2}\Psi\iR^{\pm,k+1}
-  -\frac{\sigma_{s,i,R}^k}{2}\frac{h_i}{2}\phi\iR^{k+1}
-  =\frac{h_i}{2}\Q_{i,R}^{\pm,k} \pec
+  \frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}
+  +\sigma_{t,i,R}^k\Psi\iR^{\pm,k+1}
+  -\frac{\sigma_{s,i,R}^k}{2}\phi\iR^{k+1}
+  =\Q_{i,R}^{\pm,k} \pec
 \end{equation}
 where the cell center and edge fluxes are defined as
 %\begin{equation}
@@ -277,33 +277,33 @@ apply for the boundary elements $i=1$ and $i=N$:
 \begin{tabular}{|l||c|c|c|}\hline
           & $i-1,R,+$ & $i,L,-$ & $i,L,+$\\\hline\hline
   $i,L,-$ &
-          & $-\half\mu^- + \sigtL\halfh - \sigsL\halfh$
-          & $-\sigsL\halfh$ \\\hline
-  $i,L,+$ & $-\mu^+$ ($i\ne 1$)
-          & $-\sigsL\halfh$
-          & $\half\mu^+ + \sigtL\halfh - \sigsL\halfh$ \\\hline
+          & $-\frac{\mu^-}{h_i} + \sigtL - \sigsL$
+          & $-\sigsL$ \\\hline
+  $i,L,+$ & $-\frac{2\mu^+}{h_i}$ ($i\ne 1$)
+          & $-\sigsL$
+          & $\frac{\mu^+}{h_i} + \sigtL - \sigsL$ \\\hline
   $i,R,-$ &
-          & $-\half\mu^-$
+          & $-\frac{\mu^-}{h_i}$
           & \\\hline
   $i,R,+$ &
           &
-          & $-\half\mu^+$ \\\hline
+          & $-\frac{\mu^+}{h_i}$ \\\hline
 \end{tabular}
 \end{center}
 \begin{center}
 \begin{tabular}{|l||c|c|c|}\hline
           & $i,R,-$ & $i,R,+$ & $i+1,L,-$\\\hline\hline
-  $i,L,-$ & $\half\mu^-$
+  $i,L,-$ & $\frac{\mu^-}{h_i}$
           &
           & \\\hline
   $i,L,+$ &
-          & $\half\mu^+$
+          & $\frac{\mu^+}{h_i}$
           & \\\hline
-  $i,R,-$ & $-\half\mu^- + \sigtR\halfh - \sigsR\halfh$
-          & $-\sigsR\halfh$
-          & $\mu^-$ ($i\ne N$) \\\hline
-  $i,R,+$ & $-\sigsR\halfh$
-          & $\half\mu^+ + \sigtR\halfh - \sigsR\halfh$
+  $i,R,-$ & $-\frac{\mu^-}{h_i} + \sigtR - \sigsR$
+          & $-\sigsR$
+          & $\frac{2\mu^-}{h_i}$ ($i\ne N$) \\\hline
+  $i,R,+$ & $-\sigsR$
+          & $\frac{\mu^+}{h_i} + \sigtR - \sigsR$
           & \\\hline
 \end{tabular}
 \end{center}
@@ -314,18 +314,18 @@ correspond:
 \begin{center}
 \begin{tabular}{|l||c|c|c|}\hline
           & $i=1$ & $i=2\ldots N-1$ & $i=N$\\\hline\hline
-  $i,L,-$ & $\frac{h_i}{2}\Q^-_{i,L}$
-          & $\frac{h_i}{2}\Q^-_{i,L}$
-          & $\frac{h_i}{2}\Q^-_{i,L}$ \\\hline
-  $i,L,+$ & $\frac{h_i}{2}\Q^+_{i,L} + \mu^+\Psi^+_{inc}$
-          & $\frac{h_i}{2}\Q^+_{i,L}$
-          & $\frac{h_i}{2}\Q^+_{i,L}$ \\\hline
-  $i,R,-$ & $\frac{h_i}{2}\Q^-_{i,R}$
-          & $\frac{h_i}{2}\Q^-_{i,R}$
-          & $\frac{h_i}{2}\Q^-_{i,R} - \mu^-\Psi^-_{inc}$ \\\hline
-  $i,R,+$ & $\frac{h_i}{2}\Q^+_{i,R}$
-          & $\frac{h_i}{2}\Q^+_{i,R}$
-          & $\frac{h_i}{2}\Q^+_{i,R}$ \\\hline
+  $i,L,-$ & $\Q^-_{i,L}$
+          & $\Q^-_{i,L}$
+          & $\Q^-_{i,L}$ \\\hline
+  $i,L,+$ & $\Q^+_{i,L} + \frac{2\mu^+}{h_i}\Psi^+_{inc}$
+          & $\Q^+_{i,L}$
+          & $\Q^+_{i,L}$ \\\hline
+  $i,R,-$ & $\Q^-_{i,R}$
+          & $\Q^-_{i,R}$
+          & $\Q^-_{i,R} - \frac{2\mu^-}{h_i}\Psi^-_{inc}$ \\\hline
+  $i,R,+$ & $\Q^+_{i,R}$
+          & $\Q^+_{i,R}$
+          & $\Q^+_{i,R}$ \\\hline
 \end{tabular}
 \end{center}
 The incoming boundary fluxes $\Psi^\pm_{inc}$ are computed from the
@@ -359,16 +359,16 @@ and \requ{S2ssR}:
 %\lequ{S2trR}
 %\end{equation}
 \begin{equation}\lequ{S2trL}
-  \beta\mu^\pm\fn{\Psi^{\pm,k+1}_i - \Psi^{\pm,k+1}_{i-\half}}
-  +\fn{\beta\sigma_{t,i,L}^k\frac{h_i}{2} + \alpha}\Psi\iL^{\pm,k+1}
-  -\beta\frac{\sigma_{s,i,L}^k}{2}\frac{h_i}{2}\phi\iL^{k+1}
-  =\frac{h_i}{2}\tilde{\Q}_{i,L}^{\pm,k} \pec
+  \beta\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_i - \Psi^{\pm,k+1}_{i-\half}}
+  +\fn{\beta\sigma_{t,i,L}^k + \alpha}\Psi\iL^{\pm,k+1}
+  -\beta\frac{\sigma_{s,i,L}^k}{2}\phi\iL^{k+1}
+  =\tilde{\Q}_{i,L}^{\pm,k} \pec
 \end{equation}
 \begin{equation}\lequ{S2trR}
-  \beta\mu^\pm\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}
-  +\fn{\beta\sigma_{t,i,R}^k\frac{h_i}{2} + \alpha}\Psi\iR^{\pm,k+1}
-  -\beta\frac{\sigma_{s,i,R}^k}{2}\frac{h_i}{2}\phi\iR^{k+1}
-  =\frac{h_i}{2}\tilde{\Q}_{i,R}^{\pm,k} \pec
+  \beta\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}
+  +\fn{\beta\sigma_{t,i,R}^k + \alpha}\Psi\iR^{\pm,k+1}
+  -\beta\frac{\sigma_{s,i,R}^k}{2}\phi\iR^{k+1}
+  =\tilde{\Q}_{i,R}^{\pm,k} \pec
 \end{equation}
 where $\alpha$, $\beta$, and $\tilde{\Q}^\pm$ depend on the time
 discretization used.
@@ -565,14 +565,14 @@ $t^n\rightarrow t^{n+1}$ are
 %\end{split}\end{equation}
 \begin{equation}\lequ{S2CNfullL}\begin{split}
   \frac{1}{c}\frac{\Psi\iL^{\pm,k+1}-\Psi\iL^{\pm,n}}{\dt} = &
-  -\half\mu^\pm\fn{\Psi^{\pm,n}_i - \Psi^{\pm,n}_{i-\half}}
-  -\half\mu^\pm\fn{\Psi^{\pm,k+1}_i - \Psi^{\pm,k+1}_{i-\half}}\\
-  &-\half\sigma_{t,i,L}^n\frac{h_i}{2}\Psi\iL^{\pm,n}
-   -\half\sigma_{t,i,L}^k\frac{h_i}{2}\Psi\iL^{\pm,k+1}\\
-  &+\half\frac{\sigma_{s,i,L}^n}{2}\frac{h_i}{2}\phi\iL^n
-   +\half\frac{\sigma_{s,i,L}^k}{2}\frac{h_i}{2}\phi\iL^{k+1}\\
-  &+\half\frac{h_i}{2}\Q_{i,L}^{\pm,n}
-   +\half\frac{h_i}{2}\Q_{i,L}^{\pm,k} \pec
+  -\half\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,n}_i - \Psi^{\pm,n}_{i-\half}}
+  -\half\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_i - \Psi^{\pm,k+1}_{i-\half}}\\
+  &-\half\sigma_{t,i,L}^n\Psi\iL^{\pm,n}
+   -\half\sigma_{t,i,L}^k\Psi\iL^{\pm,k+1}\\
+  &+\half\frac{\sigma_{s,i,L}^n}{2}\phi\iL^n
+   +\half\frac{\sigma_{s,i,L}^k}{2}\phi\iL^{k+1}\\
+  &+\half\Q_{i,L}^{\pm,n}
+   +\half\Q_{i,L}^{\pm,k} \pec
 \end{split}\end{equation}
 
 %\begin{equation}\lequ{S2CNfullR}\begin{split}
@@ -588,14 +588,14 @@ $t^n\rightarrow t^{n+1}$ are
 %\end{split}\end{equation}
 \begin{equation}\lequ{S2CNfullR}\begin{split}
   \frac{1}{c}\frac{\Psi\iR^{\pm,k+1}-\Psi\iR^{\pm,n}}{\dt} = &
-  -\half\mu^\pm\fn{\Psi^{\pm,n}_{i+\half} - \Psi^{\pm,n}_i}
-  -\half\mu^\pm\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}\\
-  &-\half\sigma_{t,i,R}^n\frac{h_i}{2}\Psi\iR^{\pm,n}
-   -\half\sigma_{t,i,R}^k\frac{h_i}{2}\Psi\iR^{\pm,k+1}\\
-  &+\half\frac{\sigma_{s,i,R}^n}{2}\frac{h_i}{2}\phi\iR^n
-   +\half\frac{\sigma_{s,i,R}^k}{2}\frac{h_i}{2}\phi\iR^{k+1}\\
-  &+\half\frac{h_i}{2}\Q_{i,R}^{\pm,n}
-   +\half\frac{h_i}{2}\Q_{i,R}^{\pm,k} \pec
+  -\half\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,n}_{i+\half} - \Psi^{\pm,n}_i}
+  -\half\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}\\
+  &-\half\sigma_{t,i,R}^n\Psi\iR^{\pm,n}
+   -\half\sigma_{t,i,R}^k\Psi\iR^{\pm,k+1}\\
+  &+\half\frac{\sigma_{s,i,R}^n}{2}\phi\iR^n
+   +\half\frac{\sigma_{s,i,R}^k}{2}\phi\iR^{k+1}\\
+  &+\half\Q_{i,R}^{\pm,n}
+   +\half\Q_{i,R}^{\pm,k} \pec
 \end{split}\end{equation}
 
 These equations can be solved by solving steady-state S$_2$ equations
@@ -618,8 +618,8 @@ the following definitions:
 %\end{multline}
 \begin{multline}
   \tilde{\Q}_{i,L}^{\pm,k}
-  = \frac{2}{h_i}\frac{\Psi\iL^{\pm,n}}{c\dt}
-  - \frac{1}{h_i}\mu^\pm\fn{\Psi_i^{\pm,n} - \Psi_{i-\half}^{\pm,n}}
+  = \frac{\Psi\iL^{\pm,n}}{c\dt}
+  - \half\frac{2\mu^\pm}{h_i}\fn{\Psi_i^{\pm,n} - \Psi_{i-\half}^{\pm,n}}
   - \half\sigma_{t,i,L}^n\Psi\iL^{\pm,n}\\
   + \half\frac{\sigma_{s,i,L}^n}{2}\phi\iL^n
   + \half\Q\iL^{\pm,n}
@@ -627,8 +627,8 @@ the following definitions:
 \end{multline}
 \begin{multline}
   \tilde{\Q}_{i,R}^{\pm,k}
-  = \frac{2}{h_i}\frac{\Psi\iR^{\pm,n}}{c\dt}
-  - \frac{1}{h_i}\mu^\pm\fn{\Psi_{i+\half}^{\pm,n} - \Psi_i^{\pm,n}}
+  = \frac{\Psi\iR^{\pm,n}}{c\dt}
+  - \half\frac{2\mu^\pm}{h_i}\fn{\Psi_{i+\half}^{\pm,n} - \Psi_i^{\pm,n}}
   - \half\sigma_{t,i,R}^n\Psi\iR^{\pm,n}\\
   + \half\frac{\sigma_{s,i,R}^n}{2}\phi\iR^n
   + \half\Q\iR^{\pm,n}
@@ -656,18 +656,18 @@ $t^{n}\rightarrow t^{n+1}$ are
 %\end{split}\end{equation}
 \begin{equation}\lequ{S2BDF2fullL}\begin{split}
   \frac{1}{c}\frac{\Psi\iL^{\pm,k+1}-\Psi\iL^{\pm,n}}{\dt} = &
-   -\sixth\mu^\pm\fn{\Psi^{\pm,n-1}_i - \Psi^{\pm,n-1}_{i-\half}}
-   -\sixth\mu^\pm\fn{\Psi^{\pm,n}_i - \Psi^{\pm,n}_{i-\half}}\\
-  &-\frac{2}{3}\mu^\pm\fn{\Psi^{\pm,k+1}_i - \Psi^{\pm,k+1}_{i-\half}}\\
-  &-\sixth\sigma_{t,i,L}^{n-1}\frac{h_i}{2}\Psi\iL^{\pm,n-1}
-   -\sixth\sigma_{t,i,L}^{n}  \frac{h_i}{2}\Psi\iL^{\pm,n}
-   -\frac{2}{3}\sigma_{t,i,L}^k\frac{h_i}{2}\Psi\iL^{\pm,k+1}\\
-  &+\sixth\frac{\sigma_{s,i,L}^{n-1}}{2}\frac{h_i}{2}\phi\iL^{n-1}
-   +\sixth\frac{\sigma_{s,i,L}^{n}}{2}  \frac{h_i}{2}\phi\iL^{n}
-   +\frac{2}{3}\frac{\sigma_{s,i,L}^k}{2}\frac{h_i}{2}\phi\iL^{k+1}\\
-  &+\sixth\frac{h_i}{2}\Q_{i,L}^{\pm,n-1}
-   +\sixth\frac{h_i}{2}\Q_{i,L}^{\pm,n}
-   +\frac{2}{3}\frac{h_i}{2}\Q_{i,L}^{\pm,k} \pec
+   -\sixth     \frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,n-1}_i - \Psi^{\pm,n-1}_{i-\half}}
+   -\sixth     \frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,n}_i   - \Psi^{\pm,n}_{i-\half}}\\
+  &-\frac{2}{3}\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_i - \Psi^{\pm,k+1}_{i-\half}}\\
+  &-\sixth\sigma_{t,i,L}^{n-1}\Psi\iL^{\pm,n-1}
+   -\sixth\sigma_{t,i,L}^{n}  \Psi\iL^{\pm,n}
+   -\frac{2}{3}\sigma_{t,i,L}^k\Psi\iL^{\pm,k+1}\\
+  &+\sixth\frac{\sigma_{s,i,L}^{n-1}}{2}\phi\iL^{n-1}
+   +\sixth\frac{\sigma_{s,i,L}^{n}}{2}  \phi\iL^{n}
+   +\frac{2}{3}\frac{\sigma_{s,i,L}^k}{2}\phi\iL^{k+1}\\
+  &+\sixth\Q_{i,L}^{\pm,n-1}
+   +\sixth\Q_{i,L}^{\pm,n}
+   +\frac{2}{3}\Q_{i,L}^{\pm,k} \pec
 \end{split}\end{equation}
 
 %\begin{equation}\lequ{S2BDF2fullR}\begin{split}
@@ -687,18 +687,18 @@ $t^{n}\rightarrow t^{n+1}$ are
 %\end{split}\end{equation}
 \begin{equation}\lequ{S2BDF2fullR}\begin{split}
   \frac{1}{c}\frac{\Psi\iR^{\pm,k+1}-\Psi\iR^{\pm,n}}{\dt} = &
-   -\sixth\mu^\pm\fn{\Psi^{\pm,n-1}_{i+\half} - \Psi^{\pm,n-1}_i}
-   -\sixth\mu^\pm\fn{\Psi^{\pm,n}_{i+\half} - \Psi^{\pm,n}_i}\\
-  &-\frac{2}{3}\mu^\pm\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}\\
-  &-\sixth\sigma_{t,i,R}^{n-1}\frac{h_i}{2}\Psi\iR^{\pm,n-1}
-   -\sixth\sigma_{t,i,R}^{n}  \frac{h_i}{2}\Psi\iR^{\pm,n}
-   -\frac{2}{3}\sigma_{t,i,R}^k\frac{h_i}{2}\Psi\iR^{\pm,k+1}\\
-  &+\sixth\frac{\sigma_{s,i,R}^{n-1}}{2}\frac{h_i}{2}\phi\iR^{n-1}
-   +\sixth\frac{\sigma_{s,i,R}^{n}}{2}  \frac{h_i}{2}\phi\iR^{n}
-   +\frac{2}{3}\frac{\sigma_{s,i,R}^k}{2}\frac{h_i}{2}\phi\iR^{k+1}\\
-  &+\sixth\frac{h_i}{2}\Q_{i,R}^{\pm,n-1}
-   +\sixth\frac{h_i}{2}\Q_{i,R}^{\pm,n}
-   +\frac{2}{3}\frac{h_i}{2}\Q_{i,R}^{\pm,k} \pec
+   -\sixth     \frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,n-1}_{i+\half} - \Psi^{\pm,n-1}_i}
+   -\sixth     \frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,n}_{i+\half}   - \Psi^{\pm,n}_i}\\
+  &-\frac{2}{3}\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}\\
+  &-\sixth\sigma_{t,i,R}^{n-1}\Psi\iR^{\pm,n-1}
+   -\sixth\sigma_{t,i,R}^{n}  \Psi\iR^{\pm,n}
+   -\frac{2}{3}\sigma_{t,i,R}^k\Psi\iR^{\pm,k+1}\\
+  &+\sixth\frac{\sigma_{s,i,R}^{n-1}}{2}\phi\iR^{n-1}
+   +\sixth\frac{\sigma_{s,i,R}^{n}}{2}  \phi\iR^{n}
+   +\frac{2}{3}\frac{\sigma_{s,i,R}^k}{2}\phi\iR^{k+1}\\
+  &+\sixth\Q_{i,R}^{\pm,n-1}
+   +\sixth\Q_{i,R}^{\pm,n}
+   +\frac{2}{3}\Q_{i,R}^{\pm,k} \pec
 \end{split}\end{equation}
 
 These equations can be solved by solving steady-state S$_2$ equations
@@ -727,9 +727,9 @@ the following definitions:
 %\end{split}\end{equation}
 \begin{multline}
   \tilde{\Q}_{i,L}^{\pm,k}
-  = \frac{2}{h_i}\frac{\Psi\iL^{\pm,n}}{c\dt}
-  - \frac{1}{3h_i}\mu^\pm\fn{\Psi_i^{\pm,n-1} - \Psi_{i-\half}^{\pm,n-1}}
-  - \frac{1}{3h_i}\mu^\pm\fn{\Psi_i^{\pm,n} - \Psi_{i-\half}^{\pm,n}}\\
+  = \frac{\Psi\iL^{\pm,n}}{c\dt}
+  - \sixth\frac{2\mu^\pm}{h_i}\fn{\Psi_i^{\pm,n-1} - \Psi_{i-\half}^{\pm,n-1}}
+  - \sixth\frac{2\mu^\pm}{h_i}\fn{\Psi_i^{\pm,n} - \Psi_{i-\half}^{\pm,n}}\\
   - \sixth\sigma_{t,i,L}^{n-1}\Psi\iL^{\pm,n-1}
   - \sixth\sigma_{t,i,L}^n    \Psi\iL^{\pm,n}
   + \sixth\frac{\sigma_{s,i,L}^{n-1}}{2}\phi\iL^{n-1}
@@ -740,9 +740,9 @@ the following definitions:
 \end{multline}
 \begin{multline}
   \tilde{\Q}_{i,R}^{\pm,k}
-  = \frac{2}{h_i}\frac{\Psi\iR^{\pm,n}}{c\dt}
-  - \frac{1}{3h_i}\mu^\pm\fn{\Psi_{i+\half}^{\pm,n-1} - \Psi_i^{\pm,n-1}}
-  - \frac{1}{3h_i}\mu^\pm\fn{\Psi_{i+\half}^{\pm,n}   - \Psi_i^{\pm,n}}\\
+  = \frac{\Psi\iR^{\pm,n}}{c\dt}
+  - \sixth\frac{2\mu^\pm}{h_i}\fn{\Psi_{i+\half}^{\pm,n-1} - \Psi_i^{\pm,n-1}}
+  - \sixth\frac{2\mu^\pm}{h_i}\fn{\Psi_{i+\half}^{\pm,n}   - \Psi_i^{\pm,n}}\\
   - \sixth\sigma_{t,i,R}^{n-1}\Psi\iR^{\pm,n-1}
   - \sixth\sigma_{t,i,R}^n    \Psi\iR^{\pm,n}
   + \sixth\frac{\sigma_{s,i,R}^{n-1}}{2}\phi\iR^{n-1}

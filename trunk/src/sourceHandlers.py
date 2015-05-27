@@ -181,9 +181,7 @@ class OldIntensitySrc(SourceHandler):
         Q[iRminus] = psi_minus_old[i][1] 
         Q[iLplus]  = psi_plus_old[i][0]   
         Q[iRplus]  = psi_plus_old[i][1]
-        #SIMON return Q*(1./self.c_dt)
-        h = self.mesh.getElement(i).dx
-        return Q*(1./self.c_dt*2.0/h)
+        return Q*(1./self.c_dt)
 
 
 #====================================================================================

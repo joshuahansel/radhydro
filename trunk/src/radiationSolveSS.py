@@ -90,43 +90,43 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
 
        # Left control volume, minus direction
        row = np.zeros(n)
-       row[iLminus]    = -0.5*beta*mu["-"] + (0.5*h*beta*cx_tL+diag_add_term) - 0.25*beta*cx_sL*h
-       row[iLplus]     = -0.25*beta*cx_sL*h
-       row[iRminus]    = 0.5*beta*mu["-"]
+       row[iLminus]    = -beta*mu["-"]/h + (beta*cx_tL + diag_add_term) - 0.5*beta*cx_sL
+       row[iLplus]     = -0.5*beta*cx_sL
+       row[iRminus]    = beta*mu["-"]/h
        matrix[iLminus] = row
-       rhs[iLminus]    = 0.5*h*QLminus
+       rhs[iLminus]    = QLminus
       
        # Left control volume, plus direction
        row = np.zeros(n)
        if i == 0:
-          rhs[iLplus] = beta*mu["+"]*bc_psi_left
+          rhs[iLplus] = 2.0*beta*mu["+"]/h*bc_psi_left
        else:
-          row[iprevRplus] = -beta*mu["+"]
-       row[iLminus]    = -0.25*beta*cx_sL*h
-       row[iLplus]     = 0.5*beta*mu["+"] + (0.5*h*beta*cx_tL+diag_add_term) - 0.25*beta*cx_sL*h
-       row[iRplus]     = 0.5*beta*mu["+"]
+          row[iprevRplus] = -2.0*beta*mu["+"]/h
+       row[iLminus]    = -0.5*beta*cx_sL
+       row[iLplus]     = beta*mu["+"]/h + (beta*cx_tL + diag_add_term) - 0.5*beta*cx_sL
+       row[iRplus]     = beta*mu["+"]/h
        matrix[iLplus]  = row
-       rhs[iLplus]    += 0.5*h*QLplus
+       rhs[iLplus]    += QLplus
 
        # Right control volume, minus direction
        row = np.zeros(n)
-       row[iLminus]     = -0.5*beta*mu["-"]
-       row[iRminus]     = -0.5*beta*mu["-"] + (0.5*h*beta*cx_tR+diag_add_term) - 0.25*beta*cx_sR*h
-       row[iRplus]      = -0.25*beta*cx_sR*h
+       row[iLminus]     = -beta*mu["-"]/h
+       row[iRminus]     = -beta*mu["-"]/h + (beta*cx_tR + diag_add_term) - 0.5*beta*cx_sR
+       row[iRplus]      = -0.5*beta*cx_sR
        if i == mesh.n_elems-1:
-          rhs[iRminus] = -beta*mu["-"]*bc_psi_right
+          rhs[iRminus] = -2.0*beta*mu["-"]/h*bc_psi_right
        else:
-          row[inextLminus] = beta*mu["-"]
+          row[inextLminus] = 2.0*beta*mu["-"]/h
        matrix[iRminus]  = row
-       rhs[iRminus]    += 0.5*h*QRminus
+       rhs[iRminus]    += QRminus
 
        # Right control volume, plus direction
        row = np.zeros(n)
-       row[iLplus]      = -0.5*beta*mu["+"]
-       row[iRminus]     = -0.25*beta*cx_sR*h
-       row[iRplus]      = 0.5*beta*mu["+"] + (0.5*h*beta*cx_tR+diag_add_term) - 0.25*beta*cx_sR*h
+       row[iLplus]      = -beta*mu["+"]/h
+       row[iRminus]     = -0.5*beta*cx_sR
+       row[iRplus]      = beta*mu["+"]/h + (beta*cx_tR + diag_add_term) - 0.5*beta*cx_sR
        matrix[iRplus]   = row
-       rhs[iRplus]      = 0.5*h*QRplus
+       rhs[iRplus]      = QRplus
 
     # solve linear system
     solution = np.linalg.solve(matrix, rhs)
