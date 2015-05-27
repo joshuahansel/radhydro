@@ -29,7 +29,7 @@ def solveRadProblem():
     # transient options
     dt = 0.1
     t  = 0.0
-    t_end = 10.0
+    t_end = 0.1
 
     # create the steady-state source
     Q_iso = 5.
@@ -58,16 +58,26 @@ def solveRadProblem():
 
     # run transient solution from arbitrary IC to see if it reaches
     # the same steady-state
-    psi_p_i = psi_plusSS[mesh.n_elems/2][0]*0.5
-    psi_m_i = psi_minusSS[mesh.n_elems/2][0]*0.5
+    #psi_p_i = psi_plusSS[mesh.n_elems/2][0]*0.5
+    #psi_m_i = psi_minusSS[mesh.n_elems/2][0]*0.5
+    psi_p_i = psi_plusSS[mesh.n_elems/2][0]
+    psi_m_i = psi_minusSS[mesh.n_elems/2][0]
     psi_plus_old  = [(psi_p_i,psi_p_i) for i in range(mesh.n_elems)]
     psi_minus_old = [(psi_m_i,psi_m_i) for i in range(mesh.n_elems)] 
     E_old = [(GC.SPD_OF_LGT*(psi_plus_old[i][0] + psi_minus_old[i][0]),
               GC.SPD_OF_LGT*(psi_plus_old[i][1] + psi_minus_old[i][1]))  for i in
             range(len(psi_plus_old))]
-    while t <= t_end:
 
+    #phiSS = computeScalarFlux(psi_plusSS, psi_minusSS)
+    #plotScalarFlux(mesh, psi_minus_old, psi_plus_old, scalar_flux_exact=phiSS,
+    #   exact_data_continuous=False)
+
+    # transient loop
+    while t < t_end:
+
+        print("t = %0.3f -> %0.3f" % (t,t+dt))
         t += dt # new time
+
         react_term = 1./(GC.SPD_OF_LGT*dt)
 
         # Create the sources for time stepper
