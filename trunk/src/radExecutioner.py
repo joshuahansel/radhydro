@@ -56,11 +56,14 @@ def solveRadProblem():
     plotScalarFlux(mesh, psi_minusSS, psi_plusSS)
 
     #now run transient solution from arbitrary starting and see if it gives back the same answera    = n
-    psi_plus_old   = np.array([psi_plusSS[mesh.n_elems/2]*0.5 for i in
-        range(mesh.n_elems) ] )
-    psi_minus_old  =  np.array([psi_plusSS[mesh.n_elems/2]*0.25 for i in
-        range(mesh.n_elems) ] ) 
-    E_old = [GC.SPD_OF_LGT*(psi_plus_old[i] + psi_minus_old[i]) for i in
+    psi_p_i= psi_plusSS[mesh.n_elems/2]*0.5
+    psi_m_i= psi_minusSS[mesh.n_elems/2]*0.25
+    psi_plus_old   = [(psi_p_i,psi_p_i) for i in
+        range(mesh.n_elems) ]
+    psi_minus_old  =  [(psi_m_i,psi_m_i) for i in
+        range(mesh.n_elems) ] 
+    E_old = [(GC.SPD_OF_LGT*(psi_plus_old[i][0] + psi_minus_old[i][0]),
+              GC.SPD_OF_LGT*(psi_plus_old[i][1] + psi_minus_old[i][1]))  for i in
             range(len(psi_plus_old))]
     while t <= t_end:
 
