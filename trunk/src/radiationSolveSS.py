@@ -20,7 +20,7 @@ import globalConstants as GC
 #                      with the same global numbering as $\Psi$ unknowns.
 #  @param[in] diag_add_term       \f$\alpha\f$ as defined in documentation for
 #                                 time-dependent solvers
-#  @param[in] diag_scale          \f$\beta\f$ as defined in documentation for
+#  @param[in] implicit_scale          \f$\beta\f$ as defined in documentation for
 #                                 time-dependent solvers
 #  @param[in] bound_curr_lt       left  boundary current data, \f$j^+\f$
 #  @param[in] bound_curr_rt       right boundary current data, \f$j^-\f$
@@ -33,7 +33,7 @@ import globalConstants as GC
 #          -# \f$\mathcal{E}\f$: radiation energy
 #          -# \f$\mathcal{F}\f$: radiation flux
 #
-def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, diag_scale=1.0,
+def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
     bound_curr_lt=0.0, bound_curr_rt=0.0,
     bc_psi_left = None, bc_psi_right = None):
 
@@ -41,7 +41,7 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, diag_scale=1.0,
     mu = {"-" : -1/math.sqrt(3), "+" : 1/math.sqrt(3)}
 
     # abbreviation for the scale term
-    ds = diag_scale
+    beta = implicit_scale
 
     # compute boundary fluxes based on incoming currents if there is no specified
     # fluxes.  If fluxes are specified, they will overwrite current value. Default 
@@ -90,41 +90,41 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, diag_scale=1.0,
 
        # Left control volume, minus direction
        row = np.zeros(n)
-       row[iLminus]    = -0.5*ds*mu["-"] + 0.5*(ds*cx_tL+diag_add_term)*h - 0.25*ds*cx_sL*h
-       row[iLplus]     = -0.25*ds*cx_sL*h
-       row[iRminus]    = 0.5*ds*mu["-"]
+       row[iLminus]    = -0.5*beta*mu["-"] + 0.5*(beta*cx_tL+diag_add_term)*h - 0.25*beta*cx_sL*h
+       row[iLplus]     = -0.25*beta*cx_sL*h
+       row[iRminus]    = 0.5*beta*mu["-"]
        matrix[iLminus] = row
        rhs[iLminus]    = 0.5*h*QLminus
       
        # Left control volume, plus direction
        row = np.zeros(n)
        if i == 0:
-          rhs[iLplus] = ds*mu["+"]*bc_psi_left
+          rhs[iLplus] = beta*mu["+"]*bc_psi_left
        else:
-          row[iprevRplus] = -ds*mu["+"]
-       row[iLminus]    = -0.25*ds*cx_sL*h
-       row[iLplus]     = 0.5*ds*mu["+"] + 0.5*(ds*cx_tL+diag_add_term)*h - 0.25*ds*cx_sL*h
-       row[iRplus]     = 0.5*ds*mu["+"]
+          row[iprevRplus] = -beta*mu["+"]
+       row[iLminus]    = -0.25*beta*cx_sL*h
+       row[iLplus]     = 0.5*beta*mu["+"] + 0.5*(beta*cx_tL+diag_add_term)*h - 0.25*beta*cx_sL*h
+       row[iRplus]     = 0.5*beta*mu["+"]
        matrix[iLplus]  = row
        rhs[iLplus]    += 0.5*h*QLplus
 
        # Right control volume, minus direction
        row = np.zeros(n)
-       row[iLminus]     = -0.5*ds*mu["-"]
-       row[iRminus]     = -0.5*ds*mu["-"] + 0.5*(ds*cx_tR+diag_add_term)*h - 0.25*ds*cx_sR*h
-       row[iRplus]      = -0.25*ds*cx_sR*h
+       row[iLminus]     = -0.5*beta*mu["-"]
+       row[iRminus]     = -0.5*beta*mu["-"] + 0.5*(beta*cx_tR+diag_add_term)*h - 0.25*beta*cx_sR*h
+       row[iRplus]      = -0.25*beta*cx_sR*h
        if i == mesh.n_elems-1:
-          rhs[iRminus] = -ds*mu["-"]*bc_psi_right
+          rhs[iRminus] = -beta*mu["-"]*bc_psi_right
        else:
-          row[inextLminus] = ds*mu["-"]
+          row[inextLminus] = beta*mu["-"]
        matrix[iRminus]  = row
        rhs[iRminus]    += 0.5*h*QRminus
 
        # Right control volume, plus direction
        row = np.zeros(n)
-       row[iLplus]      = -0.5*ds*mu["+"]
-       row[iRminus]     = -0.25*ds*cx_sR*h
-       row[iRplus]      = 0.5*ds*mu["+"] + 0.5*(ds*cx_tR+diag_add_term)*h - 0.25*ds*cx_sR*h
+       row[iLplus]      = -0.5*beta*mu["+"]
+       row[iRminus]     = -0.25*beta*cx_sR*h
+       row[iRplus]      = 0.5*beta*mu["+"] + 0.5*(beta*cx_tR+diag_add_term)*h - 0.25*beta*cx_sR*h
        matrix[iRplus]   = row
        rhs[iRplus]      = 0.5*h*QRplus
 

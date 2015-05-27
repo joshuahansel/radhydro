@@ -31,8 +31,8 @@ def solveRadProblem():
     #consistent BC's, eventually lets just switch to psi's and forget the currents
     Q_iso = 5.
     from math import pi
-    psi_left = Q_iso/(2.*sig_a)*0.5
-    psi_right = Q_iso/(2.*sig_a)*0.9
+    psi_left = Q_iso/(2.*sig_a)
+    psi_right = Q_iso/(2.*sig_a)
 
     # call radiation solver to get the steady state solution
     Q = []
@@ -56,8 +56,8 @@ def solveRadProblem():
     plotScalarFlux(mesh, psi_minusSS, psi_plusSS)
 
     #now run transient solution from arbitrary starting and see if it gives back the same answera    = n
-    psi_p_i= psi_plusSS[mesh.n_elems/2]*0.5
-    psi_m_i= psi_minusSS[mesh.n_elems/2]*0.25
+    psi_p_i= psi_plusSS[mesh.n_elems/2][0]*0.5
+    psi_m_i= psi_minusSS[mesh.n_elems/2][0]*0.5
     psi_plus_old   = [(psi_p_i,psi_p_i) for i in
         range(mesh.n_elems) ]
     psi_minus_old  =  [(psi_m_i,psi_m_i) for i in
@@ -71,7 +71,7 @@ def solveRadProblem():
         react_term = 1./(GC.SPD_OF_LGT*dt)
 
         # Create the sources for time stepper
-        ts = "BE" #timestepper
+        ts = "CN" #timestepper
         source_handles = [OldIntensitySrc(mesh, dt, ts), 
                           StreamingSrc(mesh, dt, ts),
                           ReactionSrc(mesh, dt, ts),
@@ -84,10 +84,10 @@ def solveRadProblem():
         Q_tot = np.array(Q)
         for src in source_handles:
 
-            # build src for this term
+            # build src for this handler
             Q_new = src.buildSource(psi_plus_old = psi_plus_old, psi_minus_old = 
                     psi_minus_old, bc_flux_left = psi_left, bc_flux_right = psi_right,
-                    cx_old = cross_sects,)
+                    cx_old = cross_sects,E_old = E_old)
          #   print "src", src
          #   print "Q_new: "
          #   print Q_new
@@ -98,11 +98,13 @@ def solveRadProblem():
 
         #solve the system
         psi_minus, psi_plus, E, F = radiationSolveSS(mesh, cross_sects, Q_tot,
-                bc_psi_left = psi_left, bc_psi_right = psi_right, diag_add_term = react_term)
+                bc_psi_left = psi_left, bc_psi_right = psi_right, diag_add_term =
+                react_term, implicit_scale = diag_terms[ts] )
 
 
         psi_plus_old = deepcopy(psi_plus)
         psi_minus_old = deepcopy(psi_minus)
+        E_old = deepcopy(E)
 
         print sum([(psi_plus[i][0]- psi_plusSS[i][0])/psi_plus[i][0] for i in range(len(psi_plus_old))])
 
@@ -122,9 +124,9 @@ def solveRadProblem():
   #  print "Psi TR + : ", psi_plus
   #  print "Psi SS - : ", psi_minusSS
   #  print "Psi TR - : ", psi_minus
-  #  print "Diff in averages: ", [(phiSSi[i] - phiTRi[i])/phiSSi[i] for i in range(len(phiSS))]
-  #  print "Diff in edge: ", [phiSS[i][0] - phiTR[i][0] for i in range(len(phiSS))]
-  #  print "Diff in edge: ", [phiSS[i][1] - phiTR[i][1] for i in range(len(phiSS))]
+    print "Diff in averages: ", [(phiSSi[i] - phiTRi[i])/phiSSi[i] for i in range(len(phiSS))]
+    print "Diff in edge: ", [phiSS[i][0] - phiTR[i][0] for i in range(len(phiSS))]
+    print "Diff in edge: ", [phiSS[i][1] - phiTR[i][1] for i in range(len(phiSS))]
     
 
 if __name__ == "__main__":

@@ -237,12 +237,14 @@ class StreamingSrc(SourceHandler):
         psi_i_p = 0.5*(psi_L_p + psi_R_p)
 
         #Evaluate \f$ \my d\psi/dx \f$ at t_n. The minus is because on RHS of eq.
-        print psi_i_m, psi_L_m
 
-        Q[iLminus] = -1.*mu["-"]*(psi_i_m - psi_L_m)
-        Q[iLplus]  = -1.*mu["+"]*(psi_i_p - psi_L_face)
-        Q[iRminus] = -1.*mu["-"]*(psi_R_face - psi_i_m)
-        Q[iRplus]  = -1.*mu["+"]*(psi_R_p - psi_i_p)
+        #need to divide by h/2 to correct for artificial scaling in solver
+        h_x_2 = self.mesh.getElement(i).dx/2.
+
+        Q[iLminus] = -1.*mu["-"]*(psi_i_m - psi_L_m)/h_x_2
+        Q[iLplus]  = -1.*mu["+"]*(psi_i_p - psi_L_face)/h_x_2
+        Q[iRminus] = -1.*mu["-"]*(psi_R_face - psi_i_m)/h_x_2
+        Q[iRplus]  = -1.*mu["+"]*(psi_R_p - psi_i_p)/h_x_2
 
         return Q
 
@@ -332,8 +334,8 @@ class ScatteringSrc(SourceHandler):
         sig_s_r = cx_old[i][1].sig_s
 
         #Get all the indices, this is basically redundant
-        phi_L = E_old[i][0]*c
-        phi_R = E_old[i][1]*c
+        phi_L = E_old[i][0]*self.c
+        phi_R = E_old[i][1]*self.c
 
         iLminus     = getLocalIndex("L","-") # dof i,  L,-
         iLplus      = getLocalIndex("L","+") # dof i,  L,+
