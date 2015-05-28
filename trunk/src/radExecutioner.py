@@ -18,18 +18,18 @@ def solveRadProblem():
 
     #-------------------------------------------------------------------------------
     # create uniform mesh
-    mesh = Mesh(100, 5.)
+    mesh = Mesh(50, 5.)
 
     # compute uniform cross sections
-    sig_s = 10.0
+    sig_s = 1.0
     sig_a = 2.0
     cross_sects = [(CrossXInterface(sig_a, sig_s), CrossXInterface(sig_a, sig_s))
                   for i in xrange(mesh.n_elems)]
 
     # transient options
-    dt = 0.1
+    dt = 0.05
     t  = 0.0
-    t_end = 0.1
+    t_end = 100.
 
     # create the steady-state source
     Q_iso = 5.
@@ -45,12 +45,14 @@ def solveRadProblem():
 
     # consistent BC's, eventually lets just switch to psi's and forget the currents
     # Here, boundary fluxes are designed to recover a constant solution.
-    psi_left  = Q_iso/(2.*sig_a)
-    psi_right = Q_iso/(2.*sig_a)
+    psi_left  = Q_iso/(2.*sig_a)*2.30
+    psi_right = Q_iso/(2.*sig_a)*2.0
 
     # compute the steady-state solution
     psi_minusSS, psi_plusSS, E, F = radiationSolveSS(mesh, cross_sects, Q,
             bc_psi_right = psi_right, bc_psi_left = psi_left)
+
+    #plotScalarFlux(mesh, psi_minusSS, psi_plusSS)
 
     #print "Psi_minusSS", psi_minusSS
     #print "Psi_plusSS", psi_plusSS
@@ -64,9 +66,11 @@ def solveRadProblem():
     psi_m_i = psi_minusSS[mesh.n_elems/2][0]
     psi_plus_old  = [(psi_p_i,psi_p_i) for i in range(mesh.n_elems)]
     psi_minus_old = [(psi_m_i,psi_m_i) for i in range(mesh.n_elems)] 
-    E_old = [(GC.SPD_OF_LGT*(psi_plus_old[i][0] + psi_minus_old[i][0]),
-              GC.SPD_OF_LGT*(psi_plus_old[i][1] + psi_minus_old[i][1]))  for i in
+    E_old = [(1./GC.SPD_OF_LGT*(psi_plus_old[i][0] + psi_minus_old[i][0]),
+              1./GC.SPD_OF_LGT*(psi_plus_old[i][1] + psi_minus_old[i][1]))  for i in
             range(len(psi_plus_old))]
+
+    psi_plus_older = psi_plus_old[:]
 
     #phiSS = computeScalarFlux(psi_plusSS, psi_minusSS)
     #plotScalarFlux(mesh, psi_minus_old, psi_plus_old, scalar_flux_exact=phiSS,
@@ -133,8 +137,8 @@ def solveRadProblem():
   #  print "Psi SS - : ", psi_minusSS
   #  print "Psi TR - : ", psi_minus
     #print "Diff in averages: ", [(phiSSi[i] - phiTRi[i])/phiSSi[i] for i in range(len(phiSS))]
-    print "Diff in edge: ", [phiSS[i][0] - phiTR[i][0] for i in range(len(phiSS))]
-    print "Diff in edge: ", [phiSS[i][1] - phiTR[i][1] for i in range(len(phiSS))]
+    print "Diff in edge: ", [(phiSS[i][0] - phiTR[i][0])/phiSS[i][0] for i in range(len(phiSS))]
+    print "Diff in edge: ", [(phiSS[i][1] - phiTR[i][1])/phiSS[i][1] for i in range(len(phiSS))]
     
 
 if __name__ == "__main__":

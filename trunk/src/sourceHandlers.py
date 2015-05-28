@@ -330,7 +330,8 @@ class ScatteringSrc(SourceHandler):
 
     #--------------------------------------------------------------------------------
     ## At time \f$t_n\f$, there is a isotropic scattering source
-    def evalOld(self, i, E_old=None, cx_old = None, **kwargs):
+    def evalOld(self, i, E_old=None, cx_old = None, psi_minus_old=None,
+            psi_plus_old=None, **kwargs):
 
         #Get scattering cross section
         sig_s_l = cx_old[i][0].sig_s

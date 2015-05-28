@@ -2,6 +2,7 @@
 #  Provides functions for plotting radiation and hydrodynamics solutions.
 
 import matplotlib.pyplot as plt
+import globalConstants as GC
 import numpy as np
 from numpy import array
 import operator           # for adding tuples to each other elementwise
@@ -142,6 +143,26 @@ def computeScalarFlux(psi_minus, psi_plus):
    scalar_flux = [tuple(y for y in tuple(map(operator.add, psi_minus[i], psi_plus[i]))
                        ) for i in xrange(len(psi_minus))]
    return scalar_flux
+
+## Function to compute energy density E from angular fluxes.
+#
+#  @param[in] psi_minus S-2 angular flux solution for the minus direction
+#                       multiplied by \f$2\pi\f$, i.e.,
+#                       \f$\Psi^-\f$, passed as an array of tuples of left
+#                       and right values, e.g., psi_minus[i]\f$=(\Psi^-_{i,L},
+#                       \Psi^-_{i,R})\f$
+#  @param[in] psi_plus  S-2 angular flux solution for the plus direction
+#                       multiplied by \f$2\pi\f$, i.e.,
+#                       \f$\Psi^+\f$, passed as an array of tuples of left
+#                       and right values, e.g., psi_plus[i]\f$=(\Psi^+_{i,L},
+#                       \Psi^+_{i,R})\f$
+#  @return  energy density, \f$E\f$, as an array of tuples of left
+#           and right values, e.g., E[i]\f$=(E_{i,L},E_{i,R})\f$
+#
+def computeEnergyDensity(psi_minus, psi_plus):
+   E = [tuple((1./GC.SPD_OF_LGT)*y for y in tuple(map(operator.add, psi_minus[i], psi_plus[i]))
+                       ) for i in xrange(len(psi_minus))]
+   return E
 
 ## Function to transform mesh into discontinuous x-points for plotting.
 #

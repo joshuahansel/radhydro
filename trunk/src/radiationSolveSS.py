@@ -7,7 +7,7 @@ import numpy as np
 from numpy import array
 from mesh import Mesh
 from utilityFunctions import getIndex
-from plotUtilities import computeScalarFlux
+from plotUtilities import computeScalarFlux, computeEnergyDensity
 import globalConstants as GC
 
 ## Steady-state solve function for the S-2 equations.
@@ -136,9 +136,7 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
     psi_plus  = [(solution[4*i+1],solution[4*i+3]) for i in xrange(mesh.n_elems)]
 
     # Calculate E
-    c = GC.SPD_OF_LGT
-    E = computeScalarFlux(psi_minus, psi_plus)
-    E = [(i[0]/c, i[1]/c) for i in E]
+    E = computeEnergyDensity(psi_minus, psi_plus)
 
     #Return F as a zeros for now
     F = [(0, 0) for i in range(mesh.n_elems)]
