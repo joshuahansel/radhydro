@@ -2,11 +2,10 @@
 #  Provides functions for plotting radiation and hydrodynamics solutions.
 
 import matplotlib.pyplot as plt
-import globalConstants as GC
 import numpy as np
 from numpy import array
-import operator           # for adding tuples to each other elementwise
 from matplotlib import rc # for rendering tex in plots
+from radUtilities import computeScalarFlux
 
 ## Function to plot angular flux.
 #
@@ -22,13 +21,17 @@ from matplotlib import rc # for rendering tex in plots
 #                       and right values, e.g., psi_plus[i]\f$=(\Psi^+_{i,L},
 #                       \Psi^+_{i,R})\f$
 #  @param[in] save      boolean flag for saving the plot as a .pdf file
+#  @param[in] filename  name of pdf file if plot is saved
 #  @param[in] psi_minus_exact  exact angular flux solution for minus direction,
 #                              passed as an array of values at each edge.
 #  @param[in] psi_plus_exact   exact angular flux solution for minus direction,
 #                              passed as an array of values at each edge.
 #
 def plotAngularFlux(mesh, psi_minus, psi_plus, save=False,
-   psi_minus_exact=None, psi_plus_exact=None):
+   filename='angularFlux.pdf', psi_minus_exact=None, psi_plus_exact=None):
+
+   # create new figure
+   plt.figure()
 
    # create x-points
    x            = makeXPoints(mesh)           # discontinuous x-points
@@ -57,7 +60,7 @@ def plotAngularFlux(mesh, psi_minus, psi_plus, save=False,
 
    # save if requested
    if save:
-      plt.savefig('angularflux.pdf')
+      plt.savefig(filename)
    else:
       plt.show()
 
@@ -75,18 +78,18 @@ def plotAngularFlux(mesh, psi_minus, psi_plus, save=False,
 #                       and right values, e.g., psi_plus[i]\f$=(\Psi^+_{i,L},
 #                       \Psi^+_{i,R})\f$
 #  @param[in] save      boolean flag for saving the plot as a .pdf file
+#  @param[in] filename  name of pdf file if plot is saved
 #  @param[in] scalar_flux_exact  exact scalar flux solution, passed as an
 #                                array of values at each edge.
 #  @param[in] exact_data_continuous  boolean flag that specifies if the provided
 #                                    exact solution data is continuous (True)
 #                                    or is given as discontinuous tuples (False).
 #
-def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, scalar_flux_exact=None,
-   exact_data_continuous=True):
+def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, filename='scalarFlux.pdf',
+   scalar_flux_exact=None, exact_data_continuous=True):
 
    # create new figure
-   plotScalarFlux.count += 1
-   plt.figure(plotScalarFlux.count)
+   plt.figure()
 
    # create x-points
    x            = makeXPoints(mesh)           # discontinuous x-points
@@ -118,51 +121,9 @@ def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, scalar_flux_exact=None
 
    # save if requested
    if save:
-      plt.savefig('scalarflux.pdf')
+      plt.savefig(filename)
    else:
       plt.show()
-
-plotScalarFlux.count = 0
-
-## Function to compute scalar flux from angular fluxes.
-#
-#  @param[in] psi_minus S-2 angular flux solution for the minus direction
-#                       multiplied by \f$2\pi\f$, i.e.,
-#                       \f$\Psi^-\f$, passed as an array of tuples of left
-#                       and right values, e.g., psi_minus[i]\f$=(\Psi^-_{i,L},
-#                       \Psi^-_{i,R})\f$
-#  @param[in] psi_plus  S-2 angular flux solution for the plus direction
-#                       multiplied by \f$2\pi\f$, i.e.,
-#                       \f$\Psi^+\f$, passed as an array of tuples of left
-#                       and right values, e.g., psi_plus[i]\f$=(\Psi^+_{i,L},
-#                       \Psi^+_{i,R})\f$
-#  @return  scalar flux solution, \f$\phi\f$, as an array of tuples of left
-#           and right values, e.g., scalar_flux[i]\f$=(\phi_{i,L},\phi_{i,R})\f$
-#
-def computeScalarFlux(psi_minus, psi_plus):
-   scalar_flux = [tuple(y for y in tuple(map(operator.add, psi_minus[i], psi_plus[i]))
-                       ) for i in xrange(len(psi_minus))]
-   return scalar_flux
-
-## Function to compute energy density E from angular fluxes.
-#
-#  @param[in] psi_minus S-2 angular flux solution for the minus direction
-#                       multiplied by \f$2\pi\f$, i.e.,
-#                       \f$\Psi^-\f$, passed as an array of tuples of left
-#                       and right values, e.g., psi_minus[i]\f$=(\Psi^-_{i,L},
-#                       \Psi^-_{i,R})\f$
-#  @param[in] psi_plus  S-2 angular flux solution for the plus direction
-#                       multiplied by \f$2\pi\f$, i.e.,
-#                       \f$\Psi^+\f$, passed as an array of tuples of left
-#                       and right values, e.g., psi_plus[i]\f$=(\Psi^+_{i,L},
-#                       \Psi^+_{i,R})\f$
-#  @return  energy density, \f$E\f$, as an array of tuples of left
-#           and right values, e.g., E[i]\f$=(E_{i,L},E_{i,R})\f$
-#
-def computeEnergyDensity(psi_minus, psi_plus):
-   E = [tuple((1./GC.SPD_OF_LGT)*y for y in tuple(map(operator.add, psi_minus[i], psi_plus[i]))
-                       ) for i in xrange(len(psi_minus))]
-   return E
 
 ## Function to transform mesh into discontinuous x-points for plotting.
 #

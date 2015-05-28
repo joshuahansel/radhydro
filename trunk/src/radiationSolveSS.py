@@ -7,7 +7,7 @@ import numpy as np
 from numpy import array
 from mesh import Mesh
 from utilityFunctions import getIndex
-from plotUtilities import computeScalarFlux, computeEnergyDensity
+from radUtilities import computeScalarFlux, computeEnergyDensity
 import globalConstants as GC
 
 ## Steady-state solve function for the S-2 equations.

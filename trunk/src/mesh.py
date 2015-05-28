@@ -18,12 +18,15 @@ class Mesh:
     #----------------------------------------------------------------------------
     def __init__(self, n_elements, width, x_start=0.):
 
-        ##The mesh currently has fixed element widths, but let each element have one
+        # mesh currently assumes uniform element widths
         self.n_elems = n_elements
         dx = width/float(n_elements)
         
-        #Build elements in a list comprehension
+        # build elements
         self.elements = [Element(i,(i+0.5)*dx,dx) for i in xrange(n_elements)]
+
+        # compute max dx in mesh
+        self.max_dx = dx
                
     #----------------------------------------------------------------------------
     ## Print definition.

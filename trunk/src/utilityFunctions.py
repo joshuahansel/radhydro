@@ -1,6 +1,8 @@
 ## @package src.utilityFunctions
 #  Contains helper functions that do not belong in any particular class.
 
+from math import log
+
 #-----------------------------------------------------------------------------------
 ## Converge f_L and f_R to f_a and f_x
 def EdgToMom(f_l, f_r):
@@ -42,4 +44,64 @@ def getLocalIndex(side, dir):
 
     return getIndex(0, side, dir)
 
+#-----------------------------------------------------------------------------------
+## Computes convergence rates
+#
+#  @param[in] dx        list of mesh sizes or time step sizes for each cycle
+#  @param[in] err       list of errors for each cycle
+#
+#  @return  list of convergence rates. The size of this list will be the number
+#           of cycles minus one.
+#
+def computeConvergenceRates(dx,err):
+
+   # determine number of refinement cycles from length of lists
+   n_cycles = len(dx)
+
+   # initialize list of rates
+   rates = list()
+
+   # loop over cycles
+   for cycle in xrange(n_cycles):
+      # compute convergence rate
+      if cycle > 0:
+         rates.append(log(err[cycle]/err[cycle-1]) / log(dx[cycle]/dx[cycle-1]))
+
+   return rates
+
+#-----------------------------------------------------------------------------------
+## Prints convergence table and convergence rates
+#
+#  @param[in] dx        list of mesh sizes or time step sizes for each cycle
+#  @param[in] err       list of errors for each cycle
+#  @param[in] rates     list of convergence rates. The size of this list will
+#                       be the number of cycles minus one. If this argument
+#                       is not provided, rates are computed in this function.
+#  @param[in] dx_desc   string description for the size quantity, e.g.,
+#                       'dx' or 'dt'
+#  @param[in] err_desc  string description for the error, e.g., 'L1' or 'L2'
+#
+def printConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err'):
+
+   # compute rates if they were not provided
+   if rates is None:
+      rates = computeConvergenceRates(dx,err)
+
+   # determine number of refinement cycles from length of lists
+   n_cycles = len(dx)
+
+   # print header
+   print('%11s %11s    Rate' % (dx_desc,err_desc))
+   print('-------------------------------')
+
+   # loop over cycles
+   for cycle in xrange(n_cycles):
+      # compute convergence rate
+      if cycle > 0:
+         rate_string = '%7.3f' % rates[cycle-1]
+      else:
+         rate_string = '-'
+
+      # print line to convergence table
+      print('%11.3e %11.3e %7s' % (dx[cycle],err[cycle],rate_string))
 

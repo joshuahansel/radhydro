@@ -16,12 +16,14 @@ def main():
     mesh = Mesh(100, 5.)
 
     # compute cross sections
-    cross_sects = [(CrossXInterface(1,3), CrossXInterface(1,3)) for i in xrange(mesh.n_elems)]
+    cross_sects = [(CrossXInterface(1,3), CrossXInterface(1,3))
+       for i in xrange(mesh.n_elems)]
+
+    # sources
+    Q = [0.5 for i in xrange(mesh.n_elems*4)]
 
     # call radiation solver
-    Q_plus  = [(1,1) for i in xrange(mesh.n_elems)]
-    Q_minus = [(2,2) for i in xrange(mesh.n_elems)]
-    psi_minus, psi_plus, E, F = radiationSolveSS(mesh, cross_sects, Q_minus, Q_plus)
+    psi_minus, psi_plus, E, F = radiationSolveSS(mesh, cross_sects, Q)
 
     # plot solution
     plotScalarFlux(mesh, psi_minus, psi_plus)

@@ -15,23 +15,23 @@
 import sys
 sys.path.append('../src')
 
+from random import random
+import numpy as np
+import unittest
+
 from mesh import Mesh
 from crossXInterface import CrossXInterface
 from radiationSolveSS import radiationSolveSS
 from sourceHandlers import * 
-import numpy as np
-from random import random
 import globalConstants as GC
 
-import unittest
-
 ## Derived unittest class to test source builder
-class TestPlotS2Solution(unittest.TestCase):
+class TestSourceBuilder(unittest.TestCase):
    def setUp(self):
       pass
    def tearDown(self):
       pass
-   def testSourceBuilder(self):
+   def test_CNSourceBuilder(self):
       # number of decimal places to test
       n_decimal_places = 14
 
