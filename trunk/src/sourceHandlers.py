@@ -199,7 +199,7 @@ class StreamingSrc(SourceHandler):
     #  of equation is already included in the system
     def evalImplicit(self, el, **kwargs):
 
-        return [0.0 for i in xrange(4)]
+        return np.zeros(4)
 
     #--------------------------------------------------------------------------------
     ## At time \f$t_n\f$, there is a streaming source based on upwinding in
@@ -256,8 +256,9 @@ class StreamingSrc(SourceHandler):
     #  version
     def evalOlder(self, el, psi_minus_older=None, psi_plus_older=None, **kwargs):
 
-        return self.evalOld(self,el,psi_minus_old=psi_minus_older,
-                psi_plus_old=psi_plus_older)
+        #have to carefully pass in **kwargs to avoid duplicating
+        return self.evalOld(el,psi_minus_old=psi_minus_older,psi_plus_old=psi_plus_older,
+                bc_flux_left=kwargs['bc_flux_left'],bc_flux_right=kwargs['bc_flux_right'])
 
 
 #====================================================================================
@@ -275,7 +276,7 @@ class ReactionSrc(SourceHandler):
     #  of equation is already included in the system
     def evalImplicit(self, el, **kwargs):
 
-        return [0.0 for i in xrange(4)]
+        return np.zeros(4)
 
     #--------------------------------------------------------------------------------
     ## At time \f$t_n\f$, there is a reaction source, straight forward
@@ -303,12 +304,12 @@ class ReactionSrc(SourceHandler):
 
     #--------------------------------------------------------------------------------
     ## The older term is the same as old, but with the oldest fluxes. So call old
-    #  version
+    #  version. You cannot pass in **kwargs or it will duplicate some arguments
     def evalOlder(self, el, psi_minus_older=None, psi_plus_older=None, 
                    cx_older = None, **kwargs):
 
-        return self.evalOld(self,el,psi_minus_old=psi_minus_older,
-                psi_plus_old=psi_plus_older,cx_old=cx_older,**kwargs)
+        return self.evalOld(el,psi_minus_old=psi_minus_older,
+                psi_plus_old=psi_plus_older,cx_old=cx_older)
 
 #====================================================================================
 ## Derived class for scattering source term:  \sigma_s phi/2
@@ -326,12 +327,11 @@ class ScatteringSrc(SourceHandler):
     #  of equation is already included in the system
     def evalImplicit(self, el, **kwargs):
 
-        return [0.0 for i in xrange(4)]
+        return np.zeros(4)
 
     #--------------------------------------------------------------------------------
     ## At time \f$t_n\f$, there is a isotropic scattering source
-    def evalOld(self, i, E_old=None, cx_old = None, psi_minus_old=None,
-            psi_plus_old=None, **kwargs):
+    def evalOld(self, i, E_old=None, cx_old = None, **kwargs):
 
         #Get scattering cross section
         sig_s_l = cx_old[i][0].sig_s
@@ -359,5 +359,5 @@ class ScatteringSrc(SourceHandler):
     #  version
     def evalOlder(self, el, E_older = None, cx_older = None, **kwargs):
 
-        return self.evalOld(self,el,E_old = E_older,cx_old=cx_older,**kwargs)
+        return self.evalOld(el,E_old = E_older,cx_old=cx_older)
 

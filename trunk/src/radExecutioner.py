@@ -27,9 +27,9 @@ def solveRadProblem():
                   for i in xrange(mesh.n_elems)]
 
     # transient options
-    dt = 0.05
+    dt = 0.1
     t  = 0.0
-    t_end = 100.
+    t_end = 10.
 
     # create the steady-state source
     Q_iso = 5.
@@ -66,11 +66,15 @@ def solveRadProblem():
     psi_m_i = psi_minusSS[mesh.n_elems/2][0]
     psi_plus_old  = [(psi_p_i,psi_p_i) for i in range(mesh.n_elems)]
     psi_minus_old = [(psi_m_i,psi_m_i) for i in range(mesh.n_elems)] 
+    psi_plus_older = [(0.5*i[0], 0.5*i[1]) for i in psi_plus_old ]
+    psi_minus_older = deepcopy(psi_plus_older)
     E_old = [(1./GC.SPD_OF_LGT*(psi_plus_old[i][0] + psi_minus_old[i][0]),
               1./GC.SPD_OF_LGT*(psi_plus_old[i][1] + psi_minus_old[i][1]))  for i in
             range(len(psi_plus_old))]
+    E_older = [(1./GC.SPD_OF_LGT*(psi_plus_older[i][0] + psi_minus_older[i][0]),
+              1./GC.SPD_OF_LGT*(psi_plus_older[i][1] + psi_minus_older[i][1]))  for i in
+            range(len(psi_plus_old))]
 
-    psi_plus_older = psi_plus_old[:]
 
     #phiSS = computeScalarFlux(psi_plusSS, psi_minusSS)
     #plotScalarFlux(mesh, psi_minus_old, psi_plus_old, scalar_flux_exact=phiSS,
@@ -98,12 +102,16 @@ def solveRadProblem():
         Q_tot = np.array(Q)
         for src in source_handles:
             # build src for this handler
-            Q_src = src.buildSource(psi_plus_old  = psi_plus_old,
-                                    psi_minus_old = psi_minus_old,
-                                    bc_flux_left  = psi_left,
-                                    bc_flux_right = psi_right,
-                                    cx_old        = cross_sects,
-                                    E_old         = E_old)
+            Q_src = src.buildSource(psi_plus_old    = psi_plus_old,
+                                    psi_minus_old   = psi_minus_old,
+                                    psi_minus_older = psi_minus_older,
+                                    psi_plus_older  = psi_plus_older,
+                                    bc_flux_left    = psi_left,
+                                    bc_flux_right   = psi_right,
+                                    cx_old          = cross_sects,
+                                    cx_older        = cross_sects,
+                                    E_old           = E_old,
+                                    E_older         = E_older)
             # Add elementwise the src to the total
             Q_tot += Q_src
 
@@ -112,10 +120,17 @@ def solveRadProblem():
                 bc_psi_left = psi_left, bc_psi_right = psi_right, diag_add_term =
                 react_term, implicit_scale = diag_terms[ts] )
 
+        # save oldest solutions
+        psi_plus_older  = deepcopy(psi_plus_old)
+        psi_minus_older = deepcopy(psi_minus_old)
+        E_older         = deepcopy(E_old)
+
         # save old solutions
         psi_plus_old  = deepcopy(psi_plus)
         psi_minus_old = deepcopy(psi_minus)
         E_old         = deepcopy(E)
+
+
 
         #print sum([(psi_plus[i][0]- psi_plusSS[i][0])/psi_plus[i][0] for i in range(len(psi_plus_old))])
 
