@@ -70,21 +70,25 @@ class TestSourceBuilder(unittest.TestCase):
       source_handles = [OldIntensitySrc(mesh, dt, ts), 
                         StreamingSrc(mesh, dt, ts),
                         ReactionSrc(mesh, dt, ts),
-                        ScatteringSrc(mesh, dt, ts)]
+                        ScatteringSrc(mesh, dt, ts),
+                        SourceSrc(mesh, dt, ts)]
   
       #Check all derived classes are implemented correctly
       assert all([isinstance(i, SourceHandler) for i in source_handles])
   
       # build the transient source
-      Q_tr = np.array(Q)
+      n = mesh.n_elems * 4
+      Q_tr = np.zeros(n)
       for src in source_handles:
          # build src for this handler
-         Q_src = src.buildSource(psi_plus_old  = psi_plus_SS,
-                                 psi_minus_old = psi_minus_SS,
+         Q_src = src.buildSource(psim_old      = psi_minus_SS,
+                                 psip_old      = psi_plus_SS,
                                  bc_flux_left  = psi_left,
                                  bc_flux_right = psi_right,
                                  cx_old        = cross_sects,
-                                 E_old         = E_SS)
+                                 E_old         = E_SS,
+                                 Q_old         = Q,
+                                 Q_new         = Q)
          # add the source to the total
          Q_tr += Q_src
 

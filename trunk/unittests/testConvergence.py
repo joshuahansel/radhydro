@@ -25,9 +25,6 @@ class TestConvergence(unittest.TestCase):
       pass
    def test_Convergence(self):
 
-      # set directions
-      mu = {"-" : -1/sqrt(3), "+" : 1/sqrt(3)}
-   
       # physics data
       sig_a = 0.25         # absorption cross section
       sig_s = 0.75         # scattering cross section

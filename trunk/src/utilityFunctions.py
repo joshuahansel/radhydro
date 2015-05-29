@@ -105,3 +105,24 @@ def printConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err'):
       # print line to convergence table
       print('%11.3e %11.3e %7s' % (dx[cycle],err[cycle],rate_string))
 
+## Function to compute the discrete \f$L^1\f$ norm of an array \f$\mathbf{y}\f$
+#  of 2-tuples: \f$\|\mathbf{y}\|_1 = \sum\limits_i |y_{i,L}| + |y_{i,R}|\f$
+#
+#  @param[in] values  array \f$\mathbf{y}\f$ of 2-tuples:
+#                     \f$y_i = (y_{i,L},y_{i,R})\f$
+#
+#  @return  the discrete \f$L^1\f$ norm \f$\|y\|_1\f$
+#
+def computeDiscreteL1Norm(values):
+
+   # number of tuples in array
+   n = len(values)
+
+   # initialize norm to zero
+   norm = 0.0
+
+   # loop over tuples
+   for i in xrange(n):
+      norm += abs(values[i][0]) + abs(values[i][1])
+
+   return norm

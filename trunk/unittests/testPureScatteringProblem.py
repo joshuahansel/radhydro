@@ -25,9 +25,6 @@ class TestPureScatteringProblem(unittest.TestCase):
       pass
    def test_PureScatteringProblem(self):
 
-      # set directions
-      mu = {"-" : -1/sqrt(3), "+" : 1/sqrt(3)}
-   
       # physics data
       sig_a = 0.0         # absorption cross section
       sig_s = 1.0         # scattering cross section

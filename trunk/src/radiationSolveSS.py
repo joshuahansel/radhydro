@@ -7,7 +7,7 @@ import numpy as np
 from numpy import array
 from mesh import Mesh
 from utilityFunctions import getIndex
-from radUtilities import computeScalarFlux, computeEnergyDensity
+from radUtilities import mu, computeScalarFlux, computeEnergyDensity
 import globalConstants as GC
 
 ## Steady-state solve function for the S-2 equations.
@@ -36,9 +36,6 @@ import globalConstants as GC
 def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
     bound_curr_lt=0.0, bound_curr_rt=0.0,
     bc_psi_left = None, bc_psi_right = None):
-
-    # set directions
-    mu = {"-" : -1/math.sqrt(3), "+" : 1/math.sqrt(3)}
 
     # abbreviation for the scale term
     beta = implicit_scale

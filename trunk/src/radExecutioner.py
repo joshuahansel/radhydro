@@ -93,25 +93,30 @@ def solveRadProblem():
         source_handles = [OldIntensitySrc(mesh, dt, ts), 
                           StreamingSrc(mesh, dt, ts),
                           ReactionSrc(mesh, dt, ts),
-                          ScatteringSrc(mesh, dt, ts)]
+                          ScatteringSrc(mesh, dt, ts),
+                          SourceSrc(mesh, dt, ts)]
 
         #Check all derived classes are implemented correctly
         assert all([isinstance(i, SourceHandler) for i in source_handles])
 
         # build the transient source
-        Q_tot = np.array(Q)
+        n = mesh.n_elems * 4
+        Q_tot = np.zeros(n)
         for src in source_handles:
             # build src for this handler
-            Q_src = src.buildSource(psi_plus_old    = psi_plus_old,
-                                    psi_minus_old   = psi_minus_old,
-                                    psi_minus_older = psi_minus_older,
-                                    psi_plus_older  = psi_plus_older,
-                                    bc_flux_left    = psi_left,
-                                    bc_flux_right   = psi_right,
-                                    cx_old          = cross_sects,
-                                    cx_older        = cross_sects,
-                                    E_old           = E_old,
-                                    E_older         = E_older)
+            Q_src = src.buildSource(psim_old      = psi_minus_old,
+                                    psip_old      = psi_plus_old,
+                                    psim_older    = psi_minus_older,
+                                    psip_older    = psi_plus_older,
+                                    bc_flux_left  = psi_left,
+                                    bc_flux_right = psi_right,
+                                    cx_old        = cross_sects,
+                                    cx_older      = cross_sects,
+                                    E_old         = E_old,
+                                    E_older       = E_older,
+                                    Q_older       = Q,
+                                    Q_old         = Q,
+                                    Q_new         = Q)
             # Add elementwise the src to the total
             Q_tot += Q_src
 

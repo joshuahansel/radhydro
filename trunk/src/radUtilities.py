@@ -3,6 +3,10 @@
 
 import globalConstants as GC  # global constants
 import operator               # for adding tuples to each other elementwise
+from math import sqrt
+
+## directions for S-2, \f$\mu^\pm\f$
+mu = {"-" : -1.0/sqrt(3.0), "+" : 1.0/sqrt(3.0)}
 
 ## Function to compute scalar flux from angular fluxes.
 #

@@ -13,7 +13,7 @@ from mesh import Mesh
 from crossXInterface import CrossXInterface
 from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotAngularFlux, makeContinuousXPoints
-from radUtilities import computeScalarFlux
+from radUtilities import mu, computeScalarFlux
 from integrationUtilities import computeL1ErrorLD
 
 ## Derived unittest class to run a pure absorber problem and compare to
@@ -25,9 +25,6 @@ class TestPureAbsorberProblem(unittest.TestCase):
       pass
    def test_PureAbsorberProblem(self):
 
-      # set directions
-      mu = {"-" : -1/sqrt(3), "+" : 1/sqrt(3)}
-   
       # physics data
       sig_t = 0.1    # total cross section
       L = 10.0       # domain length

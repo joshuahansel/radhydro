@@ -50,7 +50,7 @@ import numpy as np
 from mesh import Mesh
 import globalConstants as GC
 from utilityFunctions import getIndex, getLocalIndex
-from math import sqrt
+from radUtilities import mu
 
 #====================================================================================
 ## Base class for source handlers. More info given in package documentation. Here, 
@@ -59,23 +59,30 @@ from math import sqrt
 class SourceHandler:
 
     #---------------------------------------------------------------------------
-    ## Basic constructor
+    ## Constructor
+    #
+    #  @param[in] mesh          mesh object
+    #  @param[in] dt            time step size
+    #  @param[in] time_stepper  string identifier for the chosen time-stepper,
+    #                          e.g., 'CN'
+    #
     def __init__(self, mesh, dt, time_stepper):
 
-        self.mesh = mesh #copy mesh
-        self.dt   = dt   #current time step size
+        self.mesh = mesh
+        self.dt   = dt
         self.time_stepper = time_stepper
 
-
-        #Determine which time stepping function to use in derived class
+        # Determine which time stepping function to use in derived class
         ts = time_stepper
         self.func = None
-        if re.search("CN", ts):
+        if re.search("BE", ts):
+            self.func = self.evalBE
+        elif re.search("CN", ts):
             self.func = self.evalCN
         elif re.search("BDF2", ts):
             self.func = self.evalBDF2
         else:
-            self.func = self.evalBE
+           raise NotImplementedError("Specified an invalid time-stepper")
 
     #----------------------------------------------------------------------------
     ## Function to evaluate source at all cells in the mesh. This is the main 
@@ -93,27 +100,39 @@ class SourceHandler:
 
     #----------------------------------------------------------------------------
     ## Function to evaluate source in CN time stepping, for element el
-    def evalCN(self, el, **kwargs):
+    #
+    #  @param[in] i  element id
+    #
+    def evalCN(self, i, **kwargs):
 
-        return 0.5*(self.evalOld(el, **kwargs) + self.evalImplicit(el, **kwargs))
+        return 0.5*(self.evalOld(i, **kwargs) + self.evalImplicit(i, **kwargs))
 
     #----------------------------------------------------------------------------
     ## Function to evaluate source backward Euler time stepping, for element el
-    def evalBE(self, el, **kwargs):
+    #
+    #  @param[in] i  element id
+    #
+    def evalBE(self, i, **kwargs):
 
-        return self.evalImplicit(el, **kwargs)
+        return self.evalImplicit(i, **kwargs)
 
     #----------------------------------------------------------------------------
     ## Function to evaluate source in BDF2 time stepping, for element el
-    def evalBDF2(self, el, **kwargs):
+    #
+    #  @param[in] i  element id
+    #
+    def evalBDF2(self, i, **kwargs):
 
-        return 1./6.*( self.evalOld(el, **kwargs) + self.evalOlder(el, **kwargs) ) \
-                 + 2./3.*(self.evalImplicit(el, **kwargs))
+        return 1./6.*( self.evalOld(i, **kwargs) + self.evalOlder(i, **kwargs) ) \
+                 + 2./3.*(self.evalImplicit(i, **kwargs))
 
     #----------------------------------------------------------------------------
     ## Function to evaluate the implicit term, if it occurs on right hand side of
     #  equation. For example, the streaming term has no implicit term on the RHS 
-    def evalImplicit(self, el, **kwargs):
+    #
+    #  @param[in] i  element id
+    #
+    def evalImplicit(self, i, **kwargs):
 
         raise NotImplementedError("You must define the evalImplicit, or entire build"             
             "source function in the derived class")
@@ -121,7 +140,10 @@ class SourceHandler:
     #----------------------------------------------------------------------------
     ## Function to evaluate the old term at \f$t_n\f$. For example, in the CN system,
     #  this is \f$A(Y^n)\f$.  All terms should have this function 
-    def evalOld(self, el, **kwargs):
+    #
+    #  @param[in] i  element id
+    #
+    def evalOld(self, i, **kwargs):
 
         raise NotImplementedError("You must define the evalOld, or entire build"
             "source function in the derived class")
@@ -129,7 +151,10 @@ class SourceHandler:
     #----------------------------------------------------------------------------
     ## Function to evaluate the oldest term, only used by BDF2, i.e.,  at \f$t_n-1\f$. 
     #  All terms should have this function implemented.
-    def evalOlder(self, el, **kwargs):
+    #
+    #  @param[in] i  element id
+    #
+    def evalOlder(self, i, **kwargs):
 
         raise NotImplementedError("You must define the evalOlder, or entire build"
            "source function in the derived class")
@@ -138,226 +163,354 @@ class SourceHandler:
 # All derived classes
 #===========================================================================================
 
-## Derived class for the old intensity
-#
-#  This is the term resulting from discretization of time derivative, i.e., T_n
+## Derived class for computing old intensity term, \f$\frac{\Psi^{\pm,n}}{c\Delta t}\f$
 class OldIntensitySrc(SourceHandler):
     
-    ## Constructor just needs to call base class constructor in this case
+    ## Constructor
     def __init__(self, *args):
 
+        # call base class constructor
         SourceHandler.__init__(self, *args)
+
         self.c_dt = GC.SPD_OF_LGT * self.dt
     
     #-------------------------------------------------------------------------------
-    ## Override the build source function.  Time derivative source term is the same in all 
-    # cases (always just psi/(c dt) ), so just make one function used by any type of
-    # time derivative.
-    def buildSource(self, psi_minus_old=None, psi_plus_old=None, **kwargs):
+    ## Override the build source function, since old intensity term is the same
+    #  for all time steppers
+    #
+    #  @param[in] psim_old  Old angular flux in minus direction, \f$\Psi^{-,n}\f$
+    #  @param[in] psip_old  Old angular flux in plus  direction, \f$\Psi^{+,n}\f$
+    #
+    def buildSource(self, psim_old=None, psip_old=None, **kwargs):
 
-        #Loop over all cells and build source 
+        # Loop over all cells and build source 
         Q = np.array([])
         for i in range(self.mesh.n_elems):
-            
-            Q_elem =  self.evaluate(i, psi_minus_old=psi_minus_old,
-                    psi_plus_old=psi_plus_old)    #Evaluate source of element i
-            Q = np.append(Q, Q_elem)                  #Append source from element i
+
+            # Evaluate source of element i
+            Q_elem =  self.evaluate(i, psim_old=psim_old, psip_old=psip_old)
+
+            # Append source from element i
+            Q = np.append(Q, Q_elem)
 
         return Q
 
     #----------------------------------------------------------------------------
-    ## Time derivative source term is the same in all cases (always just psi/(c dt)),
-    #  so just make one function called by all forms of build source
-    def evaluate(self, i, psi_minus_old=None, psi_plus_old=None):
+    ## Computes old intensity term, \f$\frac{\Psi^{\pm,n}}{c\Delta t}\f$
+    #
+    #  @param[in] i         element id
+    #  @param[in] psim_old  Old angular flux in minus direction, \f$\Psi^{-,n}\f$
+    #  @param[in] psip_old  Old angular flux in plus  direction, \f$\Psi^{+,n}\f$
+    #
+    def evaluate(self, i, psim_old=None, psip_old=None):
         
-        #Get all the indices, this is basically redundant
-        iLminus     = getLocalIndex("L","-") # dof i,  L,-
-        iLplus      = getLocalIndex("L","+") # dof i,  L,+
-        iRminus     = getLocalIndex("R","-") # dof i,  R,-
-        iRplus      = getLocalIndex("R","+") # dof i,  R,l+
+        # get local indices
+        iLm = getLocalIndex("L","-") # dof L,-
+        iLp = getLocalIndex("L","+") # dof L,+
+        iRm = getLocalIndex("R","-") # dof R,-
+        iRp = getLocalIndex("R","+") # dof R,+
 
+        # compute old intensity term
         Q  = np.zeros(4)
-        Q[iLminus] = psi_minus_old[i][0]    
-        Q[iRminus] = psi_minus_old[i][1] 
-        Q[iLplus]  = psi_plus_old[i][0]   
-        Q[iRplus]  = psi_plus_old[i][1]
-        return Q*(1./self.c_dt)
+        Q[iLm] = psim_old[i][0] / self.c_dt
+        Q[iRm] = psim_old[i][1] / self.c_dt
+        Q[iLp] = psip_old[i][0] / self.c_dt
+        Q[iRp] = psip_old[i][1] / self.c_dt
+
+        return Q
 
 
 #====================================================================================
-## Derived class for Streaming term:  \mu d\psi/dx 
+## Derived class for computing streaming term,
+#  \f$\mu^\pm \frac{\partial\Psi}{\partial x}\f$
 class StreamingSrc(SourceHandler):
 
-    ## Constructor just needs to call base class constructor in this case
     #-------------------------------------------------------------------------------
+    ## Constructor
     def __init__(self, *args):
 
         SourceHandler.__init__(self, *args)
 
     #--------------------------------------------------------------------------------
-    ## For Backward euler, there is no streaming term since implicit streaming on LHS
-    #  of equation is already included in the system
-    def evalImplicit(self, el, **kwargs):
+    ## implicit term is on LHS, so return zeros
+    #
+    #  @param[in] i         element id
+    #
+    def evalImplicit(self, i, **kwargs):
 
         return np.zeros(4)
 
     #--------------------------------------------------------------------------------
-    ## At time \f$t_n\f$, there is a streaming source based on upwinding in
-    #  spatial derivative
-    def evalOld(self, i, psi_minus_old=None, psi_plus_old=None, **kwargs):
+    ## Computes old streaming term, \f$\mu^\pm\frac{\partial\Psi^n}{\partial x}\f$
+    #
+    #  @param[in] i         element id
+    #  @param[in] psim_old  Old angular flux in minus direction, \f$\Psi^{-,n}\f$
+    #  @param[in] psip_old  Old angular flux in plus  direction, \f$\Psi^{+,n}\f$
+    #
+    def evalOld(self, i, psim_old=None, psip_old=None, **kwargs):
 
+        # get local indices
+        iLm = getLocalIndex("L","-") # dof L,-
+        iLp = getLocalIndex("L","+") # dof L,+
+        iRm = getLocalIndex("R","-") # dof R,-
+        iRp = getLocalIndex("R","+") # dof R,+
+
+        # psip_{i-1/2}
+        if i == 0: # left boundary
+            psip_Lface = kwargs['bc_flux_left']
+        else:
+            psip_Lface = psip_old[i-1][1]
+
+        # psim_{i+1/2}
+        if i == self.mesh.n_elems - 1: # right boundary
+            psim_Rface = kwargs['bc_flux_right']
+        else:
+            psim_Rface  = psim_old[i+1][0]
+
+        psim_L = psim_old[i][0] # psim_{i,L}
+        psip_L = psip_old[i][0] # psip_{i,L}
+        psim_R = psim_old[i][1] # psim_{i,R}
+        psip_R = psip_old[i][1] # psip_{i,R}
+        psim_Lface = psim_L     # psim_{i-1/2}
+        psip_Rface = psip_R     # psip_{i+1/2}
+
+        # compute cell center values
+        psim_i = 0.5*(psim_L + psim_R)
+        psip_i = 0.5*(psip_L + psip_R)
+
+        # mesh size divided by 2
+        h_over_2 = self.mesh.getElement(i).dx/2.0
+
+        # compute streaming source
         Q = np.zeros(4)
-
-        #Get all the indices for this cell
-        iLminus     = getLocalIndex("L","-") # dof i,  L,-
-        iLplus      = getLocalIndex("L","+") # dof i,  L,+
-        iRminus     = getLocalIndex("R","-") # dof i,  R,-
-        iRplus      = getLocalIndex("R","+") # dof i,  R,l+
-
-        #Get the edge fluxes
-        #for positive mu, upwinding on left term. For neg mu, upwinding on right
-        if i == 0: #left boundary special case
-            psi_Lface_p = kwargs['bc_flux_left']
-        else:
-            psi_Lface_p = psi_plus_old[i-1][1] #psi_{i-1,r}
-
-        if i == self.mesh.n_elems - 1: #right boundary special case
-            psi_Rface_m = kwargs['bc_flux_right']
-        else:
-            psi_Rface_m  = psi_minus_old[i+1][0] #psi_{i+1,l}
-
-        psi_L_m = psi_minus_old[i][0] # psi_{i,L},   minus               
-        psi_L_p = psi_plus_old[i][0]  # psi_{i,L},   plus               
-        psi_R_m = psi_minus_old[i][1] # psi_{i,R},   minus               
-        psi_R_p = psi_plus_old[i][1]  # psi_{i,R},   plus               
-        psi_Lface_m = psi_L_m         # psi_{i-1/2}, minus
-        psi_Rface_p = psi_R_p         # psi_{i+1/2}, plus
-
-        mu = {"-" : -1./sqrt(3), "+" : 1./sqrt(3.)}
-
-        #compute cell averages
-        psi_i_m = 0.5*(psi_L_m + psi_R_m)
-        psi_i_p = 0.5*(psi_L_p + psi_R_p)
-
-        #Evaluate \f$ \my d\psi/dx \f$ at t_n. The minus is because on RHS of eq.
-
-        #need to divide by h/2 to correct for artificial scaling in solver
-        h_x_2 = self.mesh.getElement(i).dx/2.
-
-        Q[iLminus] = -1.*mu["-"]*(psi_i_m     - psi_Lface_m)/h_x_2
-        Q[iLplus]  = -1.*mu["+"]*(psi_i_p     - psi_Lface_p)/h_x_2
-        Q[iRminus] = -1.*mu["-"]*(psi_Rface_m - psi_i_m)    /h_x_2
-        Q[iRplus]  = -1.*mu["+"]*(psi_Rface_p - psi_i_p)    /h_x_2
+        Q[iLm] = -1.*mu["-"]*(psim_i     - psim_Lface)/h_over_2
+        Q[iLp] = -1.*mu["+"]*(psip_i     - psip_Lface)/h_over_2
+        Q[iRm] = -1.*mu["-"]*(psim_Rface - psim_i)    /h_over_2
+        Q[iRp] = -1.*mu["+"]*(psip_Rface - psip_i)    /h_over_2
 
         return Q
 
     #--------------------------------------------------------------------------------
-    ## The older term is the same as old, but with the oldest fluxes. So call old
-    #  version
-    def evalOlder(self, el, psi_minus_older=None, psi_plus_older=None, **kwargs):
+    ## Computes older streaming term,
+    #  \f$\mu^\pm\frac{\partial\Psi^{n-1}}{\partial x}\f$
+    #
+    #  @param[in] i           element id
+    #  @param[in] psim_older  older angular flux in minus direction,
+    #                         \f$\Psi^{-,n-1}\f$
+    #  @param[in] psip_older  older angular flux in plus  direction,
+    #                         \f$\Psi^{+,n-1}\f$
+    #
+    def evalOlder(self, i, psim_older=None, psip_older=None, **kwargs):
 
-        #have to carefully pass in **kwargs to avoid duplicating
-        return self.evalOld(el,psi_minus_old=psi_minus_older,psi_plus_old=psi_plus_older,
-                bc_flux_left=kwargs['bc_flux_left'],bc_flux_right=kwargs['bc_flux_right'])
+        # Use old function but with older arguments.
+        # carefully pass in **kwargs to avoid duplicating
+        return self.evalOld(i, psim_old=psim_older, psip_old=psip_older,
+                  bc_flux_left=kwargs['bc_flux_left'],
+                  bc_flux_right=kwargs['bc_flux_right'])
 
 
 #====================================================================================
-## Derived class for reaction term:  \sigma_t* psi
+## Derived class for computing reaction term, \f$\sigma_t\Psi^\pm\f$
 class ReactionSrc(SourceHandler):
 
-    ## Constructor just needs to call base class constructor in this case
     #-------------------------------------------------------------------------------
+    ## Constructor
     def __init__(self, *args):
 
         SourceHandler.__init__(self, *args)
 
     #--------------------------------------------------------------------------------
-    ## For Backward euler, there is no reaction term since implicit reaction term on LHS
-    #  of equation is already included in the system
-    def evalImplicit(self, el, **kwargs):
+    ## implicit term is on LHS, so return zeros
+    #
+    #  @param[in] i  element id
+    #
+    def evalImplicit(self, i, **kwargs):
 
         return np.zeros(4)
 
     #--------------------------------------------------------------------------------
-    ## At time \f$t_n\f$, there is a reaction source, straight forward
-    def evalOld(self, i, psi_minus_old=None, psi_plus_old=None, 
-            cx_old = None, **kwargs):
+    ## Computes old reaction term, \f$\sigma_t^n\Psi^{\pm,n}\f$
+    #
+    #  @param[in] i         element id
+    #  @param[in] psim_old  old angular flux in minus direction, \f$\Psi^{-,n}\f$
+    #  @param[in] psip_old  old angular flux in plus  direction, \f$\Psi^{+,n}\f$
+    #  @param[in] cx_old    old cross sections
+    #
+    def evalOld(self, i, psim_old=None, psip_old=None, cx_old=None, **kwargs):
 
-        #Get all the indices, this is basically redundant
-        iLminus     = getLocalIndex("L","-") # dof i,  L,-
-        iLplus      = getLocalIndex("L","+") # dof i,  L,+
-        iRminus     = getLocalIndex("R","-") # dof i,  R,-
-        iRplus      = getLocalIndex("R","+") # dof i,  R,l+
+        # get local indices
+        iLm = getLocalIndex("L","-") # dof L,-
+        iLp = getLocalIndex("L","+") # dof L,+
+        iRm = getLocalIndex("R","-") # dof R,-
+        iRp = getLocalIndex("R","+") # dof R,+
 
-        #cross sections
-        sig_t_l = cx_old[i][0].sig_t
-        sig_t_r = cx_old[i][1].sig_t
+        # left and right cross sections
+        sig_t_L = cx_old[i][0].sig_t
+        sig_t_R = cx_old[i][1].sig_t
 
+        # compute reaction source
         Q  = np.zeros(4)
-        #negatives because on RHS of equation
-        Q[iLminus] = -1.*psi_minus_old[i][0] * sig_t_l
-        Q[iRminus] = -1.*psi_minus_old[i][1] * sig_t_r
-        Q[iLplus]  = -1.*psi_plus_old[i][0]  * sig_t_l
-        Q[iRplus]  = -1.*psi_plus_old[i][1]  * sig_t_r
+        Q[iLm] = -1.*psim_old[i][0] * sig_t_L
+        Q[iRm] = -1.*psim_old[i][1] * sig_t_R
+        Q[iLp] = -1.*psip_old[i][0] * sig_t_L
+        Q[iRp] = -1.*psip_old[i][1] * sig_t_R
 
         return Q
 
     #--------------------------------------------------------------------------------
-    ## The older term is the same as old, but with the oldest fluxes. So call old
-    #  version. You cannot pass in **kwargs or it will duplicate some arguments
-    def evalOlder(self, el, psi_minus_older=None, psi_plus_older=None, 
-                   cx_older = None, **kwargs):
+    ## Computes older reaction term, \f$\sigma_t^{n-1}\Psi^{\pm,n-1}\f$
+    #
+    #  @param[in] i           element id
+    #  @param[in] psim_older  older angular flux in minus direction,
+    #                        \f$\Psi^{-,n-1}\f$
+    #  @param[in] psip_older  older angular flux in plus  direction,
+    #                        \f$\Psi^{+,n-1}\f$
+    #
+    #  @param[in] cx_older    older cross sections
+    #
+    def evalOlder(self, i, psim_older=None, psip_older=None,
+                  cx_older=None, **kwargs):
 
-        return self.evalOld(el,psi_minus_old=psi_minus_older,
-                psi_plus_old=psi_plus_older,cx_old=cx_older)
+        # Use old function but with older arguments.
+        # Note that you cannot pass in **kwargs or it will duplicate some arguments
+        return self.evalOld(i, psim_old=psim_older, psip_old=psip_older,
+                            cx_old=cx_older)
 
 #====================================================================================
-## Derived class for scattering source term:  \sigma_s phi/2
+## Derived class for computing scattering source term, \f$\frac{\sigma_s}{2}\phi\f$
 class ScatteringSrc(SourceHandler):
 
-    ## Constructor just needs to call base class constructor in this case
     #-------------------------------------------------------------------------------
+    ## Constructor
     def __init__(self, *args):
 
+        # call base class constructor
         SourceHandler.__init__(self, *args)
+
+        # save speed of light
         self.c = GC.SPD_OF_LGT
 
     #--------------------------------------------------------------------------------
-    ## For Backward euler, there is no streaming term since implicit reaction term on LHS
-    #  of equation is already included in the system
-    def evalImplicit(self, el, **kwargs):
+    ## implicit term is on LHS, so return zeros
+    #
+    #  @param[in] i  element id
+    #
+    def evalImplicit(self, i, **kwargs):
 
         return np.zeros(4)
 
     #--------------------------------------------------------------------------------
-    ## At time \f$t_n\f$, there is a isotropic scattering source
-    def evalOld(self, i, E_old=None, cx_old = None, **kwargs):
+    ## Computes old scattering source term, \f$\frac{\sigma_s^n}{2}\phi^n\f$
+    #
+    #  @param[in] i       element id
+    #  @param[in] E_old   old radiation energy, \f$\mathcal{E}^n\f$
+    #  @param[in] cx_old  old cross sections
+    #
+    def evalOld(self, i, E_old=None, cx_old=None, **kwargs):
 
-        #Get scattering cross section
-        sig_s_l = cx_old[i][0].sig_s
-        sig_s_r = cx_old[i][1].sig_s
+        # left and right scattering cross section
+        sig_s_L = cx_old[i][0].sig_s
+        sig_s_R = cx_old[i][1].sig_s
 
-        #Get all the indices, this is basically redundant
+        # left and right scalar fluxes
         phi_L = E_old[i][0]*self.c
         phi_R = E_old[i][1]*self.c
 
-        iLminus     = getLocalIndex("L","-") # dof i,  L,-
-        iLplus      = getLocalIndex("L","+") # dof i,  L,+
-        iRminus     = getLocalIndex("R","-") # dof i,  R,-
-        iRplus      = getLocalIndex("R","+") # dof i,  R,l+
+        # get local indices
+        iLm = getLocalIndex("L","-") # dof L,-
+        iLp = getLocalIndex("L","+") # dof L,+
+        iRm = getLocalIndex("R","-") # dof R,-
+        iRp = getLocalIndex("R","+") # dof R,+
 
-        Q  = np.zeros(4)
-        Q[iLminus] = 0.5*phi_L*sig_s_l
-        Q[iRminus] = 0.5*phi_R*sig_s_r
-        Q[iLplus]  = 0.5*phi_L*sig_s_l
-        Q[iRplus]  = 0.5*phi_R*sig_s_r
+        # compute scattering source
+        Q = np.zeros(4)
+        Q[iLm] = 0.5*phi_L*sig_s_L
+        Q[iRm] = 0.5*phi_R*sig_s_R
+        Q[iLp] = 0.5*phi_L*sig_s_L
+        Q[iRp] = 0.5*phi_R*sig_s_R
 
         return Q
 
     #--------------------------------------------------------------------------------
-    ## The older term is the same as old, but with the oldest E. So call old
-    #  version
-    def evalOlder(self, el, E_older = None, cx_older = None, **kwargs):
+    ## Computes older scattering source term,
+    #  \f$\frac{\sigma_s^{n-1}}{2}\phi^{n-1}\f$
+    #
+    #  @param[in] i         element id
+    #  @param[in] E_older   older radiation energy, \f$\mathcal{E}^{n-1}\f$
+    #  @param[in] cx_older  older cross sections
+    #
+    def evalOlder(self, i, E_older=None, cx_older=None, **kwargs):
 
-        return self.evalOld(el,E_old = E_older,cx_old=cx_older)
+        # Use old function but with older arguments
+        return self.evalOld(i, E_old=E_older, cx_old=cx_older)
+
+#====================================================================================
+## Derived class for computing source term, \f$\mathcal{Q}\f$
+class SourceSrc(SourceHandler):
+
+    #-------------------------------------------------------------------------------
+    ## Constructor
+    def __init__(self, *args):
+
+        # call base class constructor
+        SourceHandler.__init__(self, *args)
+
+    #--------------------------------------------------------------------------------
+    ## Computes implicit source term, \f$\mathcal{Q}^{\pm,k}\f$
+    #
+    #  @param[in] i      element id
+    #  @param[in] Q_new  implicit source term, \f$\mathcal{Q}^{\pm,k}\f$,
+    #                    provided if source is not solution-dependent
+    #
+    def evalImplicit(self, i, Q_new=None, **kwargs):
+
+        # Use old function but with new arguments
+        return self.evalOld(i, Q_old=Q_new)
+
+    #--------------------------------------------------------------------------------
+    ## Computes old source term, \f$\mathcal{Q}^{\pm,n}\f$
+    #
+    #  @param[in] i      element id
+    #  @param[in] Q_old  old source term, \f$\mathcal{Q}^{\pm,n}\f$, provided if
+    #                    source is not solution-dependent
+    #
+    def evalOld(self, i, Q_old=None, **kwargs):
+
+        # for now, sources cannot be solution-dependent, so raise an error if
+        # no source is provided
+        if Q_old is None:
+           raise NotImplementedError("Solution-dependent sources not yet implemented")
+        else:
+           # get global indices
+           iLm = getIndex(i,"L","-") # dof i,L,-
+           iLp = getIndex(i,"L","+") # dof i,L,+
+           iRm = getIndex(i,"R","-") # dof i,R,-
+           iRp = getIndex(i,"R","+") # dof i,R,+
+
+           # get local indices
+           Lm = getLocalIndex("L","-") # dof L,-
+           Lp = getLocalIndex("L","+") # dof L,+
+           Rm = getLocalIndex("R","-") # dof R,-
+           Rp = getLocalIndex("R","+") # dof R,+
+
+           # return local Q values
+           Q_local = np.zeros(4)
+           Q_local[Lm] = Q_old[iLm]
+           Q_local[Lp] = Q_old[iLp]
+           Q_local[Rm] = Q_old[iRm]
+           Q_local[Rp] = Q_old[iRp]
+
+        return Q_local
+
+    #--------------------------------------------------------------------------------
+    ## Computes older source term, \f$\mathcal{Q}^{\pm,n-1}\f$
+    #
+    #  @param[in] i        element id
+    #  @param[in] Q_older  older source term, \f$\mathcal{Q}^{\pm,n-1}\f$,
+    #                      provided if source is not solution-dependent
+    #
+    def evalOlder(self, i, Q_older=None, **kwargs):
+
+        # Use old function but with older arguments
+        return self.evalOld(i, Q_old=Q_older)
 
