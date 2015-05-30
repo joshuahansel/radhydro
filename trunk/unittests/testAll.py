@@ -9,7 +9,7 @@ def main():
                    'testPureScatteringProblem',
                    'testDiffusionProblem',
                    'testConvergence',
-                   'testSourceBuilder']
+                   'testTransientSource']
 
    # add all tests modules to suite
    suite = TestSuite()

@@ -1,17 +1,17 @@
-## @package src.sourceHandlers
-# This file contains all of the source handler functions 
+## @package src.transientSource
+# This file contains all of the transient source builder functions 
 #
-# Each source is responsible for implementing several functions to build the approps
+# Each source is responsible for implementing several functions to build the
 # source for each of the time stepping methods.  The derived classes will, in
 # general, only need to define each of several ``virtual functions''.  Each derived
-# class inherits a "buildSource" function. This is the primary function, responsible
+# class inherits a "computeTerm" function. This is the primary function, responsible
 # for building the entire right hand side for that term in the equation. 
 #
 # In general, each derived class is responsible for overriding the different
-# functions for the different time stepping methods. Each source term, called it f,
-# will be its own derived class.  Most classes will use the default BuildSource
+# functions for the different time stepping methods. Each source term
+# will be its own derived class.  Most classes will use the default computeTerm
 # function, which calls several functions to help build the source on the RHS. In
-# particular, they assume the following forms of each of the time stepping methods.
+# particular, they assume the following forms of each of the time stepping methods:
 #
 # BE: 
 # \f[
@@ -34,14 +34,14 @@
 # \f]
 # where \f$A\f$ is a operator that is a function of \f$Y,t\f$. NOTE: we keep the
 # \f$1/c\Delta t\f$ term on the left hand terms. Each derived class is thus
-# responsible for writing functions that evaluate \f$AY^n,\;AY^{n-1},\f$ and
-# \f$AY^{n+1}\f$, which are functions evalOld, evalOlder, and evalImplicit,
+# responsible for writing functions that evaluate \f$A^n,\;A^{n-1},\f$ and
+# \f$Y^{n+1}\f$, which are functions evalOld, evalOlder, and evalImplicit,
 # respectively.
 #
 # In implementation, \f$Y^n/c\Delta t\f$
-# is also on the right hand side of the equation as a source term. This is an example
-# (probably the only one) of a term that its derived class will override buildSource,
-# rather than implement the eval*** functions because the term is the same for all
+# is also on the right hand side of the equation as a source term. This is
+# the only term for which its derived class overrides computeTerm
+# rather than implement the eval*** functions, since the term is the same for all
 # stepping algorithms
 
 
@@ -52,34 +52,69 @@ import globalConstants as GC
 from utilityFunctions import getIndex, getLocalIndex
 from radUtilities import mu
 
-#====================================================================================
+## Class to compute the full transient source
+#
+class TransientSource:
+   
+   ## Constructor
+   #
+   #  @param[in] mesh          mesh object
+   #  @param[in] time_stepper  string identifier for the chosen time-stepper,
+   #                           e.g., 'CN'
+   #
+   def __init__(self, mesh, time_stepper):
+      self.mesh         = mesh
+      self.time_stepper = time_stepper
+
+   ## Function to evaluate the full transient source
+   #
+   #  Creates a list of transient sources and loops
+   #  over them to add to the full transient source.
+   #
+   def evaluate(self, **kwargs):
+      # create transient source terms
+      terms = [OldIntensityTerm(self.mesh, self.time_stepper), 
+               StreamingTerm   (self.mesh, self.time_stepper),
+               ReactionTerm    (self.mesh, self.time_stepper),
+               ScatteringTerm  (self.mesh, self.time_stepper),
+               SourceTerm      (self.mesh, self.time_stepper)]
+   
+      # build the transient source
+      n = self.mesh.n_elems * 4
+      Q_tr = np.zeros(n)
+      for term in terms:
+          # build source for this handler
+          Q_term = term.computeTerm(**kwargs)
+          # Add elementwise the src to the total
+          Q_tr += Q_term
+
+      return Q_tr
+
+#=================================================================================
 ## Base class for source handlers. More info given in package documentation. Here, 
 #  the evaluate functions are only implemented to raise errors
 #  in case developer incorrectly creates a derived class
-class SourceHandler:
+class TransientSourceTerm:
 
     #---------------------------------------------------------------------------
     ## Constructor
     #
     #  @param[in] mesh          mesh object
-    #  @param[in] dt            time step size
     #  @param[in] time_stepper  string identifier for the chosen time-stepper,
     #                           e.g., 'CN'
     #
-    def __init__(self, mesh, dt, time_stepper):
+    def __init__(self, mesh, time_stepper):
 
         self.mesh = mesh
-        self.dt   = dt
         self.time_stepper = time_stepper
 
         # Determine which time stepping function to use in derived class
-        ts = time_stepper
         self.func = None
-        if re.search("BE", ts):
+        if re.search("BE", time_stepper):
             self.func = self.evalBE
-        elif re.search("CN", ts):
+        elif re.search("CN", time_stepper):
             self.func = self.evalCN
-        elif re.search("BDF2", ts):
+        elif re.search("BDF2", time_stepper):
             self.func = self.evalBDF2
         else:
            raise NotImplementedError("Specified an invalid time-stepper")
@@ -87,7 +122,8 @@ class SourceHandler:
     #----------------------------------------------------------------------------
     ## Function to evaluate source at all cells in the mesh. This is the main 
     #  function to be called on all sources.  
-    def buildSource(self, **kwargs):
+    #
+    def computeTerm(self, **kwargs):
 
         #Loop over all cells and build source 
         Q = np.array([])
@@ -134,7 +170,7 @@ class SourceHandler:
     #
     def evalImplicit(self, i, **kwargs):
 
-        raise NotImplementedError("You must define the evalImplicit, or entire build"             
+        raise NotImplementedError("You must define the evalImplicit, or entire build"
             "source function in the derived class")
 
     #----------------------------------------------------------------------------
@@ -159,50 +195,54 @@ class SourceHandler:
         raise NotImplementedError("You must define the evalOlder, or entire build"
            "source function in the derived class")
 
-#===========================================================================================
+#===================================================================================
 # All derived classes
-#===========================================================================================
+#===================================================================================
 
-## Derived class for computing old intensity term, \f$\frac{\Psi^{\pm,n}}{c\Delta t}\f$
-class OldIntensitySrc(SourceHandler):
+## Derived class for computing old intensity term,
+#  \f$\frac{\Psi^{\pm,n}}{c\Delta t}\f$
+#
+class OldIntensityTerm(TransientSourceTerm):
     
     ## Constructor
     def __init__(self, *args):
 
         # call base class constructor
-        SourceHandler.__init__(self, *args)
-
-        self.c_dt = GC.SPD_OF_LGT * self.dt
+        TransientSourceTerm.__init__(self, *args)
     
-    #-------------------------------------------------------------------------------
     ## Override the build source function, since old intensity term is the same
     #  for all time steppers
     #
+    #  @param[in] dt        time step size
     #  @param[in] psim_old  Old angular flux in minus direction, \f$\Psi^{-,n}\f$
     #  @param[in] psip_old  Old angular flux in plus  direction, \f$\Psi^{+,n}\f$
     #
-    def buildSource(self, psim_old=None, psip_old=None, **kwargs):
+    def computeTerm(self, dt=None, psim_old=None, psip_old=None, **kwargs):
 
         # Loop over all cells and build source 
         Q = np.array([])
         for i in range(self.mesh.n_elems):
 
             # Evaluate source of element i
-            Q_elem =  self.evaluate(i, psim_old=psim_old, psip_old=psip_old)
+            Q_elem =  self.computeOldIntensityTerm(i, dt=dt, psim_old=psim_old,
+               psip_old=psip_old)
 
             # Append source from element i
             Q = np.append(Q, Q_elem)
 
         return Q
 
-    #----------------------------------------------------------------------------
     ## Computes old intensity term, \f$\frac{\Psi^{\pm,n}}{c\Delta t}\f$
     #
     #  @param[in] i         element id
+    #  @param[in] dt        time step size
     #  @param[in] psim_old  Old angular flux in minus direction, \f$\Psi^{-,n}\f$
     #  @param[in] psip_old  Old angular flux in plus  direction, \f$\Psi^{+,n}\f$
     #
-    def evaluate(self, i, psim_old=None, psip_old=None):
+    def computeOldIntensityTerm(self, i, dt=None, psim_old=None, psip_old=None):
+
+        # compute c*dt
+        c_dt = GC.SPD_OF_LGT * dt
         
         # get local indices
         iLm = getLocalIndex("L","-") # dof L,-
@@ -212,10 +252,10 @@ class OldIntensitySrc(SourceHandler):
 
         # compute old intensity term
         Q  = np.zeros(4)
-        Q[iLm] = psim_old[i][0] / self.c_dt
-        Q[iRm] = psim_old[i][1] / self.c_dt
-        Q[iLp] = psip_old[i][0] / self.c_dt
-        Q[iRp] = psip_old[i][1] / self.c_dt
+        Q[iLm] = psim_old[i][0] / c_dt
+        Q[iRm] = psim_old[i][1] / c_dt
+        Q[iLp] = psip_old[i][0] / c_dt
+        Q[iRp] = psip_old[i][1] / c_dt
 
         return Q
 
@@ -223,13 +263,14 @@ class OldIntensitySrc(SourceHandler):
 #====================================================================================
 ## Derived class for computing streaming term,
 #  \f$\mu^\pm \frac{\partial\Psi}{\partial x}\f$
-class StreamingSrc(SourceHandler):
+#
+class StreamingTerm(TransientSourceTerm):
 
     #-------------------------------------------------------------------------------
     ## Constructor
     def __init__(self, *args):
 
-        SourceHandler.__init__(self, *args)
+        TransientSourceTerm.__init__(self, *args)
 
     #--------------------------------------------------------------------------------
     ## implicit term is on LHS, so return zeros
@@ -311,13 +352,13 @@ class StreamingSrc(SourceHandler):
 
 #====================================================================================
 ## Derived class for computing reaction term, \f$\sigma_t\Psi^\pm\f$
-class ReactionSrc(SourceHandler):
+class ReactionTerm(TransientSourceTerm):
 
     #-------------------------------------------------------------------------------
     ## Constructor
     def __init__(self, *args):
 
-        SourceHandler.__init__(self, *args)
+        TransientSourceTerm.__init__(self, *args)
 
     #--------------------------------------------------------------------------------
     ## implicit term is on LHS, so return zeros
@@ -378,14 +419,14 @@ class ReactionSrc(SourceHandler):
 
 #====================================================================================
 ## Derived class for computing scattering source term, \f$\frac{\sigma_s}{2}\phi\f$
-class ScatteringSrc(SourceHandler):
+class ScatteringTerm(TransientSourceTerm):
 
     #-------------------------------------------------------------------------------
     ## Constructor
     def __init__(self, *args):
 
         # call base class constructor
-        SourceHandler.__init__(self, *args)
+        TransientSourceTerm.__init__(self, *args)
 
         # save speed of light
         self.c = GC.SPD_OF_LGT
@@ -446,14 +487,14 @@ class ScatteringSrc(SourceHandler):
 
 #====================================================================================
 ## Derived class for computing source term, \f$\mathcal{Q}\f$
-class SourceSrc(SourceHandler):
+class SourceTerm(TransientSourceTerm):
 
     #-------------------------------------------------------------------------------
     ## Constructor
     def __init__(self, *args):
 
         # call base class constructor
-        SourceHandler.__init__(self, *args)
+        TransientSourceTerm.__init__(self, *args)
 
     #--------------------------------------------------------------------------------
     ## Computes implicit source term, \f$\mathcal{Q}^{\pm,k}\f$

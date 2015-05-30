@@ -14,7 +14,7 @@ from mesh import Mesh
 from crossXInterface import CrossXInterface
 from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotAngularFlux, plotScalarFlux, computeScalarFlux
-from sourceHandlers import * 
+from transientSource import * 
 from utilityFunctions import computeDiscreteL1Norm
 
 ## Derived unittest class to run a transient radiation problem
@@ -33,6 +33,12 @@ class TestRadTransient(unittest.TestCase):
        sig_a = 2.0
        cross_sects = [(CrossXInterface(sig_a, sig_s), CrossXInterface(sig_a, sig_s))
                      for i in xrange(mesh.n_elems)]
+   
+       # transient options
+       dt = 0.1            # time step size
+       t  = 0.0            # begin time
+       t_end = 10.0        # end time
+       time_stepper = "CN" # time-stepper
    
        # boundary fluxes
        psi_left  = 2.5
@@ -56,12 +62,6 @@ class TestRadTransient(unittest.TestCase):
        # compute steady state scalar flux
        phi_ss = computeScalarFlux(psip_ss, psim_ss)
    
-       # transient options
-       dt = 0.1     # time step size
-       t  = 0.0     # begin time
-       t_end = 10.0 # end time
-       ts = "BE"    # time-stepper
-   
        # run transient solution from arbitrary IC, such as zero
        psip_old   = [(0.0,0.0) for i in range(mesh.n_elems)]
        psim_old   = deepcopy(psip_old)
@@ -70,6 +70,9 @@ class TestRadTransient(unittest.TestCase):
        E_old      = deepcopy(psip_old)
        E_older    = deepcopy(psip_old)
    
+       # create transient source
+       transientSource = TransientSource(mesh, time_stepper)
+
        # transient loop
        transient_incomplete = True # boolean flag signalling end of transient
        while transient_incomplete:
@@ -82,43 +85,29 @@ class TestRadTransient(unittest.TestCase):
            else:
               t += dt
 
-           # create sources for time-stepper
-           source_handles = [OldIntensitySrc(mesh, dt, ts), 
-                             StreamingSrc(mesh, dt, ts),
-                             ReactionSrc(mesh, dt, ts),
-                             ScatteringSrc(mesh, dt, ts),
-                             SourceSrc(mesh, dt, ts)]
-   
-           # check that all derived classes are implemented correctly
-           assert all([isinstance(i, SourceHandler) for i in source_handles])
-   
-           # build the transient source
-           n = mesh.n_elems * 4
-           Q_tr = np.zeros(n)
-           for src in source_handles:
-               # build source for this handler
-               Q_src = src.buildSource(psim_old      = psim_old,
-                                       psip_old      = psip_old,
-                                       psim_older    = psim_older,
-                                       psip_older    = psip_older,
-                                       bc_flux_left  = psi_left,
-                                       bc_flux_right = psi_right,
-                                       cx_old        = cross_sects,
-                                       cx_older      = cross_sects,
-                                       E_old         = E_old,
-                                       E_older       = E_older,
-                                       Q_older       = Q,
-                                       Q_old         = Q,
-                                       Q_new         = Q)
-               # Add elementwise the src to the total
-               Q_tr += Q_src
+           # build source for this handler
+           Q_tr = transientSource.evaluate(
+              dt            = dt,
+              bc_flux_left  = psi_left,
+              bc_flux_right = psi_right,
+              cx_older      = cross_sects,
+              cx_old        = cross_sects,
+              psim_older    = psim_older,
+              psip_older    = psip_older,
+              psim_old      = psim_old,
+              psip_old      = psip_old,
+              E_older       = E_older,
+              E_old         = E_old,
+              Q_older       = Q,
+              Q_old         = Q,
+              Q_new         = Q)
    
            # solve the transient system
            alpha = 1./(GC.SPD_OF_LGT*dt)
            beta = {"CN":0.5, "BDF2":2./3., "BE":1.}
            psim, psip, E, F = radiationSolveSS(mesh, cross_sects, Q_tr,
               bc_psi_left = psi_left, bc_psi_right = psi_right,
-              diag_add_term = alpha, implicit_scale = beta[ts] )
+              diag_add_term = alpha, implicit_scale = beta[time_stepper] )
 
            # compute scalar flux
            phi = computeScalarFlux(psip, psim)

@@ -1,5 +1,5 @@
-## @package testSourceBuilder
-#  Tests the source builder with Crank-Nicolson.
+## @package testTransientSource
+#  Tests the transient source builder with Crank-Nicolson.
 #
 #  The sources are built using the steady-state solution as
 #  the old solution. Considering that the steady-state
@@ -22,16 +22,17 @@ import unittest
 from mesh import Mesh
 from crossXInterface import CrossXInterface
 from radiationSolveSS import radiationSolveSS
-from sourceHandlers import * 
+from transientSource import * 
 import globalConstants as GC
 
 ## Derived unittest class to test source builder
-class TestSourceBuilder(unittest.TestCase):
+#
+class TestTransientSource(unittest.TestCase):
    def setUp(self):
       pass
    def tearDown(self):
       pass
-   def test_CNSourceBuilder(self):
+   def test_CNTransientSource(self):
       # number of decimal places to test
       n_decimal_places = 14
 
@@ -48,6 +49,10 @@ class TestSourceBuilder(unittest.TestCase):
       dt = random()
       c_dt = GC.SPD_OF_LGT*dt
   
+      # boundary fluxes
+      psi_left  = random()
+      psi_right = random()
+  
       # create the steady-state source
       n = 4*mesh.n_elems
       Q = np.zeros(n)
@@ -57,40 +62,25 @@ class TestSourceBuilder(unittest.TestCase):
          Q[getIndex(i,"L","-")] = random()
          Q[getIndex(i,"R","-")] = random()
   
-      # boundary fluxes
-      psi_left  = random()
-      psi_right = random()
-  
       # compute the steady-state solution
-      psi_minus_SS, psi_plus_SS, E_SS, F_SS = radiationSolveSS(mesh, cross_sects, Q,
+      psim_ss, psip_ss, E_ss, F_ss = radiationSolveSS(mesh, cross_sects, Q,
               bc_psi_right = psi_right, bc_psi_left = psi_left)
   
-      # create source handles
-      ts = "CN" # timestepper
-      source_handles = [OldIntensitySrc(mesh, dt, ts), 
-                        StreamingSrc(mesh, dt, ts),
-                        ReactionSrc(mesh, dt, ts),
-                        ScatteringSrc(mesh, dt, ts),
-                        SourceSrc(mesh, dt, ts)]
+      # time-stepper
+      time_stepper = "CN"
   
-      #Check all derived classes are implemented correctly
-      assert all([isinstance(i, SourceHandler) for i in source_handles])
-  
-      # build the transient source
-      n = mesh.n_elems * 4
-      Q_tr = np.zeros(n)
-      for src in source_handles:
-         # build src for this handler
-         Q_src = src.buildSource(psim_old      = psi_minus_SS,
-                                 psip_old      = psi_plus_SS,
-                                 bc_flux_left  = psi_left,
-                                 bc_flux_right = psi_right,
-                                 cx_old        = cross_sects,
-                                 E_old         = E_SS,
-                                 Q_old         = Q,
-                                 Q_new         = Q)
-         # add the source to the total
-         Q_tr += Q_src
+      # compute the transient source
+      transient_source = TransientSource(mesh, time_stepper)
+      Q_tr = transient_source.evaluate(
+         dt            = dt,
+         psim_old      = psim_ss,
+         psip_old      = psip_ss,
+         bc_flux_left  = psi_left,
+         bc_flux_right = psi_right,
+         cx_old        = cross_sects,
+         E_old         = E_ss,
+         Q_old         = Q,
+         Q_new         = Q)
 
       # loop over elements and test that sources are what they should be
       for i in xrange(mesh.n_elems):
@@ -98,10 +88,10 @@ class TestSourceBuilder(unittest.TestCase):
          iLplus  = getIndex(i,"L","+")
          iRminus = getIndex(i,"R","-")
          iRplus  = getIndex(i,"R","+")
-         QiLminus_expected = psi_minus_SS[i][0]/c_dt + 0.5*Q[iLminus]
-         QiLplus_expected  = psi_plus_SS [i][0]/c_dt + 0.5*Q[iLplus]
-         QiRminus_expected = psi_minus_SS[i][1]/c_dt + 0.5*Q[iRminus]
-         QiRplus_expected  = psi_plus_SS [i][1]/c_dt + 0.5*Q[iRplus]
+         QiLminus_expected = psim_ss[i][0]/c_dt + 0.5*Q[iLminus]
+         QiLplus_expected  = psip_ss[i][0]/c_dt + 0.5*Q[iLplus]
+         QiRminus_expected = psim_ss[i][1]/c_dt + 0.5*Q[iRminus]
+         QiRplus_expected  = psip_ss[i][1]/c_dt + 0.5*Q[iRplus]
          self.assertAlmostEqual(Q_tr[iLminus],QiLminus_expected,n_decimal_places)
          self.assertAlmostEqual(Q_tr[iLplus], QiLplus_expected, n_decimal_places)
          self.assertAlmostEqual(Q_tr[iRminus],QiRminus_expected,n_decimal_places)
