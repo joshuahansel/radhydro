@@ -8,7 +8,7 @@ def main():
                    'testPureAbsorberProblem',
                    'testPureScatteringProblem',
                    'testDiffusionProblem',
-                   'testConvergence',
+                   'testSSConvergence',
                    'testTransientSource',
                    'testRadTransient']
 

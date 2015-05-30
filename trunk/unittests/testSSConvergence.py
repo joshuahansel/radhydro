@@ -1,4 +1,4 @@
-## @package testConvergence
+## @package testSSConvergence
 #  Runs a diffusion problem and compares to exact solution.
 
 # add source directory to module search path
@@ -18,12 +18,12 @@ from integrationUtilities import computeL1ErrorLD
 from utilityFunctions import computeConvergenceRates, printConvergenceTable
 
 ## Derived unittest class to run a diffusion problem and compare to exact solution.
-class TestConvergence(unittest.TestCase):
+class TestSSConvergence(unittest.TestCase):
    def setUp(self):
       pass
    def tearDown(self):
       pass
-   def test_Convergence(self):
+   def test_SSConvergence(self):
 
       # physics data
       sig_a = 0.25         # absorption cross section
