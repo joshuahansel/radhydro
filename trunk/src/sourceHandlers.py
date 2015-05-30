@@ -64,7 +64,7 @@ class SourceHandler:
     #  @param[in] mesh          mesh object
     #  @param[in] dt            time step size
     #  @param[in] time_stepper  string identifier for the chosen time-stepper,
-    #                          e.g., 'CN'
+    #                           e.g., 'CN'
     #
     def __init__(self, mesh, dt, time_stepper):
 

@@ -28,7 +28,7 @@ def computeScalarFlux(psi_minus, psi_plus):
                        ) for i in xrange(len(psi_minus))]
    return scalar_flux
 
-## Function to compute energy density E from angular fluxes.
+## Function to compute energy density \f$\mathcal{E}\f$ from angular fluxes.
 #
 #  @param[in] psi_minus S-2 angular flux solution for the minus direction
 #                       multiplied by \f$2\pi\f$, i.e.,
@@ -40,10 +40,10 @@ def computeScalarFlux(psi_minus, psi_plus):
 #                       \f$\Psi^+\f$, passed as an array of tuples of left
 #                       and right values, e.g., psi_plus[i]\f$=(\Psi^+_{i,L},
 #                       \Psi^+_{i,R})\f$
-#  @return  energy density, \f$E\f$, as an array of tuples of left
+#  @return  energy density, \f$\mathcal{E}\f$, as an array of tuples of left
 #           and right values, e.g., E[i]\f$=(E_{i,L},E_{i,R})\f$
 #
 def computeEnergyDensity(psi_minus, psi_plus):
-   E = [tuple((1./GC.SPD_OF_LGT)*y for y in tuple(map(operator.add, psi_minus[i], psi_plus[i]))
-                       ) for i in xrange(len(psi_minus))]
+   E = [tuple((1./GC.SPD_OF_LGT)*y for y in tuple(map(operator.add,
+      psi_minus[i], psi_plus[i]))) for i in xrange(len(psi_minus))]
    return E
