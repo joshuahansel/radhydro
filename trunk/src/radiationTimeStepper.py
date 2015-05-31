@@ -34,9 +34,9 @@ class RadiationTimeStepper:
 
       # solve the transient system
       alpha = 1./(GC.SPD_OF_LGT*kwargs['dt'])
-      psim, psip, E, F = radiationSolveSS(self.mesh, kwargs['cx_new'], Q_tr,
+      psi = radiationSolveSS(self.mesh, kwargs['cx_new'], Q_tr,
          bc_psi_left = kwargs['bc_flux_left'],
          bc_psi_right = kwargs['bc_flux_right'],
          diag_add_term = alpha, implicit_scale = beta[self.time_stepper] )
 
-      return psim, psip, E, F
+      return psi

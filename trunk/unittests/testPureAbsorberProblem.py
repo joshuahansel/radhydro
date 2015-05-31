@@ -13,7 +13,7 @@ from mesh import Mesh
 from crossXInterface import CrossXInterface
 from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotAngularFlux, makeContinuousXPoints
-from radUtilities import mu, computeScalarFlux
+from radUtilities import mu, computeScalarFlux, extractAngularFluxes
 from integrationUtilities import computeL1ErrorLD
 
 ## Derived unittest class to run a pure absorber problem and compare to
@@ -46,11 +46,11 @@ class TestPureAbsorberProblem(unittest.TestCase):
       Q  = [0.0 for i in xrange(mesh.n_elems*4)]
    
       # compute LD solution
-      psi_minus, psi_plus, E, F = radiationSolveSS(mesh,
-                                                   cross_sects,
-                                                   Q,
-                                                   bound_curr_lt=j_plus,
-                                                   bound_curr_rt=j_minus)
+      psi = radiationSolveSS(mesh,
+                             cross_sects,
+                             Q,
+                             bound_curr_lt=j_plus,
+                             bound_curr_rt=j_minus)
    
       # get continuous x-points
       xlist = makeContinuousXPoints(mesh)
@@ -64,18 +64,21 @@ class TestPureAbsorberProblem(unittest.TestCase):
          return exactPsiMinus(x) + exactPsiPlus(x)
 
       # compute exact solutions
-      psi_minus_exact   = [exactPsiMinus(x) for x in xlist]
-      psi_plus_exact    = [exactPsiPlus(x)  for x in xlist]
+      psim_exact = [exactPsiMinus(x) for x in xlist]
+      psip_exact = [exactPsiPlus(x)  for x in xlist]
       exact_scalar_flux = [psi_m+psi_p for psi_m, psi_p
-         in zip(psi_minus_exact, psi_plus_exact)]
+         in zip(psim_exact, psip_exact)]
+
+      # extract angular fluxes from solution vector
+      psim, psip = extractAngularFluxes(psi,mesh)
    
       # plot solutions
-      plotAngularFlux(mesh,psi_minus,psi_plus,
+      plotAngularFlux(mesh,psim,psip,
          save=True,filename='testPureAbsorber.pdf',
-         psi_minus_exact=psi_minus_exact,psi_plus_exact=psi_plus_exact)
+         psi_minus_exact=psim_exact, psi_plus_exact=psip_exact)
 
       # compute numerical and exact scalar flux
-      numerical_scalar_flux = computeScalarFlux(psi_minus,psi_plus)
+      numerical_scalar_flux = computeScalarFlux(psim,psip)
    
       # compute L1 error
       L1_error = computeL1ErrorLD(mesh,numerical_scalar_flux,exactScalarFlux)

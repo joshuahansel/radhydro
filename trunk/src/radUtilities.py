@@ -8,6 +8,17 @@ from math import sqrt
 ## directions for S-2, \f$\mu^\pm\f$
 mu = {"-" : -1.0/sqrt(3.0), "+" : 1.0/sqrt(3.0)}
 
+## Extracts plus and minus direction angular fluxes from an
+#  array with global dof indexing
+#
+#  @param[in] mesh  mesh data
+#  @param[in] psi   angular flux, stored as array with global dof indexing
+#
+def extractAngularFluxes(psi,mesh):
+   psim = [(psi[4*i],  psi[4*i+2]) for i in xrange(mesh.n_elems)]
+   psip = [(psi[4*i+1],psi[4*i+3]) for i in xrange(mesh.n_elems)]
+   return psim, psip
+
 ## Function to compute scalar flux from angular fluxes.
 #
 #  @param[in] psi_minus S-2 angular flux solution for the minus direction

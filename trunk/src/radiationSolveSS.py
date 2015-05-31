@@ -7,7 +7,7 @@ import numpy as np
 from numpy import array
 from mesh import Mesh
 from utilityFunctions import getIndex
-from radUtilities import mu, computeScalarFlux, computeEnergyDensity
+from radUtilities import mu, computeScalarFlux
 import globalConstants as GC
 
 ## Steady-state solve function for the S-2 equations.
@@ -128,15 +128,5 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
     # solve linear system
     solution = np.linalg.solve(matrix, rhs)
 
-    # extract solution from global vector
-    psi_minus = [(solution[4*i],  solution[4*i+2]) for i in xrange(mesh.n_elems)]
-    psi_plus  = [(solution[4*i+1],solution[4*i+3]) for i in xrange(mesh.n_elems)]
-
-    # Calculate E
-    E = computeEnergyDensity(psi_minus, psi_plus)
-
-    #Return F as a zeros for now
-    F = [(0, 0) for i in range(mesh.n_elems)]
-
-    return psi_minus, psi_plus, E, F
+    return solution
 

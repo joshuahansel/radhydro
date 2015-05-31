@@ -32,9 +32,9 @@ class TestTransientSource(unittest.TestCase):
       pass
    def tearDown(self):
       pass
-   def test_CNTransientSource(self):
+   def test_TransientSourceCN(self):
       # number of decimal places to test
-      n_decimal_places = 14
+      n_decimal_places = 13
 
       # create mesh
       n_elems = 5
@@ -63,8 +63,8 @@ class TestTransientSource(unittest.TestCase):
          Q[getIndex(i,"R","-")] = random()
   
       # compute the steady-state solution
-      psim_ss, psip_ss, E_ss, F_ss = radiationSolveSS(mesh, cross_sects, Q,
-              bc_psi_right = psi_right, bc_psi_left = psi_left)
+      psi_ss = radiationSolveSS(mesh, cross_sects, Q,
+         bc_psi_right = psi_right, bc_psi_left = psi_left)
   
       # time-stepper
       time_stepper = "CN"
@@ -73,29 +73,27 @@ class TestTransientSource(unittest.TestCase):
       transient_source = TransientSource(mesh, time_stepper)
       Q_tr = transient_source.evaluate(
          dt            = dt,
-         psim_old      = psim_ss,
-         psip_old      = psip_ss,
          bc_flux_left  = psi_left,
          bc_flux_right = psi_right,
          cx_old        = cross_sects,
-         E_old         = E_ss,
+         psi_old       = psi_ss,
          Q_old         = Q,
          Q_new         = Q)
 
       # loop over elements and test that sources are what they should be
       for i in xrange(mesh.n_elems):
-         iLminus = getIndex(i,"L","-")
-         iLplus  = getIndex(i,"L","+")
-         iRminus = getIndex(i,"R","-")
-         iRplus  = getIndex(i,"R","+")
-         QiLminus_expected = psim_ss[i][0]/c_dt + 0.5*Q[iLminus]
-         QiLplus_expected  = psip_ss[i][0]/c_dt + 0.5*Q[iLplus]
-         QiRminus_expected = psim_ss[i][1]/c_dt + 0.5*Q[iRminus]
-         QiRplus_expected  = psip_ss[i][1]/c_dt + 0.5*Q[iRplus]
-         self.assertAlmostEqual(Q_tr[iLminus],QiLminus_expected,n_decimal_places)
-         self.assertAlmostEqual(Q_tr[iLplus], QiLplus_expected, n_decimal_places)
-         self.assertAlmostEqual(Q_tr[iRminus],QiRminus_expected,n_decimal_places)
-         self.assertAlmostEqual(Q_tr[iRplus], QiRplus_expected, n_decimal_places)
+         iLm = getIndex(i,"L","-")
+         iLp = getIndex(i,"L","+")
+         iRm = getIndex(i,"R","-")
+         iRp = getIndex(i,"R","+")
+         QiLm_expected = psi_ss[iLm]/c_dt + 0.5*Q[iLm]
+         QiLp_expected = psi_ss[iLp]/c_dt + 0.5*Q[iLp]
+         QiRm_expected = psi_ss[iRm]/c_dt + 0.5*Q[iRm]
+         QiRp_expected = psi_ss[iRp]/c_dt + 0.5*Q[iRp]
+         self.assertAlmostEqual(Q_tr[iLm], QiLm_expected, n_decimal_places)
+         self.assertAlmostEqual(Q_tr[iLp], QiLp_expected, n_decimal_places)
+         self.assertAlmostEqual(Q_tr[iRm], QiRm_expected, n_decimal_places)
+         self.assertAlmostEqual(Q_tr[iRp], QiRp_expected, n_decimal_places)
   
 # run main function from unittest module
 if __name__ == '__main__':

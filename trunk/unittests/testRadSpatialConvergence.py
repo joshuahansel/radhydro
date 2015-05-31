@@ -15,7 +15,7 @@ from crossXInterface import CrossXInterface
 from radiationSolveSS import radiationSolveSS
 from utilityFunctions import computeDiscreteL1Norm, getIndex
 from radiationTimeStepper import RadiationTimeStepper
-from radUtilities import mu, computeScalarFlux
+from radUtilities import mu, computeScalarFlux, extractAngularFluxes
 import globalConstants as GC
 from integrationUtilities import computeL1ErrorLD
 from utilityFunctions import computeConvergenceRates, printConvergenceTable
@@ -27,17 +27,25 @@ class TestRadSpatialConvergence(unittest.TestCase):
       pass
    def tearDown(self):
       pass
-   def test_RadSpatialConvergence(self):
+   def test_RadSpatialConvergenceBE(self):
+      time_stepper = 'BE'
+      self.runConvergenceTest(time_stepper)
+   def test_RadSpatialConvergenceCN(self):
+      time_stepper = 'CN'
+      self.runConvergenceTest(time_stepper)
+   def test_RadSpatialConvergenceBDF2(self):
+      time_stepper = 'BDF2'
+      self.runConvergenceTest(time_stepper)
+   def runConvergenceTest(self,time_stepper):
 
       # constant cross section values
       sig_s = 1.0
       sig_a = 2.0
 
       # transient options
-      dt_start = 0.01        # time step size
-      t_start  = 0.0         # begin time
-      t_end    = 0.1         # end time
-      time_stepper = 'CN' # time-stepper
+      dt_start = 0.01 # time step size
+      t_start  = 0.0  # begin time
+      t_end    = 0.1  # end time
    
       # boundary fluxes
       psi_left  = 0.0
@@ -71,6 +79,10 @@ class TestRadSpatialConvergence(unittest.TestCase):
       # initialize lists for mesh size and L1 error for each cycle
       max_dx   = list()
       L1_error = list()
+
+      # print header
+      if __name__ == '__main__':
+         print('\n%s:' % time_stepper)
 
       # loop over refinement cycles
       for cycle in xrange(n_cycles):
@@ -117,14 +129,11 @@ class TestRadSpatialConvergence(unittest.TestCase):
             return Q
   
          # zero IC
-         psip_old   = [(0.0,0.0) for i in range(mesh.n_elems)]
-         psim_old   = deepcopy(psip_old)
-         psip_older = deepcopy(psip_old)
-         psim_older = deepcopy(psip_old)
-         E_old      = deepcopy(psip_old)
-         E_older    = deepcopy(psip_old)
-         Q_older    = QMMS(0.0,mesh,cross_sects)
-         Q_old      = QMMS(0.0,mesh,cross_sects)
+         n_dofs = mesh.n_elems * 4
+         psi_old   = np.zeros(n_dofs)
+         psi_older = deepcopy(psi_old)
+         Q_older   = QMMS(0.0,mesh,cross_sects)
+         Q_old     = QMMS(0.0,mesh,cross_sects)
      
          # create time-stepper
          radiation_time_stepper = RadiationTimeStepper(mesh, time_stepper)
@@ -147,38 +156,29 @@ class TestRadSpatialConvergence(unittest.TestCase):
             Q_new = QMMS(t,mesh,cross_sects)
  
             # take radiation step
-            psim, psip, E, F = radiation_time_stepper.takeStep(
+            psi = radiation_time_stepper.takeStep(
                dt            = dt,
                bc_flux_left  = psi_left,
                bc_flux_right = psi_right,
                cx_older      = cross_sects,
                cx_old        = cross_sects,
                cx_new        = cross_sects,
-               psim_older    = psim_older,
-               psip_older    = psip_older,
-               psim_old      = psim_old,
-               psip_old      = psip_old,
-               E_older       = E_older,
-               E_old         = E_old,
+               psi_older     = psi_older,
+               psi_old       = psi_old,
                Q_older       = Q_older,
                Q_old         = Q_old,
                Q_new         = Q_new)
  
-            # print each time step if run standalone
-            #if __name__ == '__main__':
-            #   print("t = %0.3f -> %0.3f" % (t-dt,t))
-    
             # save oldest solutions
-            psip_older = deepcopy(psip_old)
-            psim_older = deepcopy(psim_old)
-            E_older    = deepcopy(E_old)
-            Q_older    = deepcopy(Q_old)
+            psi_older = deepcopy(psi_old)
+            Q_older   = deepcopy(Q_old)
     
             # save old solutions
-            psip_old = deepcopy(psip)
-            psim_old = deepcopy(psim)
-            E_old    = deepcopy(E)
-            Q_old    = deepcopy(Q_new)
+            psi_old = deepcopy(psi)
+            Q_old   = deepcopy(Q_new)
+
+         # extract angular fluxes from solution vector
+         psim, psip = extractAngularFluxes(psi, mesh)
          
          # compute numerical scalar flux
          numerical_scalar_flux = computeScalarFlux(psim, psip)

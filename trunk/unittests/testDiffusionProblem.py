@@ -13,7 +13,7 @@ from mesh import Mesh
 from crossXInterface import CrossXInterface
 from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotScalarFlux, makeContinuousXPoints
-from radUtilities import computeScalarFlux
+from radUtilities import computeScalarFlux, extractAngularFluxes
 from integrationUtilities import computeL1ErrorLD
 
 ## Derived unittest class to run a diffusion problem and compare to exact solution.
@@ -48,11 +48,11 @@ class TestDiffusionProblem(unittest.TestCase):
       Q_iso  = [(0.5*Q) for i in xrange(mesh.n_elems*4)]
    
       # compute LD solution
-      psi_minus, psi_plus, E, F = radiationSolveSS(mesh,
-                                                   cross_sects,
-                                                   Q_iso,
-                                                   bound_curr_lt=inc_j_plus,
-                                                   bound_curr_rt=inc_j_minus)
+      psi = radiationSolveSS(mesh,
+                             cross_sects,
+                             Q_iso,
+                             bound_curr_lt=inc_j_plus,
+                             bound_curr_rt=inc_j_minus)
    
       # get continuous x-points
       xlist = makeContinuousXPoints(mesh)
@@ -65,13 +65,16 @@ class TestDiffusionProblem(unittest.TestCase):
    
       # compute exact scalar flux solution at each x-point
       scalar_flux_exact = [exactScalarFlux(x) for x in xlist]
+
+      # extract angular fluxes
+      psim, psip = extractAngularFluxes(psi,mesh)
    
       # plot solutions
-      plotScalarFlux(mesh,psi_minus,psi_plus,save=True,filename='testDiffusion.pdf',
+      plotScalarFlux(mesh,psim,psip,save=True,filename='testDiffusion.pdf',
          scalar_flux_exact=scalar_flux_exact)
    
       # compute numerical scalar flux
-      numerical_scalar_flux = computeScalarFlux(psi_minus, psi_plus)
+      numerical_scalar_flux = computeScalarFlux(psim, psip)
    
       # compute L1 error
       L1_error = computeL1ErrorLD(mesh,numerical_scalar_flux,exactScalarFlux)

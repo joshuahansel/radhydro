@@ -91,7 +91,7 @@ def printConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err'):
    n_cycles = len(dx)
 
    # print header
-   print('%11s %11s    Rate' % (dx_desc,err_desc))
+   print('\n%11s %11s    Rate' % (dx_desc,err_desc))
    print('-------------------------------')
 
    # loop over cycles
@@ -104,6 +104,7 @@ def printConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err'):
 
       # print line to convergence table
       print('%11.3e %11.3e %7s' % (dx[cycle],err[cycle],rate_string))
+   print('\n')
 
 ## Function to compute the discrete \f$L^1\f$ norm of an array \f$\mathbf{y}\f$
 #  of 2-tuples: \f$\|\mathbf{y}\|_1 = \sum\limits_i |y_{i,L}| + |y_{i,R}|\f$

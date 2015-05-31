@@ -214,21 +214,20 @@ class OldIntensityTerm(TransientSourceTerm):
     #  for all time steppers
     #
     #  @param[in] dt        time step size
-    #  @param[in] psim_old  Old angular flux in minus direction, \f$\Psi^{-,n}\f$
-    #  @param[in] psip_old  Old angular flux in plus  direction, \f$\Psi^{+,n}\f$
+    #  @param[in] psi_old   old angular flux, stored as array with
+    #                       global dof indexing
     #
-    def computeTerm(self, dt=None, psim_old=None, psip_old=None, **kwargs):
+    def computeTerm(self, dt=None, psi_old=None, **kwargs):
 
         # Loop over all cells and build source 
         Q = np.array([])
         for i in range(self.mesh.n_elems):
 
             # Evaluate source of element i
-            Q_elem =  self.computeOldIntensityTerm(i, dt=dt, psim_old=psim_old,
-               psip_old=psip_old)
+            Q_local = self.computeOldIntensityTerm(i, dt=dt, psi_old=psi_old)
 
             # Append source from element i
-            Q = np.append(Q, Q_elem)
+            Q = np.append(Q, Q_local)
 
         return Q
 
@@ -236,28 +235,34 @@ class OldIntensityTerm(TransientSourceTerm):
     #
     #  @param[in] i         element id
     #  @param[in] dt        time step size
-    #  @param[in] psim_old  Old angular flux in minus direction, \f$\Psi^{-,n}\f$
-    #  @param[in] psip_old  Old angular flux in plus  direction, \f$\Psi^{+,n}\f$
+    #  @param[in] psi_old   old angular flux, stored as array with
+    #                       global dof indexing
     #
-    def computeOldIntensityTerm(self, i, dt=None, psim_old=None, psip_old=None):
+    def computeOldIntensityTerm(self, i, dt=None, psi_old=None):
+
+        # get global indices
+        iLm = getIndex(i,"L","-") # dof i,L,-
+        iLp = getIndex(i,"L","+") # dof i,L,+
+        iRm = getIndex(i,"R","-") # dof i,R,-
+        iRp = getIndex(i,"R","+") # dof i,R,+
+
+        # get local indices
+        Lm = getLocalIndex("L","-") # dof L,-
+        Lp = getLocalIndex("L","+") # dof L,+
+        Rm = getLocalIndex("R","-") # dof R,-
+        Rp = getLocalIndex("R","+") # dof R,+
 
         # compute c*dt
         c_dt = GC.SPD_OF_LGT * dt
-        
-        # get local indices
-        iLm = getLocalIndex("L","-") # dof L,-
-        iLp = getLocalIndex("L","+") # dof L,+
-        iRm = getLocalIndex("R","-") # dof R,-
-        iRp = getLocalIndex("R","+") # dof R,+
 
         # compute old intensity term
-        Q  = np.zeros(4)
-        Q[iLm] = psim_old[i][0] / c_dt
-        Q[iRm] = psim_old[i][1] / c_dt
-        Q[iLp] = psip_old[i][0] / c_dt
-        Q[iRp] = psip_old[i][1] / c_dt
+        Q_local = np.zeros(4)
+        Q_local[Lm] = psi_old[iLm] / c_dt
+        Q_local[Lp] = psi_old[iLp] / c_dt
+        Q_local[Rm] = psi_old[iRm] / c_dt
+        Q_local[Rp] = psi_old[iRp] / c_dt
 
-        return Q
+        return Q_local
 
 
 #====================================================================================
@@ -285,35 +290,41 @@ class StreamingTerm(TransientSourceTerm):
     ## Computes old streaming term, \f$\mu^\pm\frac{\partial\Psi^n}{\partial x}\f$
     #
     #  @param[in] i         element id
-    #  @param[in] psim_old  Old angular flux in minus direction, \f$\Psi^{-,n}\f$
-    #  @param[in] psip_old  Old angular flux in plus  direction, \f$\Psi^{+,n}\f$
+    #  @param[in] psi_old   old angular flux, stored as array with
+    #                       global dof indexing
     #
-    def evalOld(self, i, psim_old=None, psip_old=None, **kwargs):
+    def evalOld(self, i, psi_old=None, **kwargs):
+
+        # get global indices
+        iLm = getIndex(i,"L","-") # dof i,L,-
+        iLp = getIndex(i,"L","+") # dof i,L,+
+        iRm = getIndex(i,"R","-") # dof i,R,-
+        iRp = getIndex(i,"R","+") # dof i,R,+
 
         # get local indices
-        iLm = getLocalIndex("L","-") # dof L,-
-        iLp = getLocalIndex("L","+") # dof L,+
-        iRm = getLocalIndex("R","-") # dof R,-
-        iRp = getLocalIndex("R","+") # dof R,+
+        Lm = getLocalIndex("L","-") # dof L,-
+        Lp = getLocalIndex("L","+") # dof L,+
+        Rm = getLocalIndex("R","-") # dof R,-
+        Rp = getLocalIndex("R","+") # dof R,+
 
         # psip_{i-1/2}
         if i == 0: # left boundary
             psip_Lface = kwargs['bc_flux_left']
         else:
-            psip_Lface = psip_old[i-1][1]
+            psip_Lface = psi_old[getIndex(i-1,"R","+")]
 
         # psim_{i+1/2}
         if i == self.mesh.n_elems - 1: # right boundary
             psim_Rface = kwargs['bc_flux_right']
         else:
-            psim_Rface  = psim_old[i+1][0]
+            psim_Rface  = psi_old[getIndex(i+1,"L","-")]
 
-        psim_L = psim_old[i][0] # psim_{i,L}
-        psip_L = psip_old[i][0] # psip_{i,L}
-        psim_R = psim_old[i][1] # psim_{i,R}
-        psip_R = psip_old[i][1] # psip_{i,R}
-        psim_Lface = psim_L     # psim_{i-1/2}
-        psip_Rface = psip_R     # psip_{i+1/2}
+        psim_L = psi_old[iLm] # psim_{i,L}
+        psip_L = psi_old[iLp] # psip_{i,L}
+        psim_R = psi_old[iRm] # psim_{i,R}
+        psip_R = psi_old[iRp] # psip_{i,R}
+        psim_Lface = psim_L   # psim_{i-1/2}
+        psip_Rface = psip_R   # psip_{i+1/2}
 
         # compute cell center values
         psim_i = 0.5*(psim_L + psim_R)
@@ -323,29 +334,27 @@ class StreamingTerm(TransientSourceTerm):
         h_over_2 = self.mesh.getElement(i).dx/2.0
 
         # compute streaming source
-        Q = np.zeros(4)
-        Q[iLm] = -1.*mu["-"]*(psim_i     - psim_Lface)/h_over_2
-        Q[iLp] = -1.*mu["+"]*(psip_i     - psip_Lface)/h_over_2
-        Q[iRm] = -1.*mu["-"]*(psim_Rface - psim_i)    /h_over_2
-        Q[iRp] = -1.*mu["+"]*(psip_Rface - psip_i)    /h_over_2
+        Q_local = np.zeros(4)
+        Q_local[Lm] = -1.*mu["-"]*(psim_i     - psim_Lface)/h_over_2
+        Q_local[Lp] = -1.*mu["+"]*(psip_i     - psip_Lface)/h_over_2
+        Q_local[Rm] = -1.*mu["-"]*(psim_Rface - psim_i)    /h_over_2
+        Q_local[Rp] = -1.*mu["+"]*(psip_Rface - psip_i)    /h_over_2
 
-        return Q
+        return Q_local
 
     #--------------------------------------------------------------------------------
     ## Computes older streaming term,
     #  \f$\mu^\pm\frac{\partial\Psi^{n-1}}{\partial x}\f$
     #
     #  @param[in] i           element id
-    #  @param[in] psim_older  older angular flux in minus direction,
-    #                         \f$\Psi^{-,n-1}\f$
-    #  @param[in] psip_older  older angular flux in plus  direction,
-    #                         \f$\Psi^{+,n-1}\f$
+    #  @param[in] psi_older   older angular flux, stored as array with
+    #                         global dof indexing
     #
-    def evalOlder(self, i, psim_older=None, psip_older=None, **kwargs):
+    def evalOlder(self, i, psi_older=None, **kwargs):
 
         # Use old function but with older arguments.
         # carefully pass in **kwargs to avoid duplicating
-        return self.evalOld(i, psim_old=psim_older, psip_old=psip_older,
+        return self.evalOld(i, psi_old=psi_older,
                   bc_flux_left=kwargs['bc_flux_left'],
                   bc_flux_right=kwargs['bc_flux_right'])
 
@@ -373,49 +382,50 @@ class ReactionTerm(TransientSourceTerm):
     ## Computes old reaction term, \f$\sigma_t^n\Psi^{\pm,n}\f$
     #
     #  @param[in] i         element id
-    #  @param[in] psim_old  old angular flux in minus direction, \f$\Psi^{-,n}\f$
-    #  @param[in] psip_old  old angular flux in plus  direction, \f$\Psi^{+,n}\f$
+    #  @param[in] psi_old   old angular flux, stored as array with
+    #                       global dof indexing
     #  @param[in] cx_old    old cross sections
     #
-    def evalOld(self, i, psim_old=None, psip_old=None, cx_old=None, **kwargs):
+    def evalOld(self, i, psi_old=None, cx_old=None, **kwargs):
+
+        # get global indices
+        iLm = getIndex(i,"L","-") # dof i,L,-
+        iLp = getIndex(i,"L","+") # dof i,L,+
+        iRm = getIndex(i,"R","-") # dof i,R,-
+        iRp = getIndex(i,"R","+") # dof i,R,+
 
         # get local indices
-        iLm = getLocalIndex("L","-") # dof L,-
-        iLp = getLocalIndex("L","+") # dof L,+
-        iRm = getLocalIndex("R","-") # dof R,-
-        iRp = getLocalIndex("R","+") # dof R,+
+        Lm = getLocalIndex("L","-") # dof L,-
+        Lp = getLocalIndex("L","+") # dof L,+
+        Rm = getLocalIndex("R","-") # dof R,-
+        Rp = getLocalIndex("R","+") # dof R,+
 
         # left and right cross sections
         sig_t_L = cx_old[i][0].sig_t
         sig_t_R = cx_old[i][1].sig_t
 
         # compute reaction source
-        Q  = np.zeros(4)
-        Q[iLm] = -1.*psim_old[i][0] * sig_t_L
-        Q[iRm] = -1.*psim_old[i][1] * sig_t_R
-        Q[iLp] = -1.*psip_old[i][0] * sig_t_L
-        Q[iRp] = -1.*psip_old[i][1] * sig_t_R
+        Q_local = np.zeros(4)
+        Q_local[Lm] = -1.*psi_old[iLm] * sig_t_L
+        Q_local[Rm] = -1.*psi_old[iRm] * sig_t_R
+        Q_local[Lp] = -1.*psi_old[iLp] * sig_t_L
+        Q_local[Rp] = -1.*psi_old[iRp] * sig_t_R
 
-        return Q
+        return Q_local
 
     #--------------------------------------------------------------------------------
     ## Computes older reaction term, \f$\sigma_t^{n-1}\Psi^{\pm,n-1}\f$
     #
     #  @param[in] i           element id
-    #  @param[in] psim_older  older angular flux in minus direction,
-    #                        \f$\Psi^{-,n-1}\f$
-    #  @param[in] psip_older  older angular flux in plus  direction,
-    #                        \f$\Psi^{+,n-1}\f$
-    #
+    #  @param[in] psi_older   older angular flux, stored as array with
+    #                         global dof indexing
     #  @param[in] cx_older    older cross sections
     #
-    def evalOlder(self, i, psim_older=None, psip_older=None,
-                  cx_older=None, **kwargs):
+    def evalOlder(self, i, psi_older=None, cx_older=None, **kwargs):
 
         # Use old function but with older arguments.
         # Note that you cannot pass in **kwargs or it will duplicate some arguments
-        return self.evalOld(i, psim_old=psim_older, psip_old=psip_older,
-                            cx_old=cx_older)
+        return self.evalOld(i, psi_old=psi_older, cx_old=cx_older)
 
 #====================================================================================
 ## Derived class for computing scattering source term, \f$\frac{\sigma_s}{2}\phi\f$
@@ -427,9 +437,6 @@ class ScatteringTerm(TransientSourceTerm):
 
         # call base class constructor
         TransientSourceTerm.__init__(self, *args)
-
-        # save speed of light
-        self.c = GC.SPD_OF_LGT
 
     #--------------------------------------------------------------------------------
     ## implicit term is on LHS, so return zeros
@@ -443,47 +450,55 @@ class ScatteringTerm(TransientSourceTerm):
     #--------------------------------------------------------------------------------
     ## Computes old scattering source term, \f$\frac{\sigma_s^n}{2}\phi^n\f$
     #
-    #  @param[in] i       element id
-    #  @param[in] E_old   old radiation energy, \f$\mathcal{E}^n\f$
-    #  @param[in] cx_old  old cross sections
+    #  @param[in] i        element id
+    #  @param[in] psi_old  old angular flux, stored as array with
+    #                      global dof indexing
+    #  @param[in] cx_old   old cross sections
     #
-    def evalOld(self, i, E_old=None, cx_old=None, **kwargs):
+    def evalOld(self, i, psi_old=None, cx_old=None, **kwargs):
+
+        # get global indices
+        iLm = getIndex(i,"L","-") # dof i,L,-
+        iLp = getIndex(i,"L","+") # dof i,L,+
+        iRm = getIndex(i,"R","-") # dof i,R,-
+        iRp = getIndex(i,"R","+") # dof i,R,+
+
+        # get local indices
+        Lm = getLocalIndex("L","-") # dof L,-
+        Lp = getLocalIndex("L","+") # dof L,+
+        Rm = getLocalIndex("R","-") # dof R,-
+        Rp = getLocalIndex("R","+") # dof R,+
 
         # left and right scattering cross section
         sig_s_L = cx_old[i][0].sig_s
         sig_s_R = cx_old[i][1].sig_s
 
         # left and right scalar fluxes
-        phi_L = E_old[i][0]*self.c
-        phi_R = E_old[i][1]*self.c
-
-        # get local indices
-        iLm = getLocalIndex("L","-") # dof L,-
-        iLp = getLocalIndex("L","+") # dof L,+
-        iRm = getLocalIndex("R","-") # dof R,-
-        iRp = getLocalIndex("R","+") # dof R,+
+        phi_L = psi_old[iLm] + psi_old[iLp]
+        phi_R = psi_old[iRm] + psi_old[iRp]
 
         # compute scattering source
-        Q = np.zeros(4)
-        Q[iLm] = 0.5*phi_L*sig_s_L
-        Q[iRm] = 0.5*phi_R*sig_s_R
-        Q[iLp] = 0.5*phi_L*sig_s_L
-        Q[iRp] = 0.5*phi_R*sig_s_R
+        Q_local = np.zeros(4)
+        Q_local[Lm] = 0.5*phi_L*sig_s_L
+        Q_local[Rm] = 0.5*phi_R*sig_s_R
+        Q_local[Lp] = 0.5*phi_L*sig_s_L
+        Q_local[Rp] = 0.5*phi_R*sig_s_R
 
-        return Q
+        return Q_local
 
     #--------------------------------------------------------------------------------
     ## Computes older scattering source term,
     #  \f$\frac{\sigma_s^{n-1}}{2}\phi^{n-1}\f$
     #
-    #  @param[in] i         element id
-    #  @param[in] E_older   older radiation energy, \f$\mathcal{E}^{n-1}\f$
-    #  @param[in] cx_older  older cross sections
+    #  @param[in] i          element id
+    #  @param[in] psi_older  older angular flux, stored as array with
+    #                        global dof indexing
+    #  @param[in] cx_older   older cross sections
     #
-    def evalOlder(self, i, E_older=None, cx_older=None, **kwargs):
+    def evalOlder(self, i, psi_older=None, cx_older=None, **kwargs):
 
         # Use old function but with older arguments
-        return self.evalOld(i, E_old=E_older, cx_old=cx_older)
+        return self.evalOld(i, psi_old=psi_older, cx_old=cx_older)
 
 #====================================================================================
 ## Derived class for computing source term, \f$\mathcal{Q}\f$

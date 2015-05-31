@@ -1,5 +1,5 @@
 ## @package testRadTransient
-#  Contains unit test to run a radiation transient to steady-state
+#  Contains unit test to run a radiation transient to steady-state using BDF2
 #
 
 import sys
@@ -18,6 +18,7 @@ from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotAngularFlux, plotScalarFlux, computeScalarFlux
 from utilityFunctions import computeDiscreteL1Norm
 from radiationTimeStepper import RadiationTimeStepper
+from radUtilities import extractAngularFluxes
 
 ## Derived unittest class to run a transient radiation problem
 #
@@ -26,7 +27,7 @@ class TestRadTransient(unittest.TestCase):
       pass
    def tearDown(self):
       pass
-   def test_RadTransient(self):
+   def test_RadTransientBDF2(self):
 
        # create uniform mesh
        mesh = Mesh(50, 5.0)
@@ -52,19 +53,18 @@ class TestRadTransient(unittest.TestCase):
        Q = 2.4 * np.ones(n_dofs)
    
        # compute the steady-state solution
-       psim_ss, psip_ss, E, F = radiationSolveSS(mesh, cross_sects, Q,
+       psi_ss = radiationSolveSS(mesh, cross_sects, Q,
           bc_psi_right = psi_right, bc_psi_left = psi_left)
    
+       # extract angular fluxes from solution vector
+       psim_ss, psip_ss = extractAngularFluxes(psi_ss, mesh)
+
        # compute steady state scalar flux
        phi_ss = computeScalarFlux(psip_ss, psim_ss)
    
        # run transient solution from arbitrary IC, such as zero
-       psip_old   = [(0.0,0.0) for i in range(mesh.n_elems)]
-       psim_old   = deepcopy(psip_old)
-       psip_older = deepcopy(psip_old)
-       psim_older = deepcopy(psip_old)
-       E_old      = deepcopy(psip_old)
-       E_older    = deepcopy(psip_old)
+       psi_old   = np.zeros(n_dofs)
+       psi_older = deepcopy(psi_old)
    
        # create time-stepper
        radiation_time_stepper = RadiationTimeStepper(mesh, time_stepper)
@@ -82,22 +82,21 @@ class TestRadTransient(unittest.TestCase):
               t += dt
 
            # take radiation step
-           psim, psip, E, F = radiation_time_stepper.takeStep(
+           psi = radiation_time_stepper.takeStep(
               dt            = dt,
               bc_flux_left  = psi_left,
               bc_flux_right = psi_right,
               cx_older      = cross_sects,
               cx_old        = cross_sects,
               cx_new        = cross_sects,
-              psim_older    = psim_older,
-              psip_older    = psip_older,
-              psim_old      = psim_old,
-              psip_old      = psip_old,
-              E_older       = E_older,
-              E_old         = E_old,
+              psi_older     = psi_older,
+              psi_old       = psi_old,
               Q_older       = Q,
               Q_old         = Q,
               Q_new         = Q)
+
+           # extract angular fluxes from solution vector
+           psim, psip = extractAngularFluxes(psi, mesh)
 
            # compute scalar flux
            phi = computeScalarFlux(psip, psim)
@@ -115,14 +114,10 @@ class TestRadTransient(unittest.TestCase):
                  % (t-dt,t,L1_norm_diff))
    
            # save oldest solutions
-           psip_older = deepcopy(psip_old)
-           psim_older = deepcopy(psim_old)
-           E_older    = deepcopy(E_old)
+           psi_older = deepcopy(psi_old)
    
            # save old solutions
-           psip_old = deepcopy(psip)
-           psim_old = deepcopy(psim)
-           E_old    = deepcopy(E)
+           psi_old = deepcopy(psi)
    
        # plot solutions if run standalone
        if __name__ == "__main__":
