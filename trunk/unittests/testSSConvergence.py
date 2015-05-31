@@ -55,6 +55,10 @@ class TestSSConvergence(unittest.TestCase):
 
       # loop over refinement cycles
       for cycle in xrange(n_cycles):
+
+         if __name__ == '__main__':
+            print("Cycle %d of %d: n_elems = %d" % (cycle+1,n_cycles,n_elems))
+
          # mesh
          mesh = Mesh(n_elems,xR)
          # append max dx for this cycle to list

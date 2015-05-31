@@ -10,7 +10,8 @@ def main():
                    'testDiffusionProblem',
                    'testSSConvergence',
                    'testTransientSource',
-                   'testRadTransient']
+                   'testRadTransient',
+                   'testRadSpatialConvergence']
 
    # add all tests modules to suite
    suite = TestSuite()
