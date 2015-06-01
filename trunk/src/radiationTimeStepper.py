@@ -19,11 +19,13 @@ class RadiationTimeStepper:
    #  @param[in] mesh          mesh object
    #  @param[in] time_stepper  string identifier for the chosen time-stepper,
    #                           e.g., 'CN'
+   #  @param[in] src_term      if you want an external source Q, set this to true
    #
    def __init__(self, mesh, time_stepper):
       self.mesh         = mesh
       self.time_stepper = time_stepper
-      self.transient_source = TransientSource(mesh, time_stepper)
+      self.transient_source = TransientSource(mesh, time_stepper,
+              src_term = True)
 
    ## Takes time step
    #

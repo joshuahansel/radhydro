@@ -4,7 +4,7 @@
 #
 # import globalConstants as GC
 #
-# a = GC.RAD_CONST #get radiation constant
+# a = GC.RAD_CONSTANT #get radiation constant
 # c = GC.SPD_OF_LGT #get speed of light, etc.
 #
 # Our standard units are length - cm, time - shakes (sh),

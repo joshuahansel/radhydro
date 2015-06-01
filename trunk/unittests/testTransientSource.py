@@ -70,7 +70,7 @@ class TestTransientSource(unittest.TestCase):
       time_stepper = "CN"
   
       # compute the transient source
-      transient_source = TransientSource(mesh, time_stepper)
+      transient_source = TransientSource(mesh, time_stepper, src_term=True)
       Q_tr = transient_source.evaluate(
          dt            = dt,
          bc_flux_left  = psi_left,

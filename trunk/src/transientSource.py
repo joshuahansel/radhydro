@@ -7,6 +7,8 @@
 # class inherits a "computeTerm" function. This is the primary function, responsible
 # for building the entire right hand side for that term in the equation. 
 #
+# NOTE: TRT related source builders are located in src/newtonStateHandler.py because
+#
 # In general, each derived class is responsible for overriding the different
 # functions for the different time stepping methods. Each source term
 # will be its own derived class.  Most classes will use the default computeTerm
@@ -61,10 +63,54 @@ class TransientSource:
    #  @param[in] mesh          mesh object
    #  @param[in] time_stepper  string identifier for the chosen time-stepper,
    #                           e.g., 'CN'
+   #  @param[in] problem_type  type of transient problem being ran. options are
+   #                           rad_only: transient no material coupling, just for
+   #                                     tests. Default value.
+   #                           trt     : radiation coupled to material internal
+   #                                     energy. No material motion terms
+   #                           rad_hydro: not implemented yet. may need something
+   #                                     more complicated
+   #  @param[in] src_term      if you want to have an external source term, you need
+   #                           to pass in true, otherwise this is ignored
    #
-   def __init__(self, mesh, time_stepper):
-      self.mesh         = mesh
-      self.time_stepper = time_stepper
+   #  
+   #
+   def __init__(self, mesh, time_stepper, problem_type='rad_only',
+           src_term=False, newton_handler=None):
+
+      #keep track of teh newton handler separately as it may need remembered
+      #to ensure that same instance is used
+      self.newton_handler = newton_handler
+      
+      self.mesh = mesh
+
+      # create transient source terms. TODO Since the only state remembered in this class
+      # is the time stepper and the mesh, this doesnt really need to be a class,
+      # it can just be a function that is called with mesh and time stepper passed 
+      # along to evaluate
+      self.terms = [OldIntensityTerm(mesh, time_stepper), 
+               StreamingTerm   (mesh, time_stepper),
+               ReactionTerm    (mesh, time_stepper),
+               ScatteringTerm  (mesh, time_stepper)]
+
+      #Add extra terms if necessary
+      if src_term:
+          self.terms.append(SourceTerm(mesh, time_stepper))  
+      
+      #Check that newton handler was passed in if TRT active
+      if problem_type in ['trt', 'rad_hydro']:
+
+         if newton_handler == None:
+             raise IOError("You must pass in a newton handler to TransientSource "\
+                "constructor for a TRT problem\n")
+         else:
+
+             #make sure newton handler is instance of TransientSourc
+             if not isinstance(newton_handler,TransientSourceTerm):
+                 raise NotImplementedError("Newton handler must inherit from TransientSourceTern")
+             else:
+                 self.terms.append(self.newton_handler)
+               
 
    ## Function to evaluate the full transient source
    #
@@ -72,17 +118,19 @@ class TransientSource:
    #  over them to add to the full transient source.
    #
    def evaluate(self, **kwargs):
-      # create transient source terms
-      terms = [OldIntensityTerm(self.mesh, self.time_stepper), 
-               StreamingTerm   (self.mesh, self.time_stepper),
-               ReactionTerm    (self.mesh, self.time_stepper),
-               ScatteringTerm  (self.mesh, self.time_stepper),
-               SourceTerm      (self.mesh, self.time_stepper)]
-   
+
+      #Debugging check to notify since change made
+      if 'Q_new' in kwargs:
+          if not any([isinstance(i,SourceTerm) for i in self.terms]):
+              raise ValueError("You passed in a Q_new to source builder, but didnt "\
+                  "specify source term in constructor, check RadiationTimeStepper "\
+                  "constructor")
+
+
       # build the transient source
       n = self.mesh.n_elems * 4
       Q_tr = np.zeros(n)
-      for term in terms:
+      for term in self.terms:
           # build source for this handler
           Q_term = term.computeTerm(**kwargs)
           # Add elementwise the src to the total

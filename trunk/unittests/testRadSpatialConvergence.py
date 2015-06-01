@@ -136,7 +136,8 @@ class TestRadSpatialConvergence(unittest.TestCase):
          Q_old     = QMMS(0.0,mesh,cross_sects)
      
          # create time-stepper
-         radiation_time_stepper = RadiationTimeStepper(mesh, time_stepper)
+         radiation_time_stepper = RadiationTimeStepper(mesh,
+               time_stepper)
   
          # transient loop
          dt = dt_start
