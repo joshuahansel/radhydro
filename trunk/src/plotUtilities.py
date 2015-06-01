@@ -184,3 +184,11 @@ def makeYPoints(tuples_array):
    # return
    return y
 
+## Useful debugging function that just prints any tuple list
+def printTupled(tuple_list):
+
+    for i in tuple_list:
+
+        for j in i:
+
+            print j

@@ -44,7 +44,7 @@ class CrossXInterface(object):
     #----------------------------------------------------------------------------
     def __str__(self):
 
-        print_str = "\sigma_s : %.4f, \sigma_a : %.4f, \sigma_t : %.4f" % \
+        print_str = "\sigma_s : %.6g, \sigma_a : %.6g, \sigma_t : %.6g" % \
                     (self.sig_s, self.sig_a, self.sig_t) 
 
         return print_str

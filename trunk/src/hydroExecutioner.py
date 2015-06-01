@@ -5,7 +5,7 @@ import numpy as np
 from numpy import       array
 from mesh import        Mesh
 from math import        sqrt
-from musclHanc import   hydroPredictor, main, HydroState, \
+from musclHancock import   hydroPredictor, main, HydroState, \
                         plotHydroSolutions, hydroCorrector
 
 ## Main executioner for Hydro solve. Currently in a testing state.
@@ -31,6 +31,9 @@ def solveHydroProblem():
     u_right = 0.0
     rho_right = 0.125
 
+    #made up spec heat
+    spec_heat = 1.0
+
     #Create a mesh, currently hardcoded
     mesh = Mesh(n, width)
     dx = mesh.getElement(0).dx
@@ -42,8 +45,8 @@ def solveHydroProblem():
     i_right = int(0.7*n)
 
     #Create cell centered variables
-    states_a = [HydroState(u=u_left,p=p_left,gamma=gamma,rho=rho_left) for i in range(i_left)]
-    states_a = states_a + [HydroState(u=u_right,p=p_right,gamma=gamma,rho=rho_right) for i in
+    states_a = [HydroState(u=u_left,p=p_left,gamma=gamma,rho=rho_left,spec_heat=spec_heat) for i in range(i_left)]
+    states_a = states_a + [HydroState(u=u_right,p=p_right,gamma=gamma,spec_heat=spec_heat,rho=rho_right) for i in
             range(i_right)]
 
     #-----------------------------------------------------------------

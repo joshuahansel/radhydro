@@ -57,6 +57,8 @@ def main():
     i_left = int(0.3*n)
     i_right = int(0.7*n)
 
+    #made up spec heat
+
     #Create cell centered variables
     states = [HydroState(u=u_left,p=p_left,gamma=gamma,rho=rho_left) for i in range(i_left)]
     states = states + [HydroState(u=u_right,p=p_right,gamma=gamma,rho=rho_right) for i in
@@ -395,12 +397,32 @@ class HydroState:
     #define that it is a member function
 
     #constructor
-    def __init__(self, u=None ,rho=None,p=None,gamma=None):
+    def __init__(self, u=None ,rho=None,p=None,gamma=None, 
+            spec_heat=None, int_energy=None, temp=None):
+
         self.u = u
         self.rho = rho
-        self.e = getIntErg(gamma,rho,p)
-        self.p = p
         self.gamma = gamma
+        self.spec_heat = spec_heat #this is assumed constant
+
+        #Make sure p, T, and e are all consistent and not duplicate
+        if p != None:
+                
+            self.p = p
+            self.e = getIntErg(gamma,rho,p)
+
+        elif int_energy != None or temp != None: #check if T or e specificied
+
+            if temp != None:
+                self.e = computeIntEnergy(temp) #update int erg to be consistent with temp
+            else:
+                self.e = int_energy
+             
+            self.p = getPressure(gamma,rho,self.e)
+
+        else:
+            raise IOError("You must specify pressure, energy, or temperature in"
+                " HydroState constructor")
 
     #solve for new values based on a consState variables
     def updateState(self, rho, mom, erg):
@@ -413,7 +435,20 @@ class HydroState:
     def getSoundSpeed(self):
 
         return sqrt(self.gamma*self.p/self.rho)
-    
+
+    #-------------------------------------------------------------------------------
+    # Get temperature based on internal energy and constant specific heat
+    #
+    def getTemperature(self):
+
+        return self.e/(self.spec_heat)
+
+    #-------------------------------------------------------------------------------
+    # Update internal energy based on temperature
+    def computeIntEnergy(self,temp):
+
+        return temp*(self.rho*self.spec_heat)
+
     #Defin fancy function to compare values
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -525,6 +560,7 @@ def getPressure(gamma,rho,e):
 def getIntErg(gamma, rho, p):
 
     return p/((gamma-1.)*rho)
+
 
 # ----------------------------------------------------------------------------------
 def minMod(a,b):

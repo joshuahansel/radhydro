@@ -1,5 +1,6 @@
 ## @package testTRTOnly
 #  Tests the two material TRT problem. Currently with BE time disc.
+# this is just for debugging. This will all be in an executioner class
 #
 
 import sys
@@ -21,6 +22,8 @@ from TRTUtilities import convSpecHeatErgsEvToJksKev, \
                          computeRadTemp
 from newtonStateHandler import NewtonStateHandler                         
 from radUtilities import *
+from copy import deepcopy
+from plotUtilities import printTupled
 
 
 ## Derived unittest class to test source builder
@@ -42,28 +45,42 @@ class TestTRTOnly(unittest.TestCase):
       T_init = 0.05
       T_l    = 0.5
       T_r    = 0.05
-      
+
       # Set up the two material problem.
       # build constant cross sections
+      gam = 1.4
       sig_s1 = 0.0
       sig_a1 = 0.2  #macroscopic, not micro so no factor of rho here, cm^-1
-      C_v1   = convSpecHeatErgsEvToJksKev(1.E+12) #specific heat capacity in ergs/(ev-g)
+      c_v1   = convSpecHeatErgsEvToJksKev(1.E+12) #specific heat capacity in ergs/(ev-g)
       rho1   = 0.01  #g/cc
+      e1     = T_init*c_v1
 
       sig_s2 = 0.0
       sig_a2 = 2000.
-      C_v1   = C_v1
+      c_v2   = c_v1
       rho2   = 10.
+      e2     = T_init *c_v2
 
+      #Construct hydro states and cross sections
       cross_sects = []
+      hydro_states = []
       for i in range(mesh.n_elems):  
       
          if mesh.getElement(i).x_cent < 0.5:
-            cross_sects.append((CrossXInterface(sig_a1, sig_s1),
-               CrossXInterface(sig_a1, sig_s1)))
+            cross_sects.append( (CrossXInterface(sig_a1, sig_s1),
+               CrossXInterface(sig_a1, sig_s1)) )
+            hydro_states.append( (HydroState(u=0,rho=rho1,int_energy=e1,
+                gamma=gam,spec_heat=c_v1),
+                HydroState(u=0,rho=rho1,int_energy=e1,gamma=gam,spec_heat=c_v1)) )
          else:
             cross_sects.append((CrossXInterface(sig_a2, sig_s2),
                CrossXInterface(sig_a2, sig_s2)))
+            hydro_states.append( (HydroState(u=0,rho=rho2,int_energy=e2,spec_heat=c_v2, gamma=gam), 
+                HydroState(u=0,rho=rho2,spec_heat=c_v2,int_energy=e2, gamma=gam)) )
+
+
+      #keep copy of original cross sections
+      cx_orig = deepcopy(cross_sects)
 
       # time step size and c*dt
       dt = 0.001
@@ -82,20 +99,25 @@ class TestTRTOnly(unittest.TestCase):
       psi_left = computeEquivIntensity(T_l)
       psi_right = computeEquivIntensity(T_r)
       psi_old   = [psi_right for i in range(n)] #equilibrium solution
-      print psi_old
+
+      #initiialize  hydro old
+      hydro_old = deepcopy(hydro_states)
 
       #print out temperature to check
       psi_m, psi_p = extractAngularFluxes(psi_old,mesh)
-      print computeRadTemp(psi_m,psi_p)
 
       # time-stepper
       time_stepper = "BE"
 
-      #Construct source stuff
-
-     
       # transient loop
       transient_incomplete = True # boolean flag signalling end of transient
+
+      # construct newton state handler
+      newton_handler = NewtonStateHandler(mesh,
+                           time_stepper=time_stepper,
+                           hydro_states_implicit=hydro_states)
+
+
       while transient_incomplete:
   
           # adjust time step size if necessary
@@ -106,10 +128,17 @@ class TestTRTOnly(unittest.TestCase):
           else:
              t += dt
 
+
           # take radiation step, currently hardcoded here
           transient_source = TransientSource(mesh, time_stepper,problem_type='trt',
                   newton_handler= NewtonStateHandler(mesh))
               
+          # get the modified cross scattering cross sections
+          cross_sects = newton_handler.getEffectiveOpacities(cx_orig,dt)
+          printTupled(cross_sects)
+
+
+
 
           # evaluate transient source
           Q_tr = transient_source.evaluate(
@@ -119,8 +148,7 @@ class TestTRTOnly(unittest.TestCase):
               cx_older      = cross_sects,
               cx_old        = cross_sects,
               cx_new        = cross_sects,
-              psi_old       = psi_old,
-              )
+              psi_old       = psi_old )
 
           # solve the transient system
           alpha = 1./(GC.SPD_OF_LGT*kwargs['dt'])
