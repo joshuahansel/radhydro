@@ -1,0 +1,86 @@
+%===============================================================================
+\section{Implementation}
+%===============================================================================
+\subsection{Pseudocode}
+%-------------------------------------------------------------------------------
+Let $\H$ denote the hydrodynamic unknowns, i.e., $(\rho_i,u_i,E_i)\,\forall i$,
+let $\R$ denote the radiation unknowns, i.e., $(\Psi_{i,L}^\pm,\Psi_{i,R}^\pm)
+\,\forall i$, and let $\U$ denote both hydrodynamic and radiation
+unknowns. The pseudocode is listed below:
+
+\begin{lstlisting}[mathescape,columns=fullflexible,
+   basicstyle=\fontfamily{lmvtt}\selectfont]
+processInput()
+$\U^0 =$ computeInitialConditions()
+for each time step $n$
+
+   $\dt =$ computeTimeStepSize($\U^n$)
+
+   $\H^* =$ MUSCLHancockEvolve($\H^n,\half\dt$)
+   for each iteration $k$
+      $u^{k+1} =$ hydroMomentumSourceUpdateCN($\U^n,\H^*,\U^k,\fourth\dt$)
+      $E^{k+1} =$ hydroEnergySourceUpdateCN($\U^n,\H^*,\U^k,\fourth\dt$)
+      $\R^{k+1} =$ radiationSolveCN($\U^n,\U^k,\fourth\dt$)
+      converged = checkConvergence($\U^k,\U^{k+1}$)
+      if converged, then exit
+   end iteration loop
+   $\U^{n+\fourth} = \U^{k+1}$
+
+   $\H^* =$ MUSCLHancockRiemann($\H^n,\H^{n+\fourth},\half\dt$)
+   for each iteration $k$
+      $u^{k+1} =$ hydroMomentumSourceUpdateCN($\U^{n+\fourth},\H^*,\U^k,\fourth\dt$)
+      $E^{k+1} =$ hydroEnergySourceUpdateCN($\U^{n+\fourth},\H^*,\U^k,\fourth\dt$)
+      $\R^{k+1} =$ radiationSolveCN($\U^{n+\fourth},\U^k,\fourth\dt$)
+      converged = checkConvergence($\U^k,\U^{k+1}$)
+      if converged, then exit
+   end iteration loop
+   $\U^{n+\half} = \U^{k+1}$
+
+   $\H^* =$ MUSCLHancockEvolve($\H^{n+\half},\half\dt$)
+   for each iteration $k$
+      $u^{k+1} =$ hydroMomentumSourceUpdateCN($\U^{n+\half},\H^*,\U^k,\fourth\dt$)
+      $E^{k+1} =$ hydroEnergySourceUpdateCN($\U^{n+\half},\H^*,\U^k,\fourth\dt$)
+      $\R^{k+1} =$ radiationSolveCN($\U^{n+\half},\U^k,\fourth\dt$)
+      converged = checkConvergence($\U^k,\U^{k+1}$)
+      if converged, then exit
+   end iteration loop
+   $\U^{n+\frac{3}{4}} = \U^{k+1}$
+
+   $\H^* =$ MUSCLHancockRiemann($\H^{n+\half},\H^{n+\frac{3}{4}},\half\dt$)
+   for each iteration $k$
+      $u^{k+1} =$ hydroMomentumSourceUpdateTRBDF2($\U^n,\U^{n+\half},\H^*,\U^k,\half\dt$)
+      $E^{k+1} =$ hydroEnergySourceUpdateTRBDF2($\U^n,\U^{n+\half},\H^*,\U^k,\half\dt$)
+      $\R^{k+1} =$ radiationSolveTRBDF2($\U^n,\U^{n+\half},\U^k,\half\dt$)
+      converged = checkConvergence($\U^k,\U^{k+1}$)
+      if converged, then exit
+   end iteration loop
+   $\U^{n+1} = \U^{k+1}$
+
+end time step loop
+postProcess()
+\end{lstlisting}
+
+The radiation solves employ a steady-state S$_2$ solver, as discussed
+in Section \rsec{S2ssdisc}, where the specific definitions for
+CN and TR/BDF-2 are given in Sections \rsec{S2fullCN} and \rsec{S2fullTRBDF2},
+respectively. Below are pseudocodes for the wrapper functions
+\texttt{radiationSolveCN()} and \texttt{radiationSolveTRBDF2()}:
+
+\begin{lstlisting}[mathescape,columns=fullflexible,
+   basicstyle=\fontfamily{lmvtt}\selectfont]
+$\R^{k+1} =$ radiationSolveCN($\U^n,\U^k,\dt$)
+{
+   $\tilde{\Q}^{\pm,k} =$ computeCNSource($\U^n,\U^k,\dt$)
+   $\R^{k+1} =$ radiationSolveSS($\sigma^k,\tilde{\Q}^{\pm,k},\alpha^{CN}
+     ,\beta^{CN}$)
+}
+
+$\R^{k+1} =$ radiationSolveTRBDF2($\U^{n-1},\U^n,\U^k,\dt$)
+{
+   $\tilde{\Q}^{\pm,k} =$ computeTRBDF2Source($\U^{n-1},\U^n,\U^k,\dt$)
+   $\R^{k+1} =$ radiationSolveSS($\sigma^k,\tilde{\Q}^{\pm,k},\alpha^{TR/BDF-2}
+     ,\beta^{TR/BDF-2}$)
+}
+\end{lstlisting}
+
+

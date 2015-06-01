@@ -1,10 +1,5 @@
 % Mark URL's
 \newcommand{\URL}[1]{{\textcolor{blue}{#1}}}
-
-%\newcommand{\elfit}{\ensuremath{\operatorname{Im}(-1/\epsilon(\vq,\omega)}}
-%\msection{}-->section commands
-%\tradem{}  -->add TM subscript to entry
-%\ucatm{}   -->add trademark footnote about entry
 %
 % Ways of grouping things
 %
@@ -14,11 +9,9 @@
 \newcommand{\ave}[1]{\left\langle #1 \right\rangle}
 \newcommand{\norm}[1]{\Arrowvert #1 \Arrowvert}
 \newcommand{\abs}[1]{\arrowvert #1 \arrowvert}
-
 %
 % Derivative forms
 %
-%\newcommand{\dx}[1]{\,d#1}
 \newcommand{\dxdy}[2]{\frac{\partial #1}{\partial #2}}
 \newcommand{\dxy}[2]{\frac{d #1}{d #2}}
 \newcommand{\dydx}[1]{\frac{\partial #1}{\partial x}}
@@ -80,7 +73,6 @@
 \newcommand{\supertext}[1]{\ensuremath{^{\textrm{#1}}}}
 \newcommand{\subtext}[1]{\ensuremath{_{\textrm{#1}}}}
 %
-%
 % List beginnings and endings
 %
 \newcommand{\bl}{\bss\begin{itemize}}
@@ -106,19 +98,6 @@
 %
 \newcommand{\bss}{\begin{singlespace}}
 \newcommand{\ess}{\end{singlespace}}
-%
-%---New environment "arbspace". (modeled after singlespace environment
-%                                in Doublespace.sty)
-%   The baselinestretch only takes effect at a size change, so do one.
-%
-\def\arbspace#1{\def\baselinestretch{#1}\@normalsize}
-\def\endarbspace{}
-\newcommand{\bas}{\begin{arbspace}}
-\newcommand{\eas}{\end{arbspace}}
-%
-% An explanation for a function
-%
-\newcommand{\explain}[1]{\mbox{\hspace{2em} #1}}
 %
 % Quick commands for symbols
 %
@@ -149,12 +128,14 @@
 \newcommand{\dx}{\Delta x}
 \newcommand{\iL}{_{i,L}}
 \newcommand{\iR}{_{i,R}}
-
-%
-% Inclusion of Graphics Data
-%
-%\input{psfig}
-%\psfiginit
+\newcommand{\sa}{\sigma_a}
+\newcommand{\sigsL}{\frac{\sigma_{s,i,L}^k}{2}}
+\newcommand{\sigsR}{\frac{\sigma_{s,i,R}^k}{2}}
+\newcommand{\sigtL}{\sigma_{t,i,L}^k}
+\newcommand{\sigtR}{\sigma_{t,i,R}^k}
+\newcommand{\halfh}{\frac{h_i}{2}}
+\newcommand{\CN}[3]{\half\left[#1\right]^#2 + \half\left[#1\right]^#3}
+\newcommand{\CNN}[3]{\half\left[#1\right]^#2 - \half\left[#1\right]^#3}
 %
 % More Quick Commands
 %

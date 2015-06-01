@@ -1,0 +1,158 @@
+%===============================================================================
+\section{Spatial Discretization}
+%===============================================================================
+
+A lumped linear discontinuous (LLD) spatial discretization is employed
+for the S$_2$ equations, so the angular flux
+unknowns are the left and right values $\Psi_{i,L}^\pm$ and
+$\Psi_{i,R}^\pm$ for each cell $i$. The spatially
+discretized equations result from integrating each half cell
+$(x_i-\frac{h_i}{2},x_i)$ and $(x_i,x_i+\frac{h_i}{2})$,
+where $x_i$ is the cell center, and $h_i$ is the cell width.
+The fully discretized equations are given in Section \rsec{full}.
+
+%===============================================================================
+\subsection{Steady-State \texorpdfstring{S$_2$}{S-2} Equations}\lsec{S2ssdisc}
+%===============================================================================
+Using an LLD discretization, the steady-state
+S$_2$ equations (obtained by dropping the $\dydt{\Psi^\pm}$ in Equation
+\requ{S2Q}) become
+%\begin{equation}\lequ{S2ssL}
+%  \mu^\pm\fn{\psi^{\pm,k+1}_i - \psi^{\pm,k+1}_{i-\half}}
+%  +\sigma_{t,i,L}^k\frac{h_i}{2}\psi\iL^{\pm,k+1}=
+%  \frac{\sigma_{s,i,L}^k}{4\pi}\frac{h_i}{2}\phi\iL^{k+1}
+%  +\frac{1}{4\pi}\frac{h_i}{2}Q_{i,L}^{\pm,k} \pec
+%\end{equation}
+%\begin{equation}\lequ{S2ssR}
+%  \mu^\pm\fn{\psi^{\pm,k+1}_{i+\half} - \psi^{\pm,k+1}_i}
+%  +\sigma_{t,i,R}^k\frac{h_i}{2}\psi\iR^{\pm,k+1}=
+%  \frac{\sigma_{s,i,R}^k}{4\pi}\frac{h_i}{2}\phi\iR^{k+1}
+%  +\frac{1}{4\pi}\frac{h_i}{2}Q_{i,R}^{\pm,k} \pec
+%\end{equation}
+\begin{equation}\lequ{S2ssL}
+  \frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_i - \Psi^{\pm,k+1}_{i-\half}}
+  +\sigma_{t,i,L}^k\Psi\iL^{\pm,k+1}
+  -\frac{\sigma_{s,i,L}^k}{2}\phi\iL^{k+1}
+  =\Q_{i,L}^{\pm,k} \pec
+\end{equation}
+\begin{equation}\lequ{S2ssR}
+  \frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}
+  +\sigma_{t,i,R}^k\Psi\iR^{\pm,k+1}
+  -\frac{\sigma_{s,i,R}^k}{2}\phi\iR^{k+1}
+  =\Q_{i,R}^{\pm,k} \pec
+\end{equation}
+where the cell center and edge fluxes are defined as
+%\begin{equation}
+%  \psi_i^\pm=\half\fn{\psi_{i,L}^\pm + \psi_{i,R}^\pm} \pec
+%\end{equation}
+%\begin{equation}
+%  \psi_{i+\half}^+=\psi_{i,R}^+ \pec\qquad \psi_{i+\half}^-=\psi_{i+1,L}^- \pep
+%\end{equation}
+\begin{equation}
+  \Psi_i^\pm=\half\fn{\Psi_{i,L}^\pm + \Psi_{i,R}^\pm} \pec
+\end{equation}
+\begin{equation}
+  \Psi_{i+\half}^+=\Psi_{i,R}^+ \pec\qquad \Psi_{i+\half}^-=\Psi_{i+1,L}^- \pep
+\end{equation}
+Coefficients of the resulting linear system matrix are the following,
+where conditions in parentheses indicate when a term does not
+apply for the boundary elements $i=1$ and $i=N$:
+\begin{center}
+\begin{tabular}{|l||c|c|c|}\hline
+          & $i-1,R,+$ & $i,L,-$ & $i,L,+$\\\hline\hline
+  $i,L,-$ &
+          & $-\frac{\mu^-}{h_i} + \sigtL - \sigsL$
+          & $-\sigsL$ \\\hline
+  $i,L,+$ & $-\frac{2\mu^+}{h_i}$ ($i\ne 1$)
+          & $-\sigsL$
+          & $\frac{\mu^+}{h_i} + \sigtL - \sigsL$ \\\hline
+  $i,R,-$ &
+          & $-\frac{\mu^-}{h_i}$
+          & \\\hline
+  $i,R,+$ &
+          &
+          & $-\frac{\mu^+}{h_i}$ \\\hline
+\end{tabular}
+\end{center}
+\begin{center}
+\begin{tabular}{|l||c|c|c|}\hline
+          & $i,R,-$ & $i,R,+$ & $i+1,L,-$\\\hline\hline
+  $i,L,-$ & $\frac{\mu^-}{h_i}$
+          &
+          & \\\hline
+  $i,L,+$ &
+          & $\frac{\mu^+}{h_i}$
+          & \\\hline
+  $i,R,-$ & $-\frac{\mu^-}{h_i} + \sigtR - \sigsR$
+          & $-\sigsR$
+          & $\frac{2\mu^-}{h_i}$ ($i\ne N$) \\\hline
+  $i,R,+$ & $-\sigsR$
+          & $\frac{\mu^+}{h_i} + \sigtR - \sigsR$
+          & \\\hline
+\end{tabular}
+\end{center}
+The right hand side vector for the linear system is the following,
+where the columns indicate to which cell(s) the expressions
+correspond:
+
+\begin{center}
+\begin{tabular}{|l||c|c|c|}\hline
+          & $i=1$ & $i=2\ldots N-1$ & $i=N$\\\hline\hline
+  $i,L,-$ & $\Q^-_{i,L}$
+          & $\Q^-_{i,L}$
+          & $\Q^-_{i,L}$ \\\hline
+  $i,L,+$ & $\Q^+_{i,L} + \frac{2\mu^+}{h_i}\Psi^+_{inc}$
+          & $\Q^+_{i,L}$
+          & $\Q^+_{i,L}$ \\\hline
+  $i,R,-$ & $\Q^-_{i,R}$
+          & $\Q^-_{i,R}$
+          & $\Q^-_{i,R} - \frac{2\mu^-}{h_i}\Psi^-_{inc}$ \\\hline
+  $i,R,+$ & $\Q^+_{i,R}$
+          & $\Q^+_{i,R}$
+          & $\Q^+_{i,R}$ \\\hline
+\end{tabular}
+\end{center}
+The incoming boundary fluxes $\Psi^\pm_{inc}$ are computed from the
+user-supplied boundary half-range currents $j^\pm$ using quadrature:
+\begin{equation}
+   j^+(x_L) = 2\pi\int\limits_0^1 \psi(x_L,\mu)\mu d\mu
+   \approx \sum\limits_{\mu_d>0}\psi(x_L,\mu_d)\mu_d w_d
+   = \mu^+\Psi^+_{inc} \pec
+\end{equation}
+\begin{equation}
+   j^-(x_R) = -2\pi\int\limits_{-1}^0 \psi(x_R,\mu)\mu d\mu
+   \approx -\sum\limits_{\mu_d<0}\psi(x_R,\mu_d)\mu_d w_d
+   = -\mu^-\Psi^-_{inc} \pep
+\end{equation}
+
+Transient S$_2$ solvers can employ a steady-state solver if
+the following generalization is made to Equations \requ{S2ssL}
+and \requ{S2ssR}:
+%\begin{equation}
+%  \mu^\pm\fn{\psi^{\pm,k+1}_i - \psi^{\pm,k+1}_{i-\half}}
+%  +\fn{\sigma_{t,i,L}^k + \alpha}\frac{h_i}{2}\psi\iL^{\pm,k+1}=
+%  \frac{\sigma_{s,i,L}^k}{4\pi}\frac{h_i}{2}\phi\iL^{k+1}
+%  +\frac{1}{4\pi}\frac{h_i}{2}\tilde{Q}_{i,L}^{\pm,k} \pec
+%\lequ{S2trL}
+%\end{equation}
+%\begin{equation}
+%  \mu^\pm\fn{\psi^{\pm,k+1}_{i+\half} - \psi^{\pm,k+1}_i}
+%  +\fn{\sigma_{t,i,R}^k + \alpha}\frac{h_i}{2}\psi\iR^{\pm,k+1}=
+%  \frac{\sigma_{s,i,R}^k}{4\pi}\frac{h_i}{2}\phi\iR^{k+1}
+%  +\frac{1}{4\pi}\frac{h_i}{2}\tilde{Q}_{i,R}^{\pm,k} \pec
+%\lequ{S2trR}
+%\end{equation}
+\begin{equation}\lequ{S2trL}
+  \beta\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_i - \Psi^{\pm,k+1}_{i-\half}}
+  +\fn{\beta\sigma_{t,i,L}^k + \alpha}\Psi\iL^{\pm,k+1}
+  -\beta\frac{\sigma_{s,i,L}^k}{2}\phi\iL^{k+1}
+  =\tilde{\Q}_{i,L}^{\pm,k} \pec
+\end{equation}
+\begin{equation}\lequ{S2trR}
+  \beta\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}
+  +\fn{\beta\sigma_{t,i,R}^k + \alpha}\Psi\iR^{\pm,k+1}
+  -\beta\frac{\sigma_{s,i,R}^k}{2}\phi\iR^{k+1}
+  =\tilde{\Q}_{i,R}^{\pm,k} \pec
+\end{equation}
+where $\alpha$, $\beta$, and $\tilde{\Q}^\pm$ depend on the time
+discretization used.

@@ -1,0 +1,120 @@
+%===============================================================================
+\section{Solution of Nonlinear Equations}
+%===============================================================================
+\subsection{Linearization of Material Energy Equation}
+%===============================================================================
+
+Within each solution time step, first the hydro variables are advected (either
+using local predicted fluxes or a Riemann solver).  Then, a non-linear system
+must be solved.  Consider the case of the non-linear system to be solved for
+Crank Nicolson over a time step from $t_n$ to $t_{n+1}$.  The changes to the
+non-linear system for the predictor and corrector time steps will only affect
+the choice of $\dt$ the end time state, and the known source terms on the right
+hand side, which come from known previous states in time.  The non-linear
+equations to be solved in this case are, dropping spatial differencing indices,
+\begin{equation}
+  \frac{\rho^{n+1}\left(u^{k+1}-u^*\right)}{\dt} = 
+   \half\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n
+  +\half\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
+  \pec
+\label{eq:vel_update}
+\end{equation}
+\begin{equation}\begin{split}
+  \frac{E^{k+1}-E^*}{\dt} = &
+  -\half\left[\sigma_{a} c\left(aT^4 - \E\right)\right]^n
+  -\half\left[\sigma_{a}^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]\\
+  &+\half\left[\sigma_{t}\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n
+   +\half\left[\sigma_{t}\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
+  \pec
+\label{eq:mat}
+\end{split}\end{equation}
+plus the $S_2$ equations.  To simplify the algebra, a source term $Q_E$ is
+defined for all the known, lagged quantities in the above equation as
+\begin{multline}
+   Q_E^{k} = -\half\left[\sa c\left( aT^4 - \E\right)\right]^n\\
+   -\CNN{\sigma_t \frac{u}{c} \left( \frac{4}{3} \E u - \F \right)}{n}{k} \pep
+\end{multline}
+First, Eq.~\eqref{eq:vel_update} is solved for a new velocity, using lagged
+radiation energy and flux densities.  For the initial solve, these can be taken
+at $t_n$.  We then linearize the Planckian function about some temperature near
+$T^{k+1}$, denoted $T^k$. The linearized Planckian is
+\begin{equation}
+  \sigma_a^k a c \left( T^{k+1} \right)^4 = 
+  \sigma_a^k a c \left[(T^k)^4 + \frac{4(T^k)^3}{c_v^k}\left(
+  e^{k+1} - e^{k}  \right)\right] \pep
+    \label{eq:linearize}
+\end{equation}
+For the initial iteration $T^k=T^n$.  The above equation is substituted into
+Eq.~\eqref{eq:mat} and we define $\beta^k=\frac{4a(T^k)^3}{c_v^k}$ for clarity.
+The resulting equation can be solved for $(e^{k+1} - e^{k})$ through
+algebraic manipulation:
+\begin{align*}
+   \frac{E^{k+1} - E^*}{\dt} &= - \frac{1}{2}\left[\sa^k c \left(
+   a(T^{k+1})^4 - \E^{k+1}\right)\right]+Q_E^k \\
+   \frac{E^{k+1} - E^*}{\dt} &= - \frac{1}{2}\left[\sa^k c \left(
+   a(T^k)^4 + \beta^k(e^{k+1} - e^k)  - \E^{k+1}\right)\right]+Q_E^k \pec
+\end{align*}
+and adding and subtracting $\frac{\rho^{n+1}e^k}{\dt}$ on the left hand side gives
+\begin{multline*}
+   \frac{E^{k+1}-\rho^{n+1} e^k + \rho^{n+1} e^k - E^*}{\dt} = \\
+   -\frac{1}{2}\left[\sa^{k}c\left(
+   a(T^k)^4 + \beta^k(e^{k+1} - e^k)  - \E^{k+1}\right)\right]+Q_E^k \pep
+\end{multline*}
+The superscript on $\rho$ is dropped because $\rho^{n+1} = \rho^*$. Then, using
+$E=\rho\fn{\frac{u^2}{2} + e}$, the left hand side can be simplified as 
+\begin{multline} 
+   \frac{E^{k+1} - \rho e^k + \rho e^k - E^*}{\dt} =\\
+   \frac{\rho}{\dt}\left[(e^{k+1} - e^{k}) + \frac{1}{2}((u^{k+1})^2-(u^*)^2) +
+   (e^k-e^*) \right] \pep
+\end{multline}
+Solving for $(e^{k+1} - e^{k})$ then gives
+\begin{multline}
+    e^{k+1}-e^k=\\
+    \frac{{\dt}\left[ \frac{1}{2}\sa^k c (\E^{k+1} -
+    a(T^k)^4)+Q_E^k \right]- \rho(e^k-e^*)-
+    \frac{\rho}{2}((u^{k+1})^2-(u^*)^2)}
+    {\rho +\frac{1}{2}\sa^k c \dt\beta^k} \pep
+\label{eq:energy_update}
+\end{multline}
+We then multiply the above equation by $\sigma_a^k c \beta^k$ and divide the RHS
+by $\rho/\rho$; this will simplify substitution back into
+Eq.~\eqref{eq:linearize}.
+\begin{multline}
+    \sa^k c \beta^k (e^{k+1} - e^k) = \frac{\frac{1}{2}\sigma_a^k c \dt
+    \frac{\beta^k}{\rho}}{1+\frac{1}{2}\sa^k c \dt \frac{\beta^k}{\rho}}
+    \left(\sa^k c\left[\E^{k+1} - a (T^k)^4\right] + 2Q_E^k\right)\\
+    - \left(\frac{\frac{1}{2}\sa^k c \frac{\beta^k}{\rho} \dt}
+    {1 +\frac{1}{2}\sa^k c \dt \frac{\beta^k}{\rho}}\right)
+    \left(\frac{2\rho}{\dt}\right)\left[(e^k - e^*)
+    + \frac{1}{2}((u^{n+1})^2 - (u^*)^2)\right] \pep
+ \end{multline}
+The effective scattering fraction $\nu_{1/2}$, for the case of Crank Nicolson, is
+defined as
+\begin{equation}
+    \nu_{1/2}^k = \frac{\sigma_a^k c \frac{\beta^k}{\rho}}{\frac{2}{\dt}+ \sa^k c
+    \frac{\beta^k}{\rho}  } \pep
+\end{equation}
+Making this substitution gives
+\begin{multline*}
+    \sa^k c \beta^k(e^{k+1} - e^k) = \nu_{1/2}^k \left(\sa^k c
+    \left[\E^{k+1} - a (T^k)^4\right] + 2Q_E^k\right)\\
+    -\frac{2\nu_{1/2}^k\rho}{\dt} \left[(e^k - e^*)
+    + \frac{1}{2}((u^{k+1})^2 - (u^*)^2)\right] \pep
+\end{multline*}
+Finally, this can be substituted into Eq.~\eqref{eq:linearize} and the $(T^k)^4$
+terms simplified, giving the source term
+\begin{multline}
+   \sigma_a^k a c\left(T^{k+1}\right)^4 = \left(1 - \nu_{1/2}^k\right)
+   \sigma_a^k a c (T^k)^4 + \sigma_a^k c \nu_{1/2}^k \E^{k+1}\\
+   +2\nu_{1/2}^k Q_E^k - \frac{2\rho\nu_{1/2}^k}{\dt}
+   \left[(e^k - e^*) + \frac{1}{2}((u^{n+1})^2 - (u^*)^2)\right] \pep
+\end{multline}
+The above expression can be substituted for the emission source in the S$_2$
+equations, including an effective scattering cross section given by $\sigma_a^k
+\nu_{1/2}^k$.  After solving for $\E^{k+1}$, a new internal energy can be estimated
+using Eq.~\eqref{eq:energy_update}. It is important to use this linearized
+equation to ensure energy conservation.  This process can now be repeated until
+convergence, beginning with a solve of Eq.~\eqref{eq:vel_update} with updated
+radiation quantities.  Once the system is converged, the EOS can be used to
+update $p^{n+1}$.
+
