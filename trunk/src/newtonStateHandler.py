@@ -36,7 +36,7 @@ class NewtonStateHandler(TransientSourceTerm):
     #                               TODO have the constructor adjust star to use rad
     #                               slopes
     #
-    def __init__(self,mesh,hydro_states_implicit=None,time_stepper='BE'):
+    def __init__(self,mesh,cx_new=None,hydro_states_implicit=None,time_stepper='BE'):
 
         TransientSourceTerm.__init__(self,mesh,time_stepper)
 
@@ -48,6 +48,9 @@ class NewtonStateHandler(TransientSourceTerm):
 
         #Store the (initial) implicit hydro_states at t_{n+1}. These WILL be modified
         self.hydro_states = hydro_states_implicit
+
+        #Store the cross sections, you will be updating these 
+        self.cx_orig = cx_new
 
     #---------------------------------------------------------------------------------
     def getFinalHydroStates():
@@ -72,10 +75,10 @@ class NewtonStateHandler(TransientSourceTerm):
     # @param [in] cx_orig    Pass in the original cross sections, these are NOT
     #                        modified. Return effective cross section
     #
-    def getEffectiveOpacities(self, cx_orig, dt):
+    def getEffectiveOpacities(self, dt):
 
         cx_effective = []
-        print self.hydro_states
+        cx_orig = self.cx_orig #local reference
 
         # loop over cells:
         for i in range(len(cx_orig)):
@@ -114,7 +117,17 @@ class NewtonStateHandler(TransientSourceTerm):
 
         if self.time_stepper == "BE":
 
-            return 1.0
+            return 0.0
+        else:
+
+            raise NotImplementedError("Not really sure what to do here yet")
+
+    #--------------------------------------------------------------------------------
+    ## Compute a new internal energy in each of the states, based on a passed in
+    #  solution for E^{k+1}
+    #
+    def updateIntEnergy(self, cx_new, 
+    
 
     #================================================================================
     #   The following functions are for the TransientSourceTerm class
@@ -127,9 +140,10 @@ class NewtonStateHandler(TransientSourceTerm):
     #                               assumed they have been adjusted to use the
     #                               correct slope before this function is called
     #
-    def evalImplicit(self, i, cx_new=None,hydro_states_star=None, dt=None,**kwargs):
+    def evalImplicit(self, i, hydro_states_star=None, dt=None,**kwargs):
         
         #calculate at left and right, isotropic emission source
+        cx_new = self.cx_orig #local reference
         planckian = [0.0,0.0]
         for x in range(2):
 
@@ -160,8 +174,6 @@ class NewtonStateHandler(TransientSourceTerm):
         Q[UT.getLocalIndex("R","-")] = 0.5*planckian[1]
         Q[UT.getLocalIndex("R","+")] = 0.5*planckian[1]
         
-        print Q
-
         return Q
 
     #--------------------------------------------------------------------------------

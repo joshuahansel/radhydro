@@ -126,6 +126,7 @@ class TestTRTOnly(unittest.TestCase):
           # construct newton state handler
           newton_handler = NewtonStateHandler(mesh,
                                time_stepper=time_stepper,
+                               cx_new = cross_sections,
                                hydro_states_implicit=hydro_states)
 
           # take radiation step, currently hardcoded here
@@ -157,15 +158,11 @@ class TestTRTOnly(unittest.TestCase):
           # extract angular fluxes from solution vector
           psim, psip = extractAngularFluxes(psi, mesh)
 
-          # compute scalar flux
-          phi = computeScalarFlux(psip, psim)
+          # compute new scalar energy density
+          E = computeEnergyDensity(psim, psip)
 
-          # compute difference of transient and steady-state scalar flux
-          phi_diff = [tuple(map(operator.sub, phi[i], phi_ss[i]))
-             for i in xrange(len(phi))]
-
-          # compute discrete L1 norm of difference
-          L1_norm_diff = computeDiscreteL1Norm(phi_diff)
+          #update internal energies 
+          newton_handler.updateIntEnergy(E,dt)
 
           # print each time step if run standalone
           if __name__ == '__main__':
