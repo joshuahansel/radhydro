@@ -108,15 +108,10 @@ class TestTRTOnly(unittest.TestCase):
 
       # time-stepper
       time_stepper = "BE"
+      beta = {"CN":0.5, "BDF2":2./3., "BE":1.}
 
       # transient loop
       transient_incomplete = True # boolean flag signalling end of transient
-
-      # construct newton state handler
-      newton_handler = NewtonStateHandler(mesh,
-                           time_stepper=time_stepper,
-                           hydro_states_implicit=hydro_states)
-
 
       while transient_incomplete:
   
@@ -128,34 +123,36 @@ class TestTRTOnly(unittest.TestCase):
           else:
              t += dt
 
+          # construct newton state handler
+          newton_handler = NewtonStateHandler(mesh,
+                               time_stepper=time_stepper,
+                               hydro_states_implicit=hydro_states)
 
           # take radiation step, currently hardcoded here
           transient_source = TransientSource(mesh, time_stepper,problem_type='trt',
-                  newton_handler= NewtonStateHandler(mesh))
+                  newton_handler=newton_handler)
               
           # get the modified cross scattering cross sections
           cross_sects = newton_handler.getEffectiveOpacities(cx_orig,dt)
           printTupled(cross_sects)
 
-
-
-
-          # evaluate transient source
+          # evaluate transient source, including linearized planckian
           Q_tr = transient_source.evaluate(
               dt            = dt,
               bc_flux_left  = psi_left,
               bc_flux_right = psi_right,
-              cx_older      = cross_sects,
-              cx_old        = cross_sects,
+              cx_older      = cx_orig,
+              cx_old        = cx_orig,
               cx_new        = cross_sects,
-              psi_old       = psi_old )
+              psi_old       = psi_old ,
+          hydro_states_star = hydro_old)
 
           # solve the transient system
-          alpha = 1./(GC.SPD_OF_LGT*kwargs['dt'])
-          psi = radiationSolveSS(self.mesh, kwargs['cx_new'], Q_tr,
-             bc_psi_left = kwargs['bc_flux_left'],
-             bc_psi_right = kwargs['bc_flux_right'],
-             diag_add_term = alpha, implicit_scale = beta[self.time_stepper] )
+          alpha = 1./(GC.SPD_OF_LGT*dt)
+          psi = radiationSolveSS(mesh, cross_sects, Q_tr,
+             bc_psi_left = psi_left,
+             bc_psi_right = psi_right,
+             diag_add_term = alpha, implicit_scale = beta[time_stepper] )
 
           # extract angular fluxes from solution vector
           psim, psip = extractAngularFluxes(psi, mesh)

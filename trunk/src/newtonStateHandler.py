@@ -16,6 +16,8 @@ from transientSource import TransientSourceTerm
 from crossXInterface import CrossXInterface
 from copy            import deepcopy
 import globalConstants as GC
+import numpy as np
+import utilityFunctions as UT
 
 #===================================================================================
 ## Main class to handle newton solve and temperature updates, etc.
@@ -31,6 +33,8 @@ class NewtonStateHandler(TransientSourceTerm):
     # @param [in] hydro_states_implicit  The initial guess for hydro states at end of
     #                             time step. These WILL be modified. Stored in usual
     #                             tuple format (L,R)
+    #                               TODO have the constructor adjust star to use rad
+    #                               slopes
     #
     def __init__(self,mesh,hydro_states_implicit=None,time_stepper='BE'):
 
@@ -71,6 +75,7 @@ class NewtonStateHandler(TransientSourceTerm):
     def getEffectiveOpacities(self, cx_orig, dt):
 
         cx_effective = []
+        print self.hydro_states
 
         # loop over cells:
         for i in range(len(cx_orig)):
@@ -101,26 +106,63 @@ class NewtonStateHandler(TransientSourceTerm):
 
         return cx_effective
 
+    #--------------------------------------------------------------------------------
+    ## Function to evaluate Q_E^k in documentation. This is essentially everything
+    #  else from the linearization that isnt included elsewhere
+    #
+    def getQE():
+
+        if self.time_stepper == "BE":
+
+            return 1.0
+
     #================================================================================
     #   The following functions are for the TransientSourceTerm class
     #--------------------------------------------------------------------------------
     ## Evaluate implicit term
     #
-    def evalImplicit(self, i, **kwargs):
+    # param [in] hydro_states_star  If there is no material motion, this is simply
+    #                               the hydro states at t_n. But if there is material
+    #                               motion these come from the MUSCL hancock. It is
+    #                               assumed they have been adjusted to use the
+    #                               correct slope before this function is called
+    #
+    def evalImplicit(self, i, cx_new=None,hydro_states_star=None, dt=None,**kwargs):
         
-        T =  5.0375116316e-02 
-        rho = 1.0000000000e+01 
-        spec_heat = 1.0000000000e-01
-        dt = 1.0000000000e-03 
-        sigma_a = 2.0000000000e+03
-        nu  =  4.1888035417e-03
-        Sigma_s  = 8.3776070833e+00
+        #calculate at left and right, isotropic emission source
+        planckian = [0.0,0.0]
+        for x in range(2):
 
-        print "Actual nu: ", nu
-        print "Actual sigs: ", Sigma_s
-        print "My nu: ", getNu(T,sigma_a,rho, spec_heat, dt, self.scale)
+            #get temperature for this cell, at indice k
+            state = self.hydro_states[i][x]
+            T     = state.getTemperature()
 
-        raise NotImplementedError("not done")
+            #old state from hydro
+            state_star = hydro_states_star[i][x]
+
+            #Update cross section just in case
+            cx_new[i][x].updateCrossX(state.rho,T)
+
+            sig_a = cx_new[i][x].sig_a
+            nu    = getNu(T,sig_a,state.rho,state.spec_heat,dt,self.scale)
+
+            #Calculate planckian
+            emission = (1. - nu )*sig_a*GC.RAD_CONSTANT*GC.SPD_OF_LGT*T**4.
+            
+            #add in additional term from internal energy
+            planckian[x] = emission - (nu*state.rho/(self.scale*dt) 
+                    * (state.e  - state_star.e ) )
+
+        #Store the (isotropic) sources in correct index
+        Q = np.zeros(4)
+        Q[UT.getLocalIndex("L","-")] = 0.5*planckian[0]
+        Q[UT.getLocalIndex("L","+")] = 0.5*planckian[0]
+        Q[UT.getLocalIndex("R","-")] = 0.5*planckian[1]
+        Q[UT.getLocalIndex("R","+")] = 0.5*planckian[1]
+        
+        print Q
+
+        return Q
 
     #--------------------------------------------------------------------------------
     ## Evaluate implicit term
