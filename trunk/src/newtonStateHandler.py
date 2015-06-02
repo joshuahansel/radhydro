@@ -50,7 +50,7 @@ class NewtonStateHandler(TransientSourceTerm):
         self.hydro_states = hydro_states_implicit
 
         #Store the cross sections, you will be updating these 
-        self.cx_orig = cx_new
+        self.cx_new = cx_new
 
     #---------------------------------------------------------------------------------
     def getFinalHydroStates():
@@ -78,7 +78,7 @@ class NewtonStateHandler(TransientSourceTerm):
     def getEffectiveOpacities(self, dt):
 
         cx_effective = []
-        cx_orig = self.cx_orig #local reference
+        cx_orig = self.cx_new #local reference
 
         # loop over cells:
         for i in range(len(cx_orig)):
@@ -100,7 +100,6 @@ class NewtonStateHandler(TransientSourceTerm):
                 sig_a_og = cx_orig[i][x].sig_a
                 sig_s_og = cx_orig[i][x].sig_s
                 nu    = getNu(T,sig_a_og,state.rho,state.spec_heat,dt,self.scale)
-                print T, sig_a_og, state.rho, state.spec_heat, dt, self.scale
             
                 #Create new FIXED cross section instance
                 cx_i.append( CrossXInterface(sig_a_og, sig_s_og + nu*sig_a_og) )
@@ -126,7 +125,47 @@ class NewtonStateHandler(TransientSourceTerm):
     ## Compute a new internal energy in each of the states, based on a passed in
     #  solution for E^{k+1}
     #
-    def updateIntEnergy(self, cx_new, 
+    def updateIntEnergy(self, E, dt, hydro_states_star=None):
+
+        #constants
+        a = GC.RAD_CONSTANT
+        c = GC.SPD_OF_LGT
+
+        if self.time_stepper != 'BE':
+
+            raise NotImplementedError("This only works for BE currently")
+
+        #loop over cells
+        for i in xrange(len(self.hydro_states)):
+
+            #loop over left and right value
+            for x in range(2):
+
+                #get temperature for this cell, at indice k, we are going to k+1
+                state = self.hydro_states[i][x]
+                T_prev  = state.getTemperature()
+                e_prev = state.e
+
+                #old state from hydro
+                state_star = hydro_states_star[i][x]
+                e_star = state_star.e
+
+                print E[i][x]*c
+
+                sig_a = self.cx_new[i][x].sig_a
+                nu    = getNu(T_prev,sig_a,state.rho,state.spec_heat,dt,self.scale)
+
+                #Calculate planckian from T_prev (t_k)
+                planck_prev = sig_a*a*c*T_prev**4.
+                
+                #Calculate a new internal energy and store it (NEED SCALE FACTORS)
+                e_new = (1.-nu) * dt/state.rho * (sig_a*c*E[i][x] - planck_prev) \
+                        + (1.-nu)*e_star + nu*e_prev
+                self.hydro_states[i][x].e = e_new
+
+                print "New temps: ", i, self.hydro_states[i][x].getTemperature()
+
+        c = GC.SPD_OF_LGT
     
 
     #================================================================================
@@ -143,7 +182,7 @@ class NewtonStateHandler(TransientSourceTerm):
     def evalImplicit(self, i, hydro_states_star=None, dt=None,**kwargs):
         
         #calculate at left and right, isotropic emission source
-        cx_new = self.cx_orig #local reference
+        cx_new = self.cx_new #local reference
         planckian = [0.0,0.0]
         for x in range(2):
 

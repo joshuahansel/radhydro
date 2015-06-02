@@ -38,7 +38,7 @@ class TestTRTOnly(unittest.TestCase):
       n_decimal_places = 13
 
       # create mesh
-      n_elems = 5
+      n_elems = 200
       mesh = Mesh(n_elems,1.)
 
       # initialize temperature
@@ -126,7 +126,7 @@ class TestTRTOnly(unittest.TestCase):
           # construct newton state handler
           newton_handler = NewtonStateHandler(mesh,
                                time_stepper=time_stepper,
-                               cx_new = cross_sections,
+                               cx_new = cross_sects,
                                hydro_states_implicit=hydro_states)
 
           # take radiation step, currently hardcoded here
@@ -134,8 +134,7 @@ class TestTRTOnly(unittest.TestCase):
                   newton_handler=newton_handler)
               
           # get the modified cross scattering cross sections
-          cross_sects = newton_handler.getEffectiveOpacities(cx_orig,dt)
-          printTupled(cross_sects)
+          cross_sects = newton_handler.getEffectiveOpacities(dt)
 
           # evaluate transient source, including linearized planckian
           Q_tr = transient_source.evaluate(
@@ -162,13 +161,15 @@ class TestTRTOnly(unittest.TestCase):
           E = computeEnergyDensity(psim, psip)
 
           #update internal energies 
-          newton_handler.updateIntEnergy(E,dt)
+          newton_handler.updateIntEnergy(E,dt,hydro_states_star = hydro_old)
 
           # print each time step if run standalone
           if __name__ == '__main__':
-             print("t = %0.3f -> %0.3f: L1 norm of diff with steady-state: %7.3e"
-                % (t-dt,t,L1_norm_diff))
+             print("t = %0.3f -> %0.3f:"
+                % (t-dt,t) )
   
+          exit()
+
           # save oldest solutions
           psi_older = deepcopy(psi_old)
   
