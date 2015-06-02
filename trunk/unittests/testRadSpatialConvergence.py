@@ -1,4 +1,5 @@
 ## @package testRadSpatialConvergence
+#  Tests spatial convergence rate of a transient MMS radiation problem.
 #
 
 import sys

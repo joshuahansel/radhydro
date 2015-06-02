@@ -1,14 +1,15 @@
-## This module contains all the global constants that are necessary for solving
-#  radiative transfer problems. Access them like a C++ namespace as follows
+## @package src.globalConstants
+#  Contains global constants necessary for solving radiative transfer problems
 #
+#  Constants may be accessed like a C++ namespace as follows:
 #
 # import globalConstants as GC
 #
-# a = GC.RAD_CONSTANT #get radiation constant
-# c = GC.SPD_OF_LGT #get speed of light, etc.
+# a = GC.RAD_CONSTANT # get radiation constant
+# c = GC.SPD_OF_LGT   # get speed of light, etc.
 #
-# Our standard units are length - cm, time - shakes (sh),
-# energy and temperature - keV, mass - g, volume - cm^3
+# Our standard units are length: cm, time: shakes (sh),
+# energy and temperature: keV, mass: g, volume: cm^3
 #
 # Temperatures are done as an equivalent temperature, so 
 # 
@@ -18,8 +19,6 @@
 # keV.  This is confusing for specific heats, which will have units of
 #
 # C_V (energy/(temp * volume)) has units (keV/(keV*cm^3))
-
-# All constants are at global scope in this module, please dont change them :)
 
 ##shakes per second
 SH_PER_S = 1.E+8  

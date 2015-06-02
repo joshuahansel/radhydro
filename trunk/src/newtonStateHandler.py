@@ -1,4 +1,4 @@
-## @package src.newtonStateHanlder
+## @package src.newtonStateHandler
 #  This file contains a class to handle computing linearized source
 #  terms and handles temperature updates during a non-linear TRT solve.
 #  Also contains auxilary functions for evaluating TRT functions of interest
@@ -27,16 +27,16 @@ class NewtonStateHandler(TransientSourceTerm):
     #--------------------------------------------------------------------------------
     ## Constructor
     #
-    # @param [in] mesh            spatial mesh 
-    # @param [in] delta_t         The time step size is required throughout class
-    # @param [in] time_stepper    What type of time stepping method, e.g., 'BE'
-    # @param [in] hydro_states_implicit  The initial guess for hydro states at end of
-    #                             time step. These WILL be modified. Stored in usual
-    #                             tuple format (L,R)
+    # @param [in] mesh          spatial mesh 
+    # @param [in] delta_t       time step size, required throughout class
+    # @param [in] time_stepper  specifier for time-stepping method, e.g., 'BE'
+    # @param [in] hydro_new     initial guess for new (\f$t_{n+1}\f$) hydro state,
+    #                           usually taken to be old (\f$t_n\f$) hydro state.
+    #                           This WILL be modified.
     #                               TODO have the constructor adjust star to use rad
     #                               slopes
     #
-    def __init__(self,mesh,cx_new=None,hydro_states_implicit=None,time_stepper='BE'):
+    def __init__(self,mesh,cx_new=None,hydro_new=None,time_stepper='BE'):
 
         TransientSourceTerm.__init__(self,mesh,time_stepper)
 
@@ -46,13 +46,14 @@ class NewtonStateHandler(TransientSourceTerm):
         self.time_stepper = time_stepper
         self.scale = scale[time_stepper]
 
-        #Store the (initial) implicit hydro_states at t_{n+1}. These WILL be modified
-        self.hydro_states = hydro_states_implicit
+        #initialize the new hydro state to the provided guess state. These WILL be modified
+        self.hydro_states = hydro_new
 
         #Store the cross sections, you will be updating these 
         self.cx_new = cx_new
 
     #---------------------------------------------------------------------------------
+    ## Returns the converged new hydro states
     def getFinalHydroStates():
 
         #destroy the hydro states so no one accidentally reuses these for now
@@ -61,16 +62,15 @@ class NewtonStateHandler(TransientSourceTerm):
 
         return temp_states
 
-
     #--------------------------------------------------------------------------------
     ## Function to generate effective cross sections for linearization. 
     #  
     #  The effective re-emission source is included as a scattering cross section
     #  given by
     #  \f[
-    #      \tilde{\sigma_s} = \sigma_s + \sigma_a(T^k)*\nu
+    #      \tilde{\sigma_s} = \sigma_s + \sigma_a(T^k)\nu
     #  \f]
-    #  It is noted that \nu is different for the different time stepping algorithms
+    #  It is noted that \f$\nu\f$ is different for the different time stepping algorithms
     #
     # @param [in] cx_orig    Pass in the original cross sections, these are NOT
     #                        modified. Return effective cross section
@@ -109,7 +109,7 @@ class NewtonStateHandler(TransientSourceTerm):
         return cx_effective
 
     #--------------------------------------------------------------------------------
-    ## Function to evaluate Q_E^k in documentation. This is essentially everything
+    ## Function to evaluate \f$Q_E^k\f$ in documentation. This is essentially everything
     #  else from the linearization that isnt included elsewhere
     #
     def getQE():
@@ -121,11 +121,17 @@ class NewtonStateHandler(TransientSourceTerm):
 
             raise NotImplementedError("Not really sure what to do here yet")
 
+    ## Computes new velocities \f$u^{k+1}\f$
+    #
+    def updateVelocity():
+
+       #blah
+
     #--------------------------------------------------------------------------------
-    ## Compute a new internal energy in each of the states, based on a passed in
+    ## Computes a new internal energy in each of the states, based on a passed in
     #  solution for E^{k+1}
     #
-    def updateIntEnergy(self, E, dt, hydro_states_star=None):
+    def updateIntEnergy(self, E, dt, hydro_star=None):
 
         #constants
         a = GC.RAD_CONSTANT
@@ -147,7 +153,7 @@ class NewtonStateHandler(TransientSourceTerm):
                 e_prev = state.e
 
                 #old state from hydro
-                state_star = hydro_states_star[i][x]
+                state_star = hydro_star[i][x]
                 e_star = state_star.e
 
                 print E[i][x]*c
@@ -171,39 +177,39 @@ class NewtonStateHandler(TransientSourceTerm):
     #================================================================================
     #   The following functions are for the TransientSourceTerm class
     #--------------------------------------------------------------------------------
-    ## Evaluate implicit term
+    ## Evaluate new emission term \f$\sigma_a^k a c(T^{k+1})^4\f$
     #
-    # param [in] hydro_states_star  If there is no material motion, this is simply
-    #                               the hydro states at t_n. But if there is material
-    #                               motion these come from the MUSCL hancock. It is
-    #                               assumed they have been adjusted to use the
-    #                               correct slope before this function is called
+    #  @param [in] hydro_star  If there is no material motion, this is simply
+    #                                 the hydro states at t_n. But if there is material
+    #                                 motion these come from the MUSCL hancock. It is
+    #                                 assumed they have been adjusted to use the
+    #                                 correct slope before this function is called
     #
-    def evalImplicit(self, i, hydro_states_star=None, dt=None,**kwargs):
+    def evalImplicit(self, i, hydro_star=None, dt=None,**kwargs):
         
         #calculate at left and right, isotropic emission source
         cx_new = self.cx_new #local reference
         planckian = [0.0,0.0]
-        for x in range(2):
+        for edge in range(2):
 
-            #get temperature for this cell, at indice k
-            state = self.hydro_states[i][x]
+            #get temperature for this cell, at index k
+            state = self.hydro_states[i][edge]
             T     = state.getTemperature()
 
             #old state from hydro
-            state_star = hydro_states_star[i][x]
+            state_star = hydro_star[i][edge]
 
             #Update cross section just in case
-            cx_new[i][x].updateCrossX(state.rho,T)
+            cx_new[i][edge].updateCrossX(state.rho,T)
 
-            sig_a = cx_new[i][x].sig_a
+            sig_a = cx_new[i][edge].sig_a
             nu    = getNu(T,sig_a,state.rho,state.spec_heat,dt,self.scale)
 
             #Calculate planckian
             emission = (1. - nu )*sig_a*GC.RAD_CONSTANT*GC.SPD_OF_LGT*T**4.
             
             #add in additional term from internal energy
-            planckian[x] = emission - (nu*state.rho/(self.scale*dt) 
+            planckian[edge] = emission - (nu*state.rho/(self.scale*dt) 
                     * (state.e  - state_star.e ) )
 
         #Store the (isotropic) sources in correct index
@@ -216,14 +222,14 @@ class NewtonStateHandler(TransientSourceTerm):
         return Q
 
     #--------------------------------------------------------------------------------
-    ## Evaluate implicit term
+    ## Evaluate old term
     #
     def evalOld(self, **kwargs):
 
         raise NotImplementedError("not done")
 
     #--------------------------------------------------------------------------------
-    ## Evaluate BDF2 older term
+    ## Evaluate older term
     #
     def evalOlder(self, **kwargs):
 
@@ -234,18 +240,27 @@ class NewtonStateHandler(TransientSourceTerm):
 #=====================================================================================
 #
 #--------------------------------------------------------------------------------
-## Evaluate nu in linearization at a arbitrary temperature 'T'
+## Computes effective scattering fraction \f$\nu^k\f$ in linearization at an
+#  arbitrary temperature \f$T^k\f$
+#
+#  @param[in] T      Previous iteration temperature \f$T^k\f$
+#  @param[in] sig_a  Previous iteration absorption cross section \f$\sigma_a^k\f$
+#  @param[in] rho    New density \f$\rho^{n+1}\f$
+#  @param[in] spec_heat   Previous iteration specific heat \f$c_v^k\f$
+#  @param[in] dt          time step size \f$\Delta t\f$
+#  @param[in] scale       coefficient corresponding to time-stepper \f$\gamma\f$
 #
 def getNu(T, sig_a, rho, spec_heat, dt, scale):
 
+    ## compute \f$c\Delta t\f$
     c_dt = GC.SPD_OF_LGT*dt
-    beta = 4.*GC.RAD_CONSTANT * T * T * T / spec_heat #DU_R/De
 
-    #Evaluate numerator
+    ## compute \f$\beta^k\f$
+    beta = 4.*GC.RAD_CONSTANT * T * T * T / spec_heat
+
+    # Evaluate numerator
     num  = scale*sig_a*c_dt*beta/rho
 
     return num/(1. + num)
-
-
 
 

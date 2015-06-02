@@ -96,15 +96,12 @@ class TestTRTOnly(unittest.TestCase):
       Q = np.zeros(n)
   
       #initialize radiation
-      psi_left = computeEquivIntensity(T_l)
+      psi_left  = computeEquivIntensity(T_l)
       psi_right = computeEquivIntensity(T_r)
       psi_old   = [psi_right for i in range(n)] #equilibrium solution
 
       #initiialize  hydro old
       hydro_old = deepcopy(hydro_states)
-
-      #print out temperature to check
-      psi_m, psi_p = extractAngularFluxes(psi_old,mesh)
 
       # time-stepper
       time_stepper = "BE"
@@ -129,13 +126,13 @@ class TestTRTOnly(unittest.TestCase):
                                cx_new = cross_sects,
                                hydro_states_implicit=hydro_states)
 
-          # take radiation step, currently hardcoded here
-          transient_source = TransientSource(mesh, time_stepper,problem_type='trt',
-                  newton_handler=newton_handler)
-              
-          # get the modified cross scattering cross sections
+          # get the modified scattering cross sections
           cross_sects = newton_handler.getEffectiveOpacities(dt)
 
+          # take radiation step, currently hardcoded here
+          transient_source = TransientSource(mesh, time_stepper, problem_type='trt',
+                  newton_handler=newton_handler)
+              
           # evaluate transient source, including linearized planckian
           Q_tr = transient_source.evaluate(
               dt            = dt,

@@ -1,4 +1,4 @@
-## @package src.materialUtilities
+## @package src.TRTUtilities
 #  Contains material and rad utilities useful in TRT problems, e.g., unit conversions
 
 import globalConstants as GC  # global constants
@@ -8,7 +8,7 @@ from math import sqrt
 
 ## Function to convert specific heat from ergs/(ev-g) to jks/(keV-g) (the true units)
 #
-#  @param[in] spec_heat spec heat in units of (ergs/ev-g)
+#  @param[in] spec_heat specific heat in units of (ergs/ev-g)
 # 
 #  @return    spec_heat in jks/(keV*g), this is the standard unit in the code
 #
@@ -25,16 +25,20 @@ def computeEquivIntensity(temperature):
    return 0.5*GC.SPD_OF_LGT*GC.RAD_CONSTANT * (temperature**4.0) 
 
 
-## Function to compute equvialent radiation temperature from psi_plus and psi_minus
+## Function to compute equivalent radiation temperature from psi_plus and psi_minus:
 #
-def computeRadTemp(psi_minus,psi_plus ):
+#  \[
+#     T_r = \left(\frac{E}{a}\right)^{1/4}
+#  \]
+#
+def computeRadTemp(psi_minus, psi_plus):
     
-    # compute scalar flux first
+    # compute radiation energy
     E = computeEnergyDensity(psi_minus,psi_plus)
     a = GC.RAD_CONSTANT
 
-    #compute evialent temperature
-    T_rad  = [((i[0]/a)**0.25,(i[1]/a)**0.25) for i in E]
+    #compute equivalent temperature
+    T_rad  = [((E_elem[0]/a)**0.25,(E_elem[1]/a)**0.25) for E_elem in E]
     
     return T_rad
 

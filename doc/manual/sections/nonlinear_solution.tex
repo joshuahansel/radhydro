@@ -32,7 +32,7 @@ plus the $S_2$ equations.  To simplify the algebra, a source term $Q_E$ is
 defined for all the known, lagged quantities in the above equation as
 \begin{multline}
    Q_E^{k} = -\half\left[\sa c\left( aT^4 - \E\right)\right]^n\\
-   -\CNN{\sigma_t \frac{u}{c} \left( \frac{4}{3} \E u - \F \right)}{n}{k} \pep
+   +\CN{\sigma_t \frac{u}{c} \left( \F - \frac{4}{3} \E u \right)}{n}{k} \pep
 \end{multline}
 First, Eq.~\eqref{eq:vel_update} is solved for a new velocity, using lagged
 radiation energy and flux densities.  For the initial solve, these can be taken
@@ -44,7 +44,7 @@ $T^{k+1}$, denoted $T^k$. The linearized Planckian is
   e^{k+1} - e^{k}  \right)\right] \pep
     \label{eq:linearize}
 \end{equation}
-For the initial iteration $T^k=T^n$.  The above equation is substituted into
+For the initial iteration, $T^k=T^n$.  The above equation is substituted into
 Eq.~\eqref{eq:mat} and we define $\beta^k=\frac{4a(T^k)^3}{c_v^k}$ for clarity.
 The resulting equation can be solved for $(e^{k+1} - e^{k})$ through
 algebraic manipulation:
@@ -83,16 +83,16 @@ Eq.~\eqref{eq:linearize}.
     \sa^k c \beta^k (e^{k+1} - e^k) = \frac{\frac{1}{2}\sigma_a^k c \dt
     \frac{\beta^k}{\rho}}{1+\frac{1}{2}\sa^k c \dt \frac{\beta^k}{\rho}}
     \left(\sa^k c\left[\E^{k+1} - a (T^k)^4\right] + 2Q_E^k\right)\\
-    - \left(\frac{\frac{1}{2}\sa^k c \frac{\beta^k}{\rho} \dt}
+    - \left(\frac{\frac{1}{2}\sa^k c\dt \frac{\beta^k}{\rho}}
     {1 +\frac{1}{2}\sa^k c \dt \frac{\beta^k}{\rho}}\right)
     \left(\frac{2\rho}{\dt}\right)\left[(e^k - e^*)
-    + \frac{1}{2}((u^{n+1})^2 - (u^*)^2)\right] \pep
+    + \frac{1}{2}((u^{k+1})^2 - (u^*)^2)\right] \pep
  \end{multline}
 The effective scattering fraction $\nu_{1/2}$, for the case of Crank Nicolson, is
 defined as
 \begin{equation}
-    \nu_{1/2}^k = \frac{\sigma_a^k c \frac{\beta^k}{\rho}}{\frac{2}{\dt}+ \sa^k c
-    \frac{\beta^k}{\rho}  } \pep
+    \nu_{1/2}^k = \frac{\half\sigma_a^k c\dt \frac{\beta^k}{\rho}}
+    {1 + \half\sa^k c\dt \frac{\beta^k}{\rho}  } \pep
 \end{equation}
 Making this substitution gives
 \begin{multline*}
@@ -107,7 +107,7 @@ terms simplified, giving the source term
    \sigma_a^k a c\left(T^{k+1}\right)^4 = \left(1 - \nu_{1/2}^k\right)
    \sigma_a^k a c (T^k)^4 + \sigma_a^k c \nu_{1/2}^k \E^{k+1}\\
    +2\nu_{1/2}^k Q_E^k - \frac{2\rho\nu_{1/2}^k}{\dt}
-   \left[(e^k - e^*) + \frac{1}{2}((u^{n+1})^2 - (u^*)^2)\right] \pep
+   \left[(e^k - e^*) + \frac{1}{2}((u^{k+1})^2 - (u^*)^2)\right] \pep
 \end{multline}
 The above expression can be substituted for the emission source in the S$_2$
 equations, including an effective scattering cross section given by $\sigma_a^k

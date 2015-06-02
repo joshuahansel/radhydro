@@ -63,7 +63,7 @@ class TransientSource:
    #  @param[in] mesh          mesh object
    #  @param[in] time_stepper  string identifier for the chosen time-stepper,
    #                           e.g., 'CN'
-   #  @param[in] problem_type  type of transient problem being ran. options are
+   #  @param[in] problem_type  type of transient problem being run. options are:
    #                           rad_only: transient no material coupling, just for
    #                                     tests. Default value.
    #                           trt     : radiation coupled to material internal
@@ -78,7 +78,7 @@ class TransientSource:
    def __init__(self, mesh, time_stepper, problem_type='rad_only',
            src_term=False, newton_handler=None):
 
-      #keep track of teh newton handler separately as it may need remembered
+      #keep track of the newton handler separately as it may need remembered
       #to ensure that same instance is used
       self.newton_handler = newton_handler
       
@@ -105,9 +105,9 @@ class TransientSource:
                 "constructor for a TRT problem\n")
          else:
 
-             #make sure newton handler is instance of TransientSourc
+             #make sure newton handler is instance of TransientSource
              if not isinstance(newton_handler,TransientSourceTerm):
-                 raise NotImplementedError("Newton handler must inherit from TransientSourceTern")
+                 raise NotImplementedError("Newton handler must inherit from TransientSourceTerm")
              else:
                  self.terms.append(self.newton_handler)
                
