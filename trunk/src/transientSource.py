@@ -49,6 +49,7 @@
 
 import re
 import numpy as np
+from math import sqrt
 from mesh import Mesh
 import globalConstants as GC
 from utilityFunctions import getIndex, getLocalIndex
@@ -617,4 +618,201 @@ class SourceTerm(TransientSourceTerm):
 
         # Use old function but with older arguments
         return self.evalOld(i, Q_old=Q_older)
+
+#====================================================================================
+## Derived class for computing drift term,
+#  \f$-\frac{1}{2}\sigma_t\frac{u}{c}\mathcal{F}_0\f$
+#
+class DriftTerm(TransientSourceTerm):
+
+    #-------------------------------------------------------------------------------
+    ## Constructor
+    #
+    def __init__(self, *args):
+
+        # call base class constructor
+        TransientSourceTerm.__init__(self, *args)
+
+    #--------------------------------------------------------------------------------
+    ## Computes implicit drift term,
+    #  \f$-\frac{1}{2}\sigma_t^k\frac{u^k}{c}\mathcal{F}_0^k\f$
+    #
+    #  @param[in] i           element id
+    #  @param[in] cx_prev     previous cross sections \f$\sigma^k\f$
+    #  @param[in] hydro_prev  previous hydro states \f$\mathbf{H}^k\f$
+    #  @param[in] psi_prev    previous angular fluxes \f$\Psi^{\pm,k}\f$
+    #
+    def evalImplicit(self, i, cx_prev=None, hydro_prev=None,
+           psi_prev=None, **kwargs):
+
+        # get global indices
+        iLm = getIndex(i,"L","-") # dof i,L,-
+        iLp = getIndex(i,"L","+") # dof i,L,+
+        iRm = getIndex(i,"R","-") # dof i,R,-
+        iRp = getIndex(i,"R","+") # dof i,R,+
+
+        # get local indices
+        Lm = getLocalIndex("L","-") # dof L,-
+        Lp = getLocalIndex("L","+") # dof L,+
+        Rm = getLocalIndex("R","-") # dof R,-
+        Rp = getLocalIndex("R","+") # dof R,+
+
+        # get left and right total cross sections
+        cxtL = cx_prev[i][0].sig_t
+        cxtR = cx_prev[i][1].sig_t
+
+        # compute left and right velocities
+        uL = hydro_prev[i][0].u
+        uR = hydro_prev[i][1].u
+
+        # get left and right angular fluxes
+        psimL = psi_prev[iLm]
+        psipL = psi_prev[iLp]
+        psimR = psi_prev[iRm]
+        psipR = psi_prev[iRp]
+
+        # compute left and right radiation energies and fluxes
+        c = GC.SPD_OF_LGT
+        EL = (psipL + psimL) / c
+        ER = (psipR + psimR) / c
+        FL = (psipL - psimL) / sqrt(3.0)
+        FR = (psipR - psimR) / sqrt(3.0)
+        F0L = FL - 4.0/3.0*EL*uL
+        F0R = FR - 4.0/3.0*ER*uR
+        
+        # return local Q values
+        Q_local = np.zeros(4)
+        Q_local[Lm] = -cxtL*uL/c*F0L
+        Q_local[Lp] = -cxtL*uL/c*F0L
+        Q_local[Rm] = -cxtR*uR/c*F0R
+        Q_local[Rp] = -cxtR*uR/c*F0R
+
+        return Q_local
+
+    #--------------------------------------------------------------------------------
+    ## Computes old drift term,
+    #  \f$-\frac{1}{2}\sigma_t^n\frac{u^n}{c}\mathcal{F}_0^n\f$
+    #
+    #  @param[in] i          element id
+    #  @param[in] cx_old     old cross sections \f$\sigma^n\f$
+    #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
+    #  @param[in] psi_old    old angular fluxes \f$\Psi^{\pm,n}\f$
+    #
+    def evalOld(self, i, cx_old=None, hydro_old=None,
+           psi_old=None, **kwargs):
+
+       return self.evalImplicit(i, cx_prev=cx_old, hydro_prev=hydro_old,
+           psi_prev=psi_old, **kwargs):
+
+
+    #--------------------------------------------------------------------------------
+    ## Computes older drift term,
+    #  \f$-\frac{1}{2}\sigma_t^{n-1}\frac{u^{n-1}}{c}\mathcal{F}_0^{n-1}\f$
+    #
+    #  @param[in] i            element id
+    #  @param[in] cx_older     older cross sections \f$\sigma^{n-1}\f$
+    #  @param[in] hydro_older  older hydro states \f$\mathbf{H}^{n-1}\f$
+    #  @param[in] psi_older    older angular fluxes \f$\Psi^{\pm,n-1}\f$
+    #
+    def evalOlder(self, i, cx_older=None, hydro_older=None,
+           psi_older=None, **kwargs):
+
+       return self.evalImplicit(i, cx_prev=cx_older, hydro_prev=hydro_older,
+           psi_prev=psi_older, **kwargs):
+
+#====================================================================================
+## Derived class for computing anisotropic source term,
+#  \f$2\mu^\pm\sigma_t\mathcal{E}u\f$
+#
+class AnisotropicSourceTerm(TransientSourceTerm):
+
+    #-------------------------------------------------------------------------------
+    ## Constructor
+    #
+    def __init__(self, *args):
+
+        # call base class constructor
+        TransientSourceTerm.__init__(self, *args)
+
+    #--------------------------------------------------------------------------------
+    ## Computes previous anisotropic source term,
+    #  \f$2\mu^\pm\sigma_t^k\mathcal{E}^k u^k\f$
+    #
+    #  @param[in] i           element id
+    #  @param[in] cx_prev     previous cross sections \f$\sigma^k\f$
+    #  @param[in] hydro_prev  previous hydro states \f$\mathbf{H}^k\f$
+    #  @param[in] psi_prev    previous angular fluxes \f$\Psi^{\pm,k}\f$
+    #
+    def evalImplicit(self, i, cx_prev=None, hydro_prev=None,
+           psi_prev=None, **kwargs):
+
+        # get global indices
+        iLm = getIndex(i,"L","-") # dof i,L,-
+        iLp = getIndex(i,"L","+") # dof i,L,+
+        iRm = getIndex(i,"R","-") # dof i,R,-
+        iRp = getIndex(i,"R","+") # dof i,R,+
+
+        # get local indices
+        Lm = getLocalIndex("L","-") # dof L,-
+        Lp = getLocalIndex("L","+") # dof L,+
+        Rm = getLocalIndex("R","-") # dof R,-
+        Rp = getLocalIndex("R","+") # dof R,+
+
+        # get left and right total cross sections
+        cxtL = cx_prev[i][0].sig_t
+        cxtR = cx_prev[i][1].sig_t
+
+        # compute left and right velocities
+        uL = hydro_prev[i][0].u
+        uR = hydro_prev[i][1].u
+
+        # get left and right angular fluxes
+        psimL = psi_prev[iLm]
+        psipL = psi_prev[iLp]
+        psimR = psi_prev[iRm]
+        psipR = psi_prev[iRp]
+
+        # compute left and right radiation energies and fluxes
+        c = GC.SPD_OF_LGT
+        EL = (psipL + psimL) / c
+        ER = (psipR + psimR) / c
+        
+        # return local Q values
+        Q_local = np.zeros(4)
+        Q_local[Lm] = 2.0*mu["-"]*cxtL*EL*uL
+        Q_local[Lp] = 2.0*mu["+"]*cxtL*EL*uL
+        Q_local[Rm] = 2.0*mu["-"]*cxtR*ER*uR
+        Q_local[Rp] = 2.0*mu["+"]*cxtR*ER*uR
+
+        return Q_local
+
+    #--------------------------------------------------------------------------------
+    ## Computes old anisotropic source term,
+    #  \f$2\mu^\pm\sigma_t^n\mathcal{E}^n u^n\f$
+    #
+    #  @param[in] i           element id
+    #  @param[in] cx_old     old cross sections \f$\sigma^n\f$
+    #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
+    #  @param[in] psi_old    old angular fluxes \f$\Psi^{\pm,n}\f$
+    #
+    def evalOld(self, i, cx_old=None, hydro_old=None,
+           psi_old=None, **kwargs):
+
+       return self.evalImplicit(i, cx_prev=cx_old, hydro_prev=hydro_old,
+           psi_prev=psi_old, **kwargs):
+
+    #--------------------------------------------------------------------------------
+    ## Computes older anisotropic source term,
+    #  \f$2\mu^\pm\sigma_t^{n-1}\mathcal{E}^{n-1} u^{n-1}\f$
+    #
+    #  @param[in] i            element id
+    #  @param[in] cx_older     older cross sections \f$\sigma^{n-1}\f$
+    #  @param[in] hydro_older  older hydro states \f$\mathbf{H}^{n-1}\f$
+    #  @param[in] psi_older    older angular fluxes \f$\Psi^{\pm,n-1}\f$
+    #
+    def evalOlder(self, i, cx_older=None, hydro_older=None,
+           psi_older=None, **kwargs):
+
+       return self.evalImplicit(i, cx_prev=cx_older, hydro_prev=hydro_older,
+           psi_prev=psi_older, **kwargs):
 
