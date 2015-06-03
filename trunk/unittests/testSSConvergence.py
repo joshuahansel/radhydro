@@ -10,7 +10,7 @@ from scipy.integrate import quad # adaptive quadrature function
 import unittest
 
 from mesh import Mesh
-from crossXInterface import CrossXInterface
+from crossXInterface import ConstantCrossSection
 from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotScalarFlux, makeContinuousXPoints
 from radUtilities import computeScalarFlux, extractAngularFluxes
@@ -65,28 +65,23 @@ class TestSSConvergence(unittest.TestCase):
          max_dx.append(mesh.max_dx)
       
          # cross sections
-         cross_sects = [(CrossXInterface(sig_s,sig_t),CrossXInterface(sig_s,sig_t))
-            for i in xrange(n_elems)]
+         cross_sects = [(ConstantCrossSection(sig_s,sig_t),
+                         ConstantCrossSection(sig_s,sig_t))
+                         for i in xrange(n_elems)]
 
          # sources
          Q_iso  = [(0.5*Q) for i in xrange(mesh.n_elems*4)]
       
          # compute LD solution
-         psi = radiationSolveSS(mesh,
+         rad = radiationSolveSS(mesh,
                                 cross_sects,
                                 Q_iso,
                                 bound_curr_lt=inc_j_plus,
                                 bound_curr_rt=inc_j_minus)
       
-         # extract angular fluxes from solution vector
-         psim, psip = extractAngularFluxes(psi, mesh)
-
-         # compute numerical scalar flux
-         numerical_scalar_flux = computeScalarFlux(psim, psip)
-      
          # compute L1 error
          L1_error.append(\
-            computeL1ErrorLD(mesh,numerical_scalar_flux,exactScalarFlux))
+            computeL1ErrorLD(mesh, rad.phi, exactScalarFlux))
 
          # double number of elements for next cycle
          n_elems *= 2

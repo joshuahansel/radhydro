@@ -20,7 +20,7 @@ import numpy as np
 import unittest
 
 from mesh import Mesh
-from crossXInterface import CrossXInterface
+from crossXInterface import ConstantCrossSection
 from radiationSolveSS import radiationSolveSS
 from transientSource import * 
 import globalConstants as GC
@@ -28,11 +28,15 @@ import globalConstants as GC
 ## Derived unittest class to test source builder
 #
 class TestTransientSource(unittest.TestCase):
+
    def setUp(self):
       pass
+
    def tearDown(self):
       pass
+
    def test_TransientSourceCN(self):
+
       # number of decimal places to test
       n_decimal_places = 13
 
@@ -41,9 +45,9 @@ class TestTransientSource(unittest.TestCase):
       mesh = Mesh(n_elems,random())
 
       # compute uniform cross sections
-      cross_sects = [(CrossXInterface(random(), random()),
-                      CrossXInterface(random(), random()))
-                    for i in xrange(mesh.n_elems)]
+      cross_sects = [(ConstantCrossSection(random(), random()),
+                      ConstantCrossSection(random(), random()))
+                      for i in xrange(mesh.n_elems)]
   
       # time step size and c*dt
       dt = random()
@@ -63,7 +67,7 @@ class TestTransientSource(unittest.TestCase):
          Q[getIndex(i,"R","-")] = random()
   
       # compute the steady-state solution
-      psi_ss = radiationSolveSS(mesh, cross_sects, Q,
+      rad_ss = radiationSolveSS(mesh, cross_sects, Q,
          bc_psi_right = psi_right, bc_psi_left = psi_left)
   
       # time-stepper
@@ -76,7 +80,7 @@ class TestTransientSource(unittest.TestCase):
          bc_flux_left  = psi_left,
          bc_flux_right = psi_right,
          cx_old        = cross_sects,
-         psi_old       = psi_ss,
+         rad_old       = rad_ss,
          Q_old         = Q,
          Q_new         = Q)
 
@@ -86,10 +90,10 @@ class TestTransientSource(unittest.TestCase):
          iLp = getIndex(i,"L","+")
          iRm = getIndex(i,"R","-")
          iRp = getIndex(i,"R","+")
-         QiLm_expected = psi_ss[iLm]/c_dt + 0.5*Q[iLm]
-         QiLp_expected = psi_ss[iLp]/c_dt + 0.5*Q[iLp]
-         QiRm_expected = psi_ss[iRm]/c_dt + 0.5*Q[iRm]
-         QiRp_expected = psi_ss[iRp]/c_dt + 0.5*Q[iRp]
+         QiLm_expected = rad_ss.psim[i][0]/c_dt + 0.5*Q[iLm]
+         QiLp_expected = rad_ss.psip[i][0]/c_dt + 0.5*Q[iLp]
+         QiRm_expected = rad_ss.psim[i][1]/c_dt + 0.5*Q[iRm]
+         QiRp_expected = rad_ss.psip[i][1]/c_dt + 0.5*Q[iRp]
          self.assertAlmostEqual(Q_tr[iLm], QiLm_expected, n_decimal_places)
          self.assertAlmostEqual(Q_tr[iLp], QiLp_expected, n_decimal_places)
          self.assertAlmostEqual(Q_tr[iRm], QiRm_expected, n_decimal_places)

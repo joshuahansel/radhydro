@@ -13,12 +13,13 @@ import unittest
 import operator # for adding tuples to each other elementwise
 
 from mesh import Mesh
-from crossXInterface import CrossXInterface
+from crossXInterface import ConstantCrossSection
 from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotAngularFlux, plotScalarFlux, computeScalarFlux
 from utilityFunctions import computeDiscreteL1Norm
 from radiationTimeStepper import RadiationTimeStepper
 from radUtilities import extractAngularFluxes
+from radiation import Radiation
 
 ## Derived unittest class to run a transient radiation problem
 #
@@ -35,8 +36,9 @@ class TestRadTransient(unittest.TestCase):
        # compute uniform cross sections
        sig_s = 1.0
        sig_a = 2.0
-       cross_sects = [(CrossXInterface(sig_s, sig_s+sig_a), CrossXInterface(sig_s,sig_s+sig_a))
-                     for i in xrange(mesh.n_elems)]
+       cross_sects = [(ConstantCrossSection(sig_s, sig_s+sig_a),
+                       ConstantCrossSection(sig_s, sig_s+sig_a))
+                       for i in xrange(mesh.n_elems)]
    
        # transient options
        dt = 0.1              # time step size
@@ -53,18 +55,12 @@ class TestRadTransient(unittest.TestCase):
        Q = 2.4 * np.ones(n_dofs)
    
        # compute the steady-state solution
-       psi_ss = radiationSolveSS(mesh, cross_sects, Q,
+       rad_ss = radiationSolveSS(mesh, cross_sects, Q,
           bc_psi_right = psi_right, bc_psi_left = psi_left)
    
-       # extract angular fluxes from solution vector
-       psim_ss, psip_ss = extractAngularFluxes(psi_ss, mesh)
-
-       # compute steady state scalar flux
-       phi_ss = computeScalarFlux(psip_ss, psim_ss)
-   
        # run transient solution from arbitrary IC, such as zero
-       psi_old   = np.zeros(n_dofs)
-       psi_older = deepcopy(psi_old)
+       rad_old   = Radiation(np.zeros(n_dofs))
+       rad_older = deepcopy(rad_old)
    
        # create time-stepper
        radiation_time_stepper = RadiationTimeStepper(mesh, time_stepper)
@@ -82,28 +78,22 @@ class TestRadTransient(unittest.TestCase):
               t += dt
 
            # take radiation step
-           psi = radiation_time_stepper.takeStep(
+           rad = radiation_time_stepper.takeStep(
               dt            = dt,
               bc_flux_left  = psi_left,
               bc_flux_right = psi_right,
               cx_older      = cross_sects,
               cx_old        = cross_sects,
               cx_new        = cross_sects,
-              psi_older     = psi_older,
-              psi_old       = psi_old,
+              rad_older     = rad_older,
+              rad_old       = rad_old,
               Q_older       = Q,
               Q_old         = Q,
               Q_new         = Q)
 
-           # extract angular fluxes from solution vector
-           psim, psip = extractAngularFluxes(psi, mesh)
-
-           # compute scalar flux
-           phi = computeScalarFlux(psip, psim)
-
            # compute difference of transient and steady-state scalar flux
-           phi_diff = [tuple(map(operator.sub, phi[i], phi_ss[i]))
-              for i in xrange(len(phi))]
+           phi_diff = [tuple(map(operator.sub, rad.phi[i], rad_ss.phi[i]))
+              for i in xrange(len(rad.phi))]
 
            # compute discrete L1 norm of difference
            L1_norm_diff = computeDiscreteL1Norm(phi_diff)
@@ -114,14 +104,14 @@ class TestRadTransient(unittest.TestCase):
                  % (t-dt,t,L1_norm_diff))
    
            # save oldest solutions
-           psi_older = deepcopy(psi_old)
+           rad_older = deepcopy(rad_old)
    
            # save old solutions
-           psi_old = deepcopy(psi)
+           rad_old = deepcopy(rad)
    
        # plot solutions if run standalone
        if __name__ == "__main__":
-          plotScalarFlux(mesh, psim, psip, scalar_flux_exact=phi_ss,
+          plotScalarFlux(mesh, rad.psim, rad.psip, scalar_flux_exact=rad_ss.phi,
              exact_data_continuous=False)
 
        # assert that solution has converged

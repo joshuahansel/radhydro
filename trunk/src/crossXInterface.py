@@ -18,19 +18,19 @@ class CrossXInterface(object):
     #----------------------------------------------------------------------------
     ## Constructor.
     #
-    #  Takes \f$\sigma_a\f$ and \f$\sigma_s\f$ and computes \f$\sigma_t\f$.
+    #  Takes \f$\sigma_s\f$ and \f$\sigma_t\f$ and computes \f$\sigma_a\f$.
     #
     #  @param[in] self    self
-    #  @param[in] sigma_s \f$\sigma_s\f$, the absorption cross section
-    #  @param[in] sigma_t \f$\sigma_t\f$, the scattering cross section
+    #  @param[in] sigma_s \f$\sigma_s\f$, the scattering cross section
+    #  @param[in] sigma_t \f$\sigma_t\f$, the total cross section
     #----------------------------------------------------------------------------
     def __init__(self, sigma_s, sigma_t):
 
         ## \f$\sigma_s\f$, the scattering cross section
         self.sig_s = sigma_s
-        ## \f$\sigma_t\f$, the absorption cross section
+        ## \f$\sigma_t\f$, the total cross section
         self.sig_t = sigma_t
-        ## \f$\sigma_a\f$, the total cross section
+        ## \f$\sigma_a\f$, the absorption cross section
         self.sig_a = sigma_t - sigma_s
                
     #----------------------------------------------------------------------------
@@ -60,6 +60,24 @@ class CrossXInterface(object):
     #----------------------------------------------------------------------------
     def updateCrossX(self,*args,**kwargs):
 
+        return
+
+## Constant cross section
+#
+class ConstantCrossSection(CrossXInterface):
+
+    ## Constructor
+    #
+    def __init__(self, sigma_s, sigma_t):
+
+        # base class constructor
+        CrossXInterface.__init__(self, sigma_s, sigma_t)
+
+    ## Update function for cross sections
+    #
+    def updateCrossX(self,*args,**kwargs):
+    
+        # cross sections are constant; no update is required
         return
 
 #===================================================================================
@@ -122,3 +140,4 @@ class InvCubedCrossX(CrossXInterface):
         self.sig_a = rho*self.coeff/(temp**3.) 
         self.sig_s = self.sig_s
         self.sig_t = self.sig_s + self.sig_a
+

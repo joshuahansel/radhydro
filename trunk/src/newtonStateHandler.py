@@ -33,13 +33,13 @@ class NewtonStateHandler(TransientSourceTerm):
     # @param [in] mesh          spatial mesh 
     # @param [in] delta_t       time step size, required throughout class
     # @param [in] time_stepper  specifier for time-stepping method, e.g., 'BE'
-    # @param [in] hydro_new     initial guess for new (\f$t_{n+1}\f$) hydro state,
-    #                           usually taken to be old (\f$t_n\f$) hydro state.
+    # @param [in] hydro_guess   initial guess for new hydro state,
+    #                           usually taken to be old hydro state.
     #                           This WILL be modified.
     #                               TODO have the constructor adjust star to use rad
     #                               slopes
     #
-    def __init__(self,mesh,cx_new=None,hydro_new=None,time_stepper='BE'):
+    def __init__(self,mesh,cx_new=None,hydro_guess=None,time_stepper='BE'):
 
         TransientSourceTerm.__init__(self,mesh,time_stepper)
 
@@ -50,15 +50,10 @@ class NewtonStateHandler(TransientSourceTerm):
         self.scale = scale[time_stepper]
 
         #initialize the new hydro state to the provided guess state. These WILL be modified
-        self.hydro_states = hydro_new
+        self.hydro_states = hydro_guess
 
         #Store the cross sections, you will be updating these 
         self.cx_new = cx_new
-
-        #Store the old internal energies for checking convergence 
- #       self.e_prev = [([lambda x: x.e for x in i]) for i in hydro_new]
- #       print self.e_prev
- #       exit()
 
 
     #---------------------------------------------------------------------------------
@@ -99,7 +94,7 @@ class NewtonStateHandler(TransientSourceTerm):
                 rho   = state.rho
 
                 #Make sure cross section is updated with temperature
-                cx_orig[i][x].updateCrossX(rho,T) #if constant this call does nothing
+                cx_orig[i][x].updateCrossX(rho=rho, temp=T) #if constant this call does nothing
 
                 #Calculate the effective scattering cross sections
                 sig_a_og = cx_orig[i][x].sig_a

@@ -5,10 +5,12 @@
 import math
 import numpy as np
 from numpy import array
+
 from mesh import Mesh
 from utilityFunctions import getIndex
 from radUtilities import mu, computeScalarFlux
 import globalConstants as GC
+from radiation import Radiation
 
 ## Steady-state solve function for the S-2 equations.
 #
@@ -128,5 +130,6 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
     # solve linear system
     solution = np.linalg.solve(matrix, rhs)
 
-    return solution
+    #return solution
+    return Radiation(solution)
 

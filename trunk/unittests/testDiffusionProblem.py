@@ -10,7 +10,7 @@ from scipy.integrate import quad # adaptive quadrature function
 import unittest
 
 from mesh import Mesh
-from crossXInterface import CrossXInterface
+from crossXInterface import ConstantCrossSection
 from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotScalarFlux, makeContinuousXPoints
 from radUtilities import computeScalarFlux, extractAngularFluxes
@@ -42,18 +42,18 @@ class TestDiffusionProblem(unittest.TestCase):
       mesh = Mesh(n_elems,xR)
    
       # cross sections
-      cross_sects = [(CrossXInterface(sig_s,sig_t),CrossXInterface(sig_s,sig_t))
+      cross_sects = [(ConstantCrossSection(sig_s,sig_t),ConstantCrossSection(sig_s,sig_t))
          for i in xrange(n_elems)]
       # sources
       Q_iso  = [(0.5*Q) for i in xrange(mesh.n_elems*4)]
    
       # compute LD solution
-      psi = radiationSolveSS(mesh,
+      rad = radiationSolveSS(mesh,
                              cross_sects,
                              Q_iso,
                              bound_curr_lt=inc_j_plus,
                              bound_curr_rt=inc_j_minus)
-   
+
       # get continuous x-points
       xlist = makeContinuousXPoints(mesh)
    
@@ -66,18 +66,12 @@ class TestDiffusionProblem(unittest.TestCase):
       # compute exact scalar flux solution at each x-point
       scalar_flux_exact = [exactScalarFlux(x) for x in xlist]
 
-      # extract angular fluxes
-      psim, psip = extractAngularFluxes(psi,mesh)
-   
       # plot solutions
-      plotScalarFlux(mesh,psim,psip,save=True,filename='testDiffusion.pdf',
-         scalar_flux_exact=scalar_flux_exact)
-   
-      # compute numerical scalar flux
-      numerical_scalar_flux = computeScalarFlux(psim, psip)
+      if __name__ == '__main__':
+         plotScalarFlux(mesh,rad.psim,rad.psip,scalar_flux_exact=scalar_flux_exact)
    
       # compute L1 error
-      L1_error = computeL1ErrorLD(mesh,numerical_scalar_flux,exactScalarFlux)
+      L1_error = computeL1ErrorLD(mesh,rad.phi,exactScalarFlux)
    
       # compute L1 norm of exact solution to be used as normalization constant
       L1_norm_exact = quad(exactScalarFlux, xL, xR)[0]

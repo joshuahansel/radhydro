@@ -22,10 +22,11 @@ class RadiationTimeStepper:
    #  @param[in] src_term      if you want an external source Q, set this to true
    #
    def __init__(self, mesh, time_stepper):
+
       self.mesh         = mesh
       self.time_stepper = time_stepper
       self.transient_source = TransientSource(mesh, time_stepper,
-              src_term = True)
+         src_term = True)
 
    ## Takes time step
    #
@@ -36,9 +37,9 @@ class RadiationTimeStepper:
 
       # solve the transient system
       alpha = 1./(GC.SPD_OF_LGT*kwargs['dt'])
-      psi = radiationSolveSS(self.mesh, kwargs['cx_new'], Q_tr,
+      rad = radiationSolveSS(self.mesh, kwargs['cx_new'], Q_tr,
          bc_psi_left = kwargs['bc_flux_left'],
          bc_psi_right = kwargs['bc_flux_right'],
          diag_add_term = alpha, implicit_scale = beta[self.time_stepper] )
 
-      return psi
+      return rad

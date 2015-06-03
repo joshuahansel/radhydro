@@ -127,7 +127,7 @@ def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, filename='scalarFlux.p
       plt.show()
 
 def plotTemperatures(mesh, E, save=False, filename='Temperatures.pdf',
-        hydro_states=None, print_values=True):
+        hydro_states=None, print_values=False):
 
    # create new figure
    plt.figure()

@@ -12,7 +12,7 @@ import operator # for adding tuples to each other elementwise
 from math import pi, sin, cos
 
 from mesh import Mesh
-from crossXInterface import CrossXInterface
+from crossXInterface import ConstantCrossSection
 from radiationSolveSS import radiationSolveSS
 from utilityFunctions import computeDiscreteL1Norm, getIndex
 from radiationTimeStepper import RadiationTimeStepper
@@ -20,23 +20,29 @@ from radUtilities import mu, computeScalarFlux, extractAngularFluxes
 import globalConstants as GC
 from integrationUtilities import computeL1ErrorLD
 from utilityFunctions import computeConvergenceRates, printConvergenceTable
+from radiation import Radiation
 
 ## Derived unittest class to run a transient radiation MMS problem
 #
 class TestRadSpatialConvergence(unittest.TestCase):
    def setUp(self):
       pass
+
    def tearDown(self):
       pass
+
    def test_RadSpatialConvergenceBE(self):
       time_stepper = 'BE'
       self.runConvergenceTest(time_stepper)
+
    def test_RadSpatialConvergenceCN(self):
       time_stepper = 'CN'
       self.runConvergenceTest(time_stepper)
+
    def test_RadSpatialConvergenceBDF2(self):
       time_stepper = 'BDF2'
       self.runConvergenceTest(time_stepper)
+
    def runConvergenceTest(self,time_stepper):
 
       # constant cross section values
@@ -97,9 +103,9 @@ class TestRadSpatialConvergence(unittest.TestCase):
          max_dx.append(mesh.max_dx)
      
          # compute uniform cross sections
-         cross_sects = [(CrossXInterface(sig_s, sig_s+sig_a), CrossXInterface(sig_s,
-             sig_s+sig_a))
-                       for i in xrange(mesh.n_elems)]
+         cross_sects = [(ConstantCrossSection(sig_s, sig_s+sig_a),
+                         ConstantCrossSection(sig_s, sig_s+sig_a))
+                         for i in xrange(mesh.n_elems)]
   
          # MMS source
          def QMMS(t,mesh,cx):
@@ -132,8 +138,8 @@ class TestRadSpatialConvergence(unittest.TestCase):
   
          # zero IC
          n_dofs = mesh.n_elems * 4
-         psi_old   = np.zeros(n_dofs)
-         psi_older = deepcopy(psi_old)
+         rad_old   = Radiation(np.zeros(n_dofs))
+         rad_older = deepcopy(rad_old)
          Q_older   = QMMS(0.0,mesh,cross_sects)
          Q_old     = QMMS(0.0,mesh,cross_sects)
      
@@ -159,36 +165,30 @@ class TestRadSpatialConvergence(unittest.TestCase):
             Q_new = QMMS(t,mesh,cross_sects)
  
             # take radiation step
-            psi = radiation_time_stepper.takeStep(
+            rad = radiation_time_stepper.takeStep(
                dt            = dt,
                bc_flux_left  = psi_left,
                bc_flux_right = psi_right,
                cx_older      = cross_sects,
                cx_old        = cross_sects,
                cx_new        = cross_sects,
-               psi_older     = psi_older,
-               psi_old       = psi_old,
+               rad_older     = rad_older,
+               rad_old       = rad_old,
                Q_older       = Q_older,
                Q_old         = Q_old,
                Q_new         = Q_new)
  
             # save oldest solutions
-            psi_older = deepcopy(psi_old)
+            rad_older = deepcopy(rad_old)
             Q_older   = deepcopy(Q_old)
     
             # save old solutions
-            psi_old = deepcopy(psi)
+            rad_old = deepcopy(rad)
             Q_old   = deepcopy(Q_new)
 
-         # extract angular fluxes from solution vector
-         psim, psip = extractAngularFluxes(psi, mesh)
-         
-         # compute numerical scalar flux
-         numerical_scalar_flux = computeScalarFlux(psim, psip)
-      
          # compute L1 error
          L1_error.append(\
-            computeL1ErrorLD(mesh,numerical_scalar_flux,exactScalarFlux))
+            computeL1ErrorLD(mesh, rad.phi, exactScalarFlux))
 
          # double number of elements for next cycle
          n_elems *= 2
