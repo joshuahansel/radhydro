@@ -43,3 +43,24 @@ def computeRadTemp(psi_minus, psi_plus):
     return T_rad
 
 
+## Takes a step of the radiation hydrodynamics scheme
+#
+def radHydroStep(hydro_old, psi_old, dt, bc_shit):
+
+   # compute time step size, considering CFL condition
+   dt = computeTimeStepSize(hydro_old, psi_old)
+
+   # take first stage of MUSCL-Hancock step
+   hydro_star = MUSCLHancockEvolve(hydro_old, 0.5*dt)
+
+   # nonlinear iteration loop
+   not_converged = True
+   hydro_new = hydro_old
+   while not_converged:
+
+      # update velocities with new momentum deposition
+      hydro_new = updateVelocity(hydro_old, hydro_new, hydro_star, 
+                     psi_old, psi_new, 0.25*dt)
+
+      # update angular fluxes
+      psi_new = updateRadiation(hydro_old, hydro_new, psi_old, psi_new, 0.25*dt)

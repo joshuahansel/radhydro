@@ -10,54 +10,60 @@ unknowns. The pseudocode is listed below:
 
 \begin{lstlisting}[mathescape,columns=fullflexible,
    basicstyle=\fontfamily{lmvtt}\selectfont]
-processInput()
 $\U^0 =$ computeInitialConditions()
 for each time step $n$
 
    $\dt =$ computeTimeStepSize($\U^n$)
 
    $\H^* =$ MUSCLHancockEvolve($\H^n,\half\dt$)
+   ts = 'CN'
+   $\U^k = \U^n$
    for each iteration $k$
-      $u^{k+1} =$ hydroMomentumSourceUpdateCN($\U^n,\H^*,\U^k,\fourth\dt$)
-      $E^{k+1} =$ hydroEnergySourceUpdateCN($\U^n,\H^*,\U^k,\fourth\dt$)
-      $\R^{k+1} =$ radiationSolveCN($\U^n,\U^k,\fourth\dt$)
+      $u^{k+1} =$ hydroMomentumSourceUpdate($\U^n,\H^*,\U^k,\fourth\dt$,ts)
+      $\Psi^{k+1} =$ radiationSolve($\U^n,\U^k,\fourth\dt$,ts)
+      $E^{k+1} =$ hydroEnergySourceUpdate($\U^n,\H^*,\U^k,\fourth\dt$,ts)
       converged = checkConvergence($\U^k,\U^{k+1}$)
       if converged, then exit
    end iteration loop
    $\U^{n+\fourth} = \U^{k+1}$
 
    $\H^* =$ MUSCLHancockRiemann($\H^n,\H^{n+\fourth},\half\dt$)
+   ts = 'CN'
+   $\U^k = \U^n$
    for each iteration $k$
-      $u^{k+1} =$ hydroMomentumSourceUpdateCN($\U^{n+\fourth},\H^*,\U^k,\fourth\dt$)
-      $E^{k+1} =$ hydroEnergySourceUpdateCN($\U^{n+\fourth},\H^*,\U^k,\fourth\dt$)
-      $\R^{k+1} =$ radiationSolveCN($\U^{n+\fourth},\U^k,\fourth\dt$)
+      $u^{k+1} =$ hydroMomentumSourceUpdate($\U^{n+\fourth},\H^*,\U^k,\fourth\dt$,ts)
+      $\Psi^{k+1} =$ radiationSolve($\U^{n+\fourth},\U^k,\fourth\dt$,ts)
+      $E^{k+1} =$ hydroEnergySourceUpdate($\U^{n+\fourth},\H^*,\U^k,\fourth\dt$,ts)
       converged = checkConvergence($\U^k,\U^{k+1}$)
       if converged, then exit
    end iteration loop
    $\U^{n+\half} = \U^{k+1}$
 
    $\H^* =$ MUSCLHancockEvolve($\H^{n+\half},\half\dt$)
+   ts = 'CN'
+   $\U^k = \U^n$
    for each iteration $k$
-      $u^{k+1} =$ hydroMomentumSourceUpdateCN($\U^{n+\half},\H^*,\U^k,\fourth\dt$)
-      $E^{k+1} =$ hydroEnergySourceUpdateCN($\U^{n+\half},\H^*,\U^k,\fourth\dt$)
-      $\R^{k+1} =$ radiationSolveCN($\U^{n+\half},\U^k,\fourth\dt$)
+      $u^{k+1} =$ hydroMomentumSourceUpdate($\U^{n+\half},\H^*,\U^k,\fourth\dt$,ts)
+      $\Psi^{k+1} =$ radiationSolve($\U^{n+\half},\U^k,\fourth\dt$,ts)
+      $E^{k+1} =$ hydroEnergySourceUpdate($\U^{n+\half},\H^*,\U^k,\fourth\dt$,ts)
       converged = checkConvergence($\U^k,\U^{k+1}$)
       if converged, then exit
    end iteration loop
    $\U^{n+\frac{3}{4}} = \U^{k+1}$
 
    $\H^* =$ MUSCLHancockRiemann($\H^{n+\half},\H^{n+\frac{3}{4}},\half\dt$)
+   ts = 'BDF2'
+   $\U^k = \U^n$
    for each iteration $k$
-      $u^{k+1} =$ hydroMomentumSourceUpdateTRBDF2($\U^n,\U^{n+\half},\H^*,\U^k,\half\dt$)
-      $E^{k+1} =$ hydroEnergySourceUpdateTRBDF2($\U^n,\U^{n+\half},\H^*,\U^k,\half\dt$)
-      $\R^{k+1} =$ radiationSolveTRBDF2($\U^n,\U^{n+\half},\U^k,\half\dt$)
+      $u^{k+1} =$ hydroMomentumSourceUpdate($\U^n,\U^{n+\half},\H^*,\U^k,\half\dt$,ts)
+      $\Psi^{k+1} =$ radiationSolve($\U^n,\U^{n+\half},\U^k,\half\dt$,ts)
+      $E^{k+1} =$ hydroEnergySourceUpdate($\U^n,\U^{n+\half},\H^*,\U^k,\half\dt$,ts)
       converged = checkConvergence($\U^k,\U^{k+1}$)
       if converged, then exit
    end iteration loop
    $\U^{n+1} = \U^{k+1}$
 
 end time step loop
-postProcess()
 \end{lstlisting}
 
 The radiation solves employ a steady-state S$_2$ solver, as discussed
@@ -71,14 +77,14 @@ respectively. Below are pseudocodes for the wrapper functions
 $\R^{k+1} =$ radiationSolveCN($\U^n,\U^k,\dt$)
 {
    $\tilde{\Q}^{\pm,k} =$ computeCNSource($\U^n,\U^k,\dt$)
-   $\R^{k+1} =$ radiationSolveSS($\sigma^k,\tilde{\Q}^{\pm,k},\alpha^{CN}
+   $\R^{k+1} =$ radiationSolveSS($\sigma^k,\tilde{\Q}^{\pm,k},\alpha
      ,\beta^{CN}$)
 }
 
 $\R^{k+1} =$ radiationSolveTRBDF2($\U^{n-1},\U^n,\U^k,\dt$)
 {
    $\tilde{\Q}^{\pm,k} =$ computeTRBDF2Source($\U^{n-1},\U^n,\U^k,\dt$)
-   $\R^{k+1} =$ radiationSolveSS($\sigma^k,\tilde{\Q}^{\pm,k},\alpha^{TR/BDF-2}
+   $\R^{k+1} =$ radiationSolveSS($\sigma^k,\tilde{\Q}^{\pm,k},\alpha
      ,\beta^{TR/BDF-2}$)
 }
 \end{lstlisting}
