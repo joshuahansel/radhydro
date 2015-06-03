@@ -23,8 +23,8 @@ def solveRadProblem():
 
     # compute uniform cross sections
     sig_s = 1.0
-    sig_a = 2.0
-    cross_sects = [(CrossXInterface(sig_a, sig_s), CrossXInterface(sig_a, sig_s))
+    sig_t = 2.0
+    cross_sects = [(CrossXInterface(sig_s, sig_t), CrossXInterface(sig_s, sig_t))
                   for i in xrange(mesh.n_elems)]
 
     # transient options

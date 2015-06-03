@@ -21,17 +21,17 @@ class CrossXInterface(object):
     #  Takes \f$\sigma_a\f$ and \f$\sigma_s\f$ and computes \f$\sigma_t\f$.
     #
     #  @param[in] self    self
-    #  @param[in] sigma_a \f$\sigma_a\f$, the absorption cross section
-    #  @param[in] sigma_s \f$\sigma_s\f$, the scattering cross section
+    #  @param[in] sigma_s \f$\sigma_s\f$, the absorption cross section
+    #  @param[in] sigma_t \f$\sigma_t\f$, the scattering cross section
     #----------------------------------------------------------------------------
-    def __init__(self, sigma_a, sigma_s):
+    def __init__(self, sigma_s, sigma_t):
 
         ## \f$\sigma_s\f$, the scattering cross section
         self.sig_s = sigma_s
-        ## \f$\sigma_a\f$, the absorption cross section
-        self.sig_a = sigma_a
-        ## \f$\sigma_t\f$, the total cross section
-        self.sig_t = sigma_a+sigma_s
+        ## \f$\sigma_t\f$, the absorption cross section
+        self.sig_t = sigma_t
+        ## \f$\sigma_a\f$, the total cross section
+        self.sig_a = sigma_t - sigma_s
                
     #----------------------------------------------------------------------------
     ## Print string definition.
@@ -44,7 +44,7 @@ class CrossXInterface(object):
     #----------------------------------------------------------------------------
     def __str__(self):
 
-        print_str = "\sigma_s : %.6g, \sigma_a : %.6g, \sigma_t : %.6g" % \
+        print_str = "\sigma_s : %.12g, \sigma_a : %.12g, \sigma_t : %.12g" % \
                     (self.sig_s, self.sig_a, self.sig_t) 
 
         return print_str
@@ -104,7 +104,7 @@ class InvCubedCrossX(CrossXInterface):
         sig_s = sigma_s_micro*rho
 
         # call base class constructor by hand, no default call
-        CrossXInterface.__init__(self,0.0,sig_s)
+        CrossXInterface.__init__(self,sig_s,0.0)
 
         # update sigma_a and sigma_t
         self.updateCrossX(rho,temp)

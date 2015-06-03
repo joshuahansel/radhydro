@@ -2,6 +2,9 @@
 #  This file contains a class to handle computing linearized source
 #  terms and handles temperature updates during a non-linear TRT solve.
 #  Also contains auxilary functions for evaluating TRT functions of interest
+#  NOTE: this class should not do the entire non-linear solve because it is also
+#  responsible for evaluating the planckian source in the solver, so it wouldnt make
+#  sense for it to pass itsself to the source builder
 #
 #  This class is eventually passed to the source builder as source. Although it is
 #  has additional features, it is easier to have this class directly implement the
@@ -52,15 +55,17 @@ class NewtonStateHandler(TransientSourceTerm):
         #Store the cross sections, you will be updating these 
         self.cx_new = cx_new
 
+        #Store the old internal energies for checking convergence 
+ #       self.e_prev = [([lambda x: x.e for x in i]) for i in hydro_new]
+ #       print self.e_prev
+ #       exit()
+
+
     #---------------------------------------------------------------------------------
-    ## Returns the converged new hydro states
-    def getFinalHydroStates():
+    ## Returns the new hydro states that are not converged
+    def getNewHydroStates(self):
 
-        #destroy the hydro states so no one accidentally reuses these for now
-        temp_states = self.hydro_states
-        self.hydro_states = []
-
-        return temp_states
+        return deepcopy(self.hydro_states)
 
     #--------------------------------------------------------------------------------
     ## Function to generate effective cross sections for linearization. 
@@ -102,7 +107,8 @@ class NewtonStateHandler(TransientSourceTerm):
                 nu    = getNu(T,sig_a_og,state.rho,state.spec_heat,dt,self.scale)
             
                 #Create new FIXED cross section instance
-                cx_i.append( CrossXInterface(sig_a_og, sig_s_og + nu*sig_a_og) )
+                sig_s_new = nu*sig_a_og+sig_s_og
+                cx_i.append( CrossXInterface(sig_s_new, sig_s_og+sig_a_og) )
 
             cx_effective.append(tuple(cx_i))
 
@@ -125,7 +131,7 @@ class NewtonStateHandler(TransientSourceTerm):
     #
     def updateVelocity():
 
-       #blah
+       return
 
     #--------------------------------------------------------------------------------
     ## Computes a new internal energy in each of the states, based on a passed in
@@ -156,8 +162,6 @@ class NewtonStateHandler(TransientSourceTerm):
                 state_star = hydro_star[i][x]
                 e_star = state_star.e
 
-                print E[i][x]*c
-
                 sig_a = self.cx_new[i][x].sig_a
                 nu    = getNu(T_prev,sig_a,state.rho,state.spec_heat,dt,self.scale)
 
@@ -169,7 +173,7 @@ class NewtonStateHandler(TransientSourceTerm):
                         + (1.-nu)*e_star + nu*e_prev
                 self.hydro_states[i][x].e = e_new
 
-                print "New temps: ", i, self.hydro_states[i][x].getTemperature()
+                #print "New temps: ", i, self.hydro_states[i][x].getTemperature()
 
         c = GC.SPD_OF_LGT
     

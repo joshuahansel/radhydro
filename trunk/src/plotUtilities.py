@@ -4,6 +4,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import array
+import globalConstants as GC
 from matplotlib import rc # for rendering tex in plots
 from radUtilities import computeScalarFlux
 
@@ -124,6 +125,57 @@ def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, filename='scalarFlux.p
       plt.savefig(filename)
    else:
       plt.show()
+
+def plotTemperatures(mesh, E, save=False, filename='Temperatures.pdf',
+        hydro_states=None, print_values=True):
+
+   # create new figure
+   plt.figure()
+
+   # create x-points
+   x            = makeXPoints(mesh)           # discontinuous x-points
+   x_continuous = makeContinuousXPoints(mesh) # continuous    x-points
+
+   # transform array of tuples into array
+   rad_T_array  = makeYPoints(E)
+   a = GC.RAD_CONSTANT
+
+   rad_T_array = [pow(i/a, 0.25) for i in rad_T_array]
+
+   # plot
+   plt.rc('text', usetex=True)         # use tex to generate text
+   plt.rc('font', family='sans-serif') # use sans-serif font family
+   plt.plot(x, rad_T_array, 'r-', label='$T_r$')
+
+   #if necessary get temperature and plot it
+   if hydro_states != None:
+
+       T = [(i[0].getTemperature(), i[1].getTemperature()) for i in hydro_states]
+       T = makeYPoints(T)
+       plt.plot(x,T,'b-', label='$T_m$')
+    
+   # annotations
+   plt.xlabel('$x$')
+   plt.ylabel('$T$ (keV)')
+   plt.legend(loc='best')
+
+   #if print requested
+   if print_values:
+      print "  x   T_r    T_m   "
+      print "-------------------"
+      for i in range(len(x)):
+
+          print "%.12f" % x[i], "%.12f" % rad_T_array[i], "%.12f" % T[i]
+
+
+
+   # save if requested
+   if save:
+      plt.savefig(filename)
+   else:
+      plt.show()
+
+   
 
 ## Function to transform mesh into discontinuous x-points for plotting.
 #

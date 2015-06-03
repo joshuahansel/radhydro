@@ -97,7 +97,8 @@ class TestRadSpatialConvergence(unittest.TestCase):
          max_dx.append(mesh.max_dx)
      
          # compute uniform cross sections
-         cross_sects = [(CrossXInterface(sig_a, sig_s), CrossXInterface(sig_a, sig_s))
+         cross_sects = [(CrossXInterface(sig_s, sig_s+sig_a), CrossXInterface(sig_s,
+             sig_s+sig_a))
                        for i in xrange(mesh.n_elems)]
   
          # MMS source

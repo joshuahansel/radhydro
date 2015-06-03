@@ -35,7 +35,7 @@ class TestRadTransient(unittest.TestCase):
        # compute uniform cross sections
        sig_s = 1.0
        sig_a = 2.0
-       cross_sects = [(CrossXInterface(sig_a, sig_s), CrossXInterface(sig_a, sig_s))
+       cross_sects = [(CrossXInterface(sig_s, sig_s+sig_a), CrossXInterface(sig_s,sig_s+sig_a))
                      for i in xrange(mesh.n_elems)]
    
        # transient options

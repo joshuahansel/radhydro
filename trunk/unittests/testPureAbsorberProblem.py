@@ -27,6 +27,7 @@ class TestPureAbsorberProblem(unittest.TestCase):
 
       # physics data
       sig_t = 0.1    # total cross section
+      sig_s = 0.0
       L = 10.0       # domain length
       inc_minus = 10 # isotropic incoming angular flux for minus direction
       inc_plus = 20  # isotropic incoming angular flux for plus  direction
@@ -40,7 +41,7 @@ class TestPureAbsorberProblem(unittest.TestCase):
       mesh = Mesh(n_elems,L)
    
       # cross sections
-      cross_sects = [(CrossXInterface(sig_t,0),CrossXInterface(sig_t,0))
+      cross_sects = [(CrossXInterface(sig_s,sig_t),CrossXInterface(sig_s,sig_t))
          for i in xrange(n_elems)]
       # sources
       Q  = [0.0 for i in xrange(mesh.n_elems*4)]

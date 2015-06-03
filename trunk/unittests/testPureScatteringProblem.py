@@ -43,7 +43,7 @@ class TestPureScatteringProblem(unittest.TestCase):
       mesh = Mesh(n_elems,width,xL)
    
       # cross sections
-      cross_sects = [(CrossXInterface(sig_a,sig_s),CrossXInterface(sig_a,sig_s))
+      cross_sects = [(CrossXInterface(sig_s,sig_t),CrossXInterface(sig_s,sig_t))
          for i in xrange(n_elems)]
       # sources
       Q_src  = [0.5*Q for i in xrange(mesh.n_elems*4)]

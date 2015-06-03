@@ -1,7 +1,8 @@
 ## @package src.utilityFunctions
 #  Contains helper functions that do not belong in any particular class.
 
-from math import log
+from math import log, sqrt
+import numpy as np
 
 #-----------------------------------------------------------------------------------
 ## Converge f_L and f_R to f_a and f_x
@@ -127,3 +128,33 @@ def computeDiscreteL1Norm(values):
       norm += abs(values[i][0]) + abs(values[i][1])
 
    return norm
+
+## Function to compute the L2 integral based on relative error of the larger 
+#  of the two values. Passed in values are 2-tuples. Average of the L and R values is
+#  used to computed average
+#
+#  @param[in] values_1 array \f$\mathbf{y}\f$ of 2-tuples:
+#                     \f$y_i = (y_{i,L},y_{i,R})\f$
+#  @param[in] values_2 array \f$\mathbf{y}\f$ of 2-tuples:
+#                 \f$y_i = (y_{i,L},y_{i,R})\f$
+#  @param[in] aux_func optional function to apply to the values in tuple
+#
+#  @return  the discrete \f$L^2\f$ norm \f$\|y\|_1\f$
+#
+def computeL2RelDiff(values1, values2, aux_func=None):
+
+   #apply aux_func, if None default to just the value
+   if aux_func == None:
+       aux_func = lambda x: x
+   f = aux_func
+
+   # get averages
+   avg1 = np.array([0.5*(f(i[0])+f(i[1])) for i in values1])
+   avg2 = np.array([0.5*(f(i[0])+f(i[1])) for i in values2])
+
+   #compute norms
+   norm1 = np.linalg.norm(avg1)
+   norm2 = np.linalg.norm(avg2)
+   norm_diff = np.linalg.norm(avg1 - avg2)
+
+   return norm_diff/(max(norm1,norm2))

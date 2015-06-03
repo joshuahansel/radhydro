@@ -65,7 +65,7 @@ class TestSSConvergence(unittest.TestCase):
          max_dx.append(mesh.max_dx)
       
          # cross sections
-         cross_sects = [(CrossXInterface(sig_a,sig_s),CrossXInterface(sig_a,sig_s))
+         cross_sects = [(CrossXInterface(sig_s,sig_t),CrossXInterface(sig_s,sig_t))
             for i in xrange(n_elems)]
 
          # sources
