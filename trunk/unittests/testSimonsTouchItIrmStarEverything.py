@@ -102,12 +102,13 @@ class TestTRTOnly(unittest.TestCase):
       psi_left  = computeEquivIntensity(T_l)
       psi_right = computeEquivIntensity(T_r)
       rad_old   = Radiation([psi_right for i in range(n)]) #equilibrium solution
+      rad_older = deepcopy(rad_old)
 
       #initiialize  hydro old
       hydro_old = deepcopy(hydro_states)
 
       # time-stepper
-      time_stepper = "BE"
+      time_stepper = "BDF2"
       beta = {"CN":0.5, "BDF2":2./3., "BE":1.}
 
       # transient loop
@@ -137,6 +138,9 @@ class TestTRTOnly(unittest.TestCase):
           # initialize previous hydro states
           #hydro_prev = hydro_states
 
+          #initialize copies
+          hydro_older = deepcopy(hydro_old)
+
           # perform nonlinear iterations:
           converged = False
           k = 0
@@ -163,7 +167,10 @@ class TestTRTOnly(unittest.TestCase):
                   cx_old        = cx_orig,
                   cx_new        = cross_sects,
                   rad_old       = rad_old ,
-                  hydro_star    = hydro_old)
+                  rad_older     = rad_older,
+                  hydro_star    = hydro_old,
+                  hydro_older   = hydro_older,
+                  hydro_old     = hydro_old)
 
               # solve the transient system
               alpha = 1./(GC.SPD_OF_LGT*dt)
@@ -195,6 +202,7 @@ class TestTRTOnly(unittest.TestCase):
                   aux_func=lambda x: x.e)
 
           # save oldest solutions
+          hydro_older = deepcopy(hydro_old)
           rad_older = deepcopy(rad_old)
   
           # save old solutions

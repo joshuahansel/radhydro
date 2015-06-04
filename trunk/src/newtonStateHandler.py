@@ -147,10 +147,6 @@ class NewtonStateHandler(TransientSourceTerm):
         a = GC.RAD_CONSTANT
         c = GC.SPD_OF_LGT
 
-        if self.time_stepper != 'BE':
-
-            raise NotImplementedError("This only works for BE currently")
-
         #loop over cells
         for i in xrange(len(self.hydro_states)):
 
@@ -235,7 +231,7 @@ class NewtonStateHandler(TransientSourceTerm):
     #--------------------------------------------------------------------------------
     ## Evaluate old planckian. No need to use linearization, will conserve energy
     #
-    def evalOld(self, hydro_old=None, cx_old=None,**kwargs):
+    def evalOld(self, i, hydro_old=None, cx_old=None,**kwargs):
 
         #calculate at left and right, isotropic emission source
         planckian = [0.0,0.0]
@@ -246,7 +242,7 @@ class NewtonStateHandler(TransientSourceTerm):
             T     = state.getTemperature()
 
             #Cross section
-            sig_a = cx_new[i][edge].sig_a
+            sig_a = cx_old[i][edge].sig_a
 
             #Calculate planckian (with isotropic term included)
             planckian[edge] = 0.5*sig_a*GC.RAD_CONSTANT*GC.SPD_OF_LGT*T**4.
