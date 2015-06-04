@@ -91,7 +91,7 @@ class TestTRTOnly(unittest.TestCase):
       # time step size and c*dt
       dt = 0.001
       t = 0.
-      t_end = 0.001
+      t_end = 1.0
       c_dt = GC.SPD_OF_LGT*dt
   
       # create the steady-state source

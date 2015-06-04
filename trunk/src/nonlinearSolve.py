@@ -69,12 +69,14 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
 
        # update internal energy
        newton_handler.updateIntEnergy(rad_new.E, dt, hydro_star = hydro_old)
+       print "Woop", k
 
        # check nonlinear convergence
        hydro_new = newton_handler.getNewHydroStates()
        rel_diff = computeL2RelDiff(hydro_new, hydro_prev, aux_func=lambda x: x.e)
        print("Iteration %d: Difference = %7.3e" % (k,rel_diff))
        if rel_diff < tol:
+          print rel_diff
           print("Nonlinear iteration converged")
           break
 

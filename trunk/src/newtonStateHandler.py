@@ -101,7 +101,8 @@ class NewtonStateHandler(TransientSourceTerm):
                 sig_s_og = cx_orig[i][x].sig_s
                 nu    = getNu(T,sig_a_og,state.rho,state.spec_heat,dt,self.scale)
             
-                #Create new FIXED cross section instance
+                #Create new FIXED cross section instance. No need to add scale term
+                #here because it will be included in scattering source term
                 sig_s_new = nu*sig_a_og+sig_s_og
                 cx_i.append( CrossXInterface(sig_s_new, sig_s_og+sig_a_og) )
 
@@ -111,16 +112,24 @@ class NewtonStateHandler(TransientSourceTerm):
 
     #--------------------------------------------------------------------------------
     ## Function to evaluate \f$Q_E^k\f$ in documentation. This is essentially everything
-    #  else from the linearization that isnt included elsewhere
+    #  else from the linearization that isnt included elsewhere that is part of
+    #  lagged material motion and emission sources
     #
-    def getQE():
+    # NOTE: some of the terms will be duplicated here and in construction of the
+    # source. For example, for CN, \f$-sigma_a a c T^{4,n}\f$ is here (but multiplied
+    # by \nu), but it is also present from the time discretization (without the nu
+    # and of opposite sign) in the actual transport equation. This will result in
+    # (1-nu) factors multiplying the sources, but we dont worry about that here, just
+    # build it as \f$Q_E^k\f$
+    def getQMaterialMotion():
 
         if self.time_stepper == "BE":
 
-            return 0.0
+            raise NotImplementedError("Just need to add Q from docs")
+
         else:
 
-            raise NotImplementedError("Not really sure what to do here yet")
+            raise NotImplementedError("Just need to add the Q's from docs")
 
     ## Computes new velocities \f$u^{k+1}\f$
     #
@@ -166,8 +175,8 @@ class NewtonStateHandler(TransientSourceTerm):
                 #Will need scale factor
                 scale = self.scale
                 
-                #Calculate a new internal energy and store it (NEED SCALE FACTORS)
-                e_new = (1.-nu) * scale* dt/state.rho * (sig_a*c*E[i][x] - planck_prev) \
+                #Calculate a new internal energy and store it (NEEDS Q AND KIN. ERG. TERM INCLUDED)
+                e_new = (1.-nu)*scale*dt/state.rho * (sig_a*c*E[i][x] - planck_prev) \
                         + (1.-nu)*e_star + nu*e_prev
                 self.hydro_states[i][x].e = e_new
 
@@ -211,8 +220,8 @@ class NewtonStateHandler(TransientSourceTerm):
             emission = (1. - nu )*sig_a*GC.RAD_CONSTANT*GC.SPD_OF_LGT*T**4.
             
             #add in additional term from internal energy
-            planckian[edge] = emission - (nu*state.rho/(self.scale*dt) 
-                    * (state.e  - state_star.e ) )
+            planckian[edge] = emission - (
+                    nu*state.rho/(self.scale*dt)* (state.e  - state_star.e ) )
 
         #Store the (isotropic) sources in correct index
         Q = np.zeros(4)
@@ -224,18 +233,42 @@ class NewtonStateHandler(TransientSourceTerm):
         return Q
 
     #--------------------------------------------------------------------------------
-    ## Evaluate old term
+    ## Evaluate old planckian. No need to use linearization, will conserve energy
     #
-    def evalOld(self, **kwargs):
+    def evalOld(self, hydro_old=None, cx_old=None,**kwargs):
 
+        #calculate at left and right, isotropic emission source
+        planckian = [0.0,0.0]
+        for edge in range(2):
+
+            #get temperature for this cell, at index k
+            state = hydro_old[i][edge]
+            T     = state.getTemperature()
+
+            #Cross section
+            sig_a = cx_new[i][edge].sig_a
+
+            #Calculate planckian (with isotropic term included)
+            planckian[edge] = 0.5*sig_a*GC.RAD_CONSTANT*GC.SPD_OF_LGT*T**4.
+
+        #Store the (isotropic) sources in correct index
+        Q = np.zeros(4)
+        Q[UT.getLocalIndex("L","-")] = planckian[0]
+        Q[UT.getLocalIndex("L","+")] = planckian[0]
+        Q[UT.getLocalIndex("R","-")] = planckian[1]
+        Q[UT.getLocalIndex("R","+")] = planckian[1]
+        
+        return Q
         raise NotImplementedError("not done")
 
     #--------------------------------------------------------------------------------
-    ## Evaluate older term
+    ## Evaluate older term. Just call the evalOld function as in other source terms
     #
-    def evalOlder(self, **kwargs):
+    def evalOlder(self, i, hydro_older=None, cx_older=None, **kwargs):
 
-        raise NotImplementedError("not done")
+        # Use old function but with older arguments.
+        # Do not pass in **kwargs to avoid duplicating
+        return self.evalOld(i, hydro_old=hydro_older, cx_old=cx_older)
 
 #=====================================================================================
 # Miscellaneous functions that do not need to be a member function
