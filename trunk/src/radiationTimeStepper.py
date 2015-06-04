@@ -1,9 +1,9 @@
 ## @package src.radiationTimeStepper
-#  Contains class for taking radiation time steps
+#  Contains function for taking radiation time steps
 #
 
-from transientSource import TransientSource
-import globalConstants as GC
+from transientSource import computeRadiationSource
+from globalConstants import SPD_OF_LGT as c
 from radiationSolveSS import radiationSolveSS
 
 ## The parameter \f$\beta\f$ for each time-stepper
@@ -12,34 +12,36 @@ beta = {"CN":0.5, "BDF2":2./3., "BE":1.}
 
 ## Takes radiation time step
 #
-class RadiationTimeStepper:
+#  TODO: add input parameter desc.
+#
+#  @param[in] mesh          mesh object
+#  @param[in] time_stepper  string identifier for the chosen time-stepper,
+#                           e.g., 'CN'
+#
+def takeRadiationStep(mesh, time_stepper, problem_type, dt,
+   cx_new, psi_left, psi_right, **kwargs):
 
-   ## Constructor
-   #
-   #  @param[in] mesh          mesh object
-   #  @param[in] time_stepper  string identifier for the chosen time-stepper,
-   #                           e.g., 'CN'
-   #  @param[in] src_term      if you want an external source Q, set this to true
-   #
-   def __init__(self, mesh, time_stepper):
+   # evaluate transient source
+   Q_tr = computeRadiationSource(
+      mesh           = mesh,
+      time_stepper   = time_stepper,
+      problem_type   = problem_type,
+      dt             = dt,
+      psi_left       = psi_left,
+      psi_right      = psi_right,
+      **kwargs)
 
-      self.mesh         = mesh
-      self.time_stepper = time_stepper
-      self.transient_source = TransientSource(mesh, time_stepper,
-         src_term = True)
+   # compute diagonal modifier
+   alpha = 1./(c*dt)
 
-   ## Takes time step
-   #
-   def takeStep(self, **kwargs):
+   # solve transient system
+   rad = radiationSolveSS(
+      mesh,
+      cx_new,
+      Q_tr,
+      bc_psi_left = psi_left,
+      bc_psi_right = psi_right,
+      diag_add_term = alpha,
+      implicit_scale = beta[time_stepper] )
 
-      # evaluate transient source
-      Q_tr = self.transient_source.evaluate(**kwargs)
-
-      # solve the transient system
-      alpha = 1./(GC.SPD_OF_LGT*kwargs['dt'])
-      rad = radiationSolveSS(self.mesh, kwargs['cx_new'], Q_tr,
-         bc_psi_left = kwargs['bc_flux_left'],
-         bc_psi_right = kwargs['bc_flux_right'],
-         diag_add_term = alpha, implicit_scale = beta[self.time_stepper] )
-
-      return rad
+   return rad

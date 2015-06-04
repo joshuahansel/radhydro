@@ -2,9 +2,6 @@
 #  This file contains a class to handle computing linearized source
 #  terms and handles temperature updates during a non-linear TRT solve.
 #  Also contains auxilary functions for evaluating TRT functions of interest
-#  NOTE: this class should not do the entire non-linear solve because it is also
-#  responsible for evaluating the planckian source in the solver, so it wouldnt make
-#  sense for it to pass itsself to the source builder
 #
 #  This class is eventually passed to the source builder as source. Although it is
 #  has additional features, it is easier to have this class directly implement the
@@ -135,15 +132,16 @@ class NewtonStateHandler(TransientSourceTerm):
     #
     def updateVelocity():
 
+       # TODO: do this
        return
 
     #--------------------------------------------------------------------------------
-    ## Computes a new internal energy in each of the states, based on a passed in
+    ## Computes a new internal energy \f$e^{k+1}\f$ in each of the states, based on a passed in
     #  solution for E^{k+1}
     #
-    def updateIntEnergy(self, E, dt, hydro_star=None):
+    def updateIntEnergy(self, E_new, dt, hydro_star=None):
 
-        #constants
+        # constants
         a = GC.RAD_CONSTANT
         c = GC.SPD_OF_LGT
 
@@ -165,26 +163,24 @@ class NewtonStateHandler(TransientSourceTerm):
                 sig_a = self.cx_new[i][x].sig_a
                 nu    = getNu(T_prev,sig_a,state.rho,state.spec_heat,dt,self.scale)
 
-                #Calculate planckian from T_prev (t_k)
-                planck_prev = sig_a*a*c*T_prev**4.
+                # compute a*T^4
+                aT4 = a*T_prev**4.
 
                 #Will need scale factor
                 scale = self.scale
+
+                QE = 0.0 # TODO: fix this
                 
-                #Calculate a new internal energy and store it (NEEDS Q AND KIN. ERG. TERM INCLUDED)
-                e_new = (1.-nu)*scale*dt/state.rho * (sig_a*c*E[i][x] - planck_prev) \
-                        + (1.-nu)*e_star + nu*e_prev
+                #Calculate a new internal energy and store it (TODO: NEEDS Q AND KIN. ERG. TERM INCLUDED)
+                e_new = (1.-nu)*scale*dt/state.rho * (sig_a*c*(E_new[i][x] - aT4)\
+                   + 2.0*QE) + (1.-nu)*e_star + nu*e_prev
                 self.hydro_states[i][x].e = e_new
 
-                #print "New temps: ", i, self.hydro_states[i][x].getTemperature()
-
-        c = GC.SPD_OF_LGT
-    
 
     #================================================================================
     #   The following functions are for the TransientSourceTerm class
     #--------------------------------------------------------------------------------
-    ## Evaluate new emission term \f$\sigma_a^k a c(T^{k+1})^4\f$
+    ## Evaluate new emission term \f$\frac{1}{2}\sigma_a^k a c(T^{k+1})^4\f$
     #
     #  @param [in] hydro_star  If there is no material motion, this is simply
     #                                 the hydro states at t_n. But if there is material
@@ -196,6 +192,11 @@ class NewtonStateHandler(TransientSourceTerm):
         
         #calculate at left and right, isotropic emission source
         cx_new = self.cx_new #local reference
+
+        # get constants
+        a = GC.RAD_CONSTANT
+        c = GC.SPD_OF_LGT
+
         planckian = [0.0,0.0]
         for edge in range(2):
 
@@ -213,7 +214,7 @@ class NewtonStateHandler(TransientSourceTerm):
             nu    = getNu(T,sig_a,state.rho,state.spec_heat,dt,self.scale)
 
             #Calculate planckian
-            emission = (1. - nu )*sig_a*GC.RAD_CONSTANT*GC.SPD_OF_LGT*T**4.
+            emission = (1. - nu )*sig_a*a*c*T**4.
             
             #add in additional term from internal energy
             planckian[edge] = emission - (
@@ -263,7 +264,6 @@ class NewtonStateHandler(TransientSourceTerm):
     def evalOlder(self, i, hydro_older=None, cx_older=None, **kwargs):
 
         # Use old function but with older arguments.
-        # Do not pass in **kwargs to avoid duplicating
         return self.evalOld(i, hydro_old=hydro_older, cx_old=cx_older)
 
 #=====================================================================================

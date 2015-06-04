@@ -15,7 +15,7 @@ from mesh import Mesh
 from crossXInterface import ConstantCrossSection
 from radiationSolveSS import radiationSolveSS
 from utilityFunctions import computeDiscreteL1Norm, getIndex
-from radiationTimeStepper import RadiationTimeStepper
+from radiationTimeStepper import takeRadiationStep
 from radUtilities import mu, computeScalarFlux, extractAngularFluxes
 import globalConstants as GC
 from integrationUtilities import computeL1ErrorLD
@@ -143,10 +143,6 @@ class TestRadSpatialConvergence(unittest.TestCase):
          Q_older   = QMMS(0.0,mesh,cross_sects)
          Q_old     = QMMS(0.0,mesh,cross_sects)
      
-         # create time-stepper
-         radiation_time_stepper = RadiationTimeStepper(mesh,
-               time_stepper)
-  
          # transient loop
          dt = dt_start
          t = t_start
@@ -165,10 +161,13 @@ class TestRadSpatialConvergence(unittest.TestCase):
             Q_new = QMMS(t,mesh,cross_sects)
  
             # take radiation step
-            rad = radiation_time_stepper.takeStep(
+            rad = takeRadiationStep(
+               mesh          = mesh,
+               time_stepper  = time_stepper,
+               problem_type  = 'rad_only',
                dt            = dt,
-               bc_flux_left  = psi_left,
-               bc_flux_right = psi_right,
+               psi_left      = psi_left,
+               psi_right     = psi_right,
                cx_older      = cross_sects,
                cx_old        = cross_sects,
                cx_new        = cross_sects,

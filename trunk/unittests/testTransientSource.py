@@ -22,7 +22,8 @@ import unittest
 from mesh import Mesh
 from crossXInterface import ConstantCrossSection
 from radiationSolveSS import radiationSolveSS
-from transientSource import * 
+from transientSource import computeRadiationSource 
+from utilityFunctions import getIndex
 import globalConstants as GC
 
 ## Derived unittest class to test source builder
@@ -38,7 +39,7 @@ class TestTransientSource(unittest.TestCase):
    def test_TransientSourceCN(self):
 
       # number of decimal places to test
-      n_decimal_places = 13
+      n_decimal_places = 12
 
       # create mesh
       n_elems = 5
@@ -74,11 +75,13 @@ class TestTransientSource(unittest.TestCase):
       time_stepper = "CN"
   
       # compute the transient source
-      transient_source = TransientSource(mesh, time_stepper, src_term=True)
-      Q_tr = transient_source.evaluate(
+      Q_tr = computeRadiationSource(
+         mesh          = mesh,
+         time_stepper  = time_stepper,
+         problem_type  = 'rad_only',
          dt            = dt,
-         bc_flux_left  = psi_left,
-         bc_flux_right = psi_right,
+         psi_left      = psi_left,
+         psi_right     = psi_right,
          cx_old        = cross_sects,
          rad_old       = rad_ss,
          Q_old         = Q,

@@ -1,13 +1,11 @@
 ## @package src.transientSource
-#  This file contains all of the transient source builder functions 
+#  Contains classes and functions used to evaluate the transient radiation source
 #
 # Each source is responsible for implementing several functions to build the
 # source for each of the time stepping methods.  The derived classes will, in
 # general, only need to define each of several ``virtual functions''.  Each derived
 # class inherits a "computeTerm" function. This is the primary function, responsible
 # for building the entire right hand side for that term in the equation. 
-#
-# NOTE: TRT related source builders are located in src/newtonStateHandler.py because
 #
 # In general, each derived class is responsible for overriding the different
 # functions for the different time stepping methods. Each source term
@@ -37,7 +35,7 @@
 # where \f$A\f$ is a operator that is a function of \f$Y,t\f$. NOTE: we keep the
 # \f$1/c\Delta t\f$ term on the left hand terms. Each derived class is thus
 # responsible for writing functions that evaluate \f$A^n,\;A^{n-1},\f$ and
-# \f$Y^{n+1}\f$, which are functions evalOld, evalOlder, and evalImplicit,
+# \f$A^{n+1}\f$, which are functions evalOld, evalOlder, and evalImplicit,
 # respectively.
 #
 # In implementation, \f$Y^n/c\Delta t\f$
@@ -45,7 +43,6 @@
 # the only term for which its derived class overrides computeTerm
 # rather than implement the eval*** functions, since the term is the same for all
 # stepping algorithms
-
 
 import re
 import numpy as np
@@ -55,89 +52,85 @@ import globalConstants as GC
 from utilityFunctions import getIndex, getLocalIndex
 from radUtilities import mu
 
-## Class to compute the full transient source
+## Computes the radiation transient source
 #
-class TransientSource:
-   
-   ## Constructor
-   #
-   #  @param[in] mesh          mesh object
-   #  @param[in] time_stepper  string identifier for the chosen time-stepper,
-   #                           e.g., 'CN'
-   #  @param[in] problem_type  type of transient problem being run. options are:
-   #                           rad_only:  transient no material coupling, just for
-   #                                      tests. Default value.
-   #                           rad_mat:   radiation coupled to material internal
-   #                                      energy. No material motion terms
-   #                           rad_hydro: not implemented yet. may need something
-   #                                      more complicated
-   #  @param[in] src_term      if you want to have an external source term, you need
-   #                           to pass in true, otherwise this is ignored
-   #
-   #  
-   #
-   def __init__(self, mesh, time_stepper, problem_type='rad_only',
-           src_term=False, newton_handler=None):
+#  Loops over the list of transient source terms and adds them
+#  to the full transient source.
+#  The problem_type parameter may take one of the following values:
+#
+#  * 'rad_only':  radiation with no material coupling. Default value.
+#     a           The S-2 source in this case is provided:
+#  \f[
+#    \mathcal{Q}^\pm = \mathcal{Q}^\pm(x,t)
+#  \f]
+#  * 'rad_mat':   radiation coupled to material internal
+#                 energy with no material motion.
+#                 The S-2 source in this case is
+#  \f[
+#    \mathcal{Q}^\pm = \frac{1}{2}\sigma_a a c T^4
+#  \f]
+#  * 'rad_hydro': radiation coupled to hydrodynamics.
+#
+#  @param[in] mesh          mesh object
+#  @param[in] time_stepper  string identifier for the chosen time-stepper,
+#                           e.g., 'CN'
+#  @param[in] problem_type  type of transient problem being run. options are
+#                           'rad_only', 'rad_mat', or 'rad_hydro'.
+#                           Descriptions are above.
+#
+def computeRadiationSource(mesh, time_stepper, problem_type,
+   dt, psi_left, psi_right, planckian_term=None, **kwargs):
 
-      #keep track of the newton handler separately as it may need remembered
-      #to ensure that same instance is used
-      self.newton_handler = newton_handler
-      
-      self.mesh = mesh
+   # create list of transient source terms
+   terms = [OldIntensityTerm(mesh, time_stepper), 
+            StreamingTerm   (mesh, time_stepper),
+            ReactionTerm    (mesh, time_stepper),
+            ScatteringTerm  (mesh, time_stepper)]
 
-      # create transient source terms. TODO Since the only state remembered in this class
-      # is the time stepper and the mesh, this doesnt really need to be a class,
-      # it can just be a function that is called with mesh and time stepper passed 
-      # along to evaluate
-      self.terms = [OldIntensityTerm(mesh, time_stepper), 
-               StreamingTerm   (mesh, time_stepper),
-               ReactionTerm    (mesh, time_stepper),
-               ScatteringTerm  (mesh, time_stepper)]
+   # create list of source terms according to problem type
+   if problem_type == 'rad_only':
 
-      #Add extra terms if necessary
-      if src_term:
-          self.terms.append(SourceTerm(mesh, time_stepper))  
-      
-      #Check that newton handler was passed in if TRT active
-      if problem_type in ['rad_mat', 'rad_hydro']:
+       terms.append(SourceTerm(mesh, time_stepper))
 
-         if newton_handler == None:
-             raise IOError("You must pass in a newton handler to TransientSource "\
-                "constructor for a TRT problem\n")
-         else:
+   elif problem_type == 'rad_mat':
 
-             #make sure newton handler is instance of TransientSource
-             if not isinstance(newton_handler,TransientSourceTerm):
-                 raise NotImplementedError("Newton handler must inherit from TransientSourceTerm")
-             else:
-                 self.terms.append(self.newton_handler)
-               
+       if planckian_term == None:
+          raise IOError('A Planckian term must be supplied for nonlinear problems')
+       else:
+          if not isinstance(planckian_term, TransientSourceTerm):
+             raise NotImplementedError('Planckian term must inherit'\
+               ' from TransientSourceTerm')
+          else:
+             terms.append(planckian_term)
 
-   ## Function to evaluate the full transient source
-   #
-   #  Creates a list of transient sources and loops
-   #  over them to add to the full transient source.
-   #
-   def evaluate(self, **kwargs):
+   elif problem_type == 'rad_hydro':
 
-      #Debugging check to notify since change made
-      if 'Q_new' in kwargs:
-          if not any([isinstance(i,SourceTerm) for i in self.terms]):
-              raise ValueError("You passed in a Q_new to source builder, but didnt "\
-                  "specify source term in constructor, check RadiationTimeStepper "\
-                  "constructor")
+       if planckian_term == None:
+          raise IOError('A Planckian term must be supplied for nonlinear problems')
+       else:
+          if not isinstance(planckian_term, TransientSourceTerm):
+             raise NotImplementedError('Planckian term must inherit'\
+               ' from TransientSourceTerm')
+          else:
+             terms.append(planckian_term,
+                          DriftTerm      (mesh, time_stepper),
+                          AnisotropicTerm(mesh, time_stepper))
 
+   else:
 
-      # build the transient source
-      n = self.mesh.n_elems * 4
-      Q_tr = np.zeros(n)
-      for term in self.terms:
-          # build source for this handler
-          Q_term = term.computeTerm(**kwargs)
-          # Add elementwise the src to the total
-          Q_tr += Q_term
+       raise NotImplementedError('Invalid problem_type specified')
 
-      return Q_tr
+   # compute the transient source
+   n = mesh.n_elems * 4
+   Q_tr = np.zeros(n)
+   for term in terms:
+       # compute source contribution for this term
+       Q_term = term.computeTerm(dt=dt, psi_left=psi_left, psi_right=psi_right,
+          **kwargs)
+       # add to total
+       Q_tr += Q_term
+
+   return Q_tr
 
 #=================================================================================
 ## Base class for source handlers. More info given in package documentation. Here, 
@@ -265,7 +258,7 @@ class OldIntensityTerm(TransientSourceTerm):
     #  @param[in] dt        time step size
     #  @param[in] rad_old   old radiation
     #
-    def computeTerm(self, dt=None, rad_old=None, **kwargs):
+    def computeTerm(self, dt, rad_old, **kwargs):
 
         # Loop over all cells and build source 
         Q = np.array([])
@@ -285,7 +278,7 @@ class OldIntensityTerm(TransientSourceTerm):
     #  @param[in] dt        time step size
     #  @param[in] rad_old   old radiation
     #
-    def computeOldIntensityTerm(self, i, dt=None, rad_old=None):
+    def computeOldIntensityTerm(self, i, dt, rad_old):
 
         # get local indices
         Lm = getLocalIndex("L","-") # dof L,-
@@ -333,7 +326,7 @@ class StreamingTerm(TransientSourceTerm):
     #  @param[in] i         element id
     #  @param[in] rad_old   old radiation
     #
-    def evalOld(self, i, rad_old=None, **kwargs):
+    def evalOld(self, i, rad_old, psi_left, psi_right, **kwargs):
 
         # get local indices
         Lm = getLocalIndex("L","-") # dof L,-
@@ -343,13 +336,13 @@ class StreamingTerm(TransientSourceTerm):
 
         # psip_{i-1/2}
         if i == 0: # left boundary
-            psip_Lface = kwargs['bc_flux_left']
+            psip_Lface = psi_left
         else:
             psip_Lface = rad_old.psip[i-1][1]
 
         # psim_{i+1/2}
         if i == self.mesh.n_elems - 1: # right boundary
-            psim_Rface = kwargs['bc_flux_right']
+            psim_Rface = psi_right
         else:
             psim_Rface  = rad_old.psim[i+1][0]
 
@@ -383,13 +376,14 @@ class StreamingTerm(TransientSourceTerm):
     #  @param[in] i           element id
     #  @param[in] rad_older   older radiation
     #
-    def evalOlder(self, i, rad_older=None, **kwargs):
+    def evalOlder(self, i, rad_older, psi_left, psi_right, **kwargs):
 
         # Use old function but with older arguments.
         # carefully pass in **kwargs to avoid duplicating
-        return self.evalOld(i, rad_old=rad_older,
-                  bc_flux_left=kwargs['bc_flux_left'],
-                  bc_flux_right=kwargs['bc_flux_right'])
+        return self.evalOld(i,
+                  rad_old   = rad_older,
+                  psi_left  = psi_left,
+                  psi_right = psi_right)
 
 
 #====================================================================================
@@ -418,7 +412,7 @@ class ReactionTerm(TransientSourceTerm):
     #  @param[in] rad_old   old radiation
     #  @param[in] cx_old    old cross sections
     #
-    def evalOld(self, i, rad_old=None, cx_old=None, **kwargs):
+    def evalOld(self, i, rad_old, cx_old, **kwargs):
 
         # get local indices
         Lm = getLocalIndex("L","-") # dof L,-
@@ -446,7 +440,7 @@ class ReactionTerm(TransientSourceTerm):
     #  @param[in] rad_older   older radiation
     #  @param[in] cx_older    older cross sections
     #
-    def evalOlder(self, i, rad_older=None, cx_older=None, **kwargs):
+    def evalOlder(self, i, rad_older, cx_older, **kwargs):
 
         # Use old function but with older arguments.
         # Note that you cannot pass in **kwargs or it will duplicate some arguments
@@ -479,7 +473,7 @@ class ScatteringTerm(TransientSourceTerm):
     #  @param[in] rad_old  old radiation
     #  @param[in] cx_old   old cross sections
     #
-    def evalOld(self, i, rad_old=None, cx_old=None, **kwargs):
+    def evalOld(self, i, rad_old, cx_old, **kwargs):
 
         # get local indices
         Lm = getLocalIndex("L","-") # dof L,-
@@ -512,7 +506,7 @@ class ScatteringTerm(TransientSourceTerm):
     #  @param[in] rad_older  older radiation
     #  @param[in] cx_older   older cross sections
     #
-    def evalOlder(self, i, rad_older=None, cx_older=None, **kwargs):
+    def evalOlder(self, i, rad_older, cx_older, **kwargs):
 
         # Use old function but with older arguments
         return self.evalOld(i, rad_old=rad_older, cx_old=cx_older)
@@ -535,7 +529,7 @@ class SourceTerm(TransientSourceTerm):
     #  @param[in] Q_new  implicit source term, \f$\mathcal{Q}^{\pm,k}\f$,
     #                    provided if source is not solution-dependent
     #
-    def evalImplicit(self, i, Q_new=None, **kwargs):
+    def evalImplicit(self, i, Q_new, **kwargs):
 
         # Use old function but with new arguments
         return self.evalOld(i, Q_old=Q_new)
@@ -547,7 +541,7 @@ class SourceTerm(TransientSourceTerm):
     #  @param[in] Q_old  old source term, \f$\mathcal{Q}^{\pm,n}\f$, provided if
     #                    source is not solution-dependent
     #
-    def evalOld(self, i, Q_old=None, **kwargs):
+    def evalOld(self, i, Q_old, **kwargs):
 
         # for now, sources cannot be solution-dependent, so raise an error if
         # no source is provided
@@ -582,10 +576,89 @@ class SourceTerm(TransientSourceTerm):
     #  @param[in] Q_older  older source term, \f$\mathcal{Q}^{\pm,n-1}\f$,
     #                      provided if source is not solution-dependent
     #
-    def evalOlder(self, i, Q_older=None, **kwargs):
+    def evalOlder(self, i, Q_older, **kwargs):
 
         # Use old function but with older arguments
         return self.evalOld(i, Q_old=Q_older)
+
+##====================================================================================
+### Derived class for computing Planckian term,
+##  \f$\frac{1}{2}\sigma_a a c T^4\f$
+##
+#class PlanckianTerm(TransientSourceTerm):
+#
+#    #-------------------------------------------------------------------------------
+#    ## Constructor
+#    #
+#    def __init__(self, *args):
+#
+#        # call base class constructor
+#        TransientSourceTerm.__init__(self, *args)
+#
+#    #--------------------------------------------------------------------------------
+#    ## Computes implicit Planckian term,
+#    #  \f$\frac{1}{2}\sigma_a^k a c (T^k)^4\f$
+#    #
+#    #  @param[in] i           element id
+#    #  @param[in] cx_prev     previous cross sections \f$\sigma^k\f$
+#    #  @param[in] hydro_prev  previous hydro states \f$\mathbf{H}^k\f$
+#    #
+#    def evalImplicit(self, i, cx_prev, hydro_prev, **kwargs):
+#
+#        # get local indices
+#        Lm = getLocalIndex("L","-") # dof L,-
+#        Lp = getLocalIndex("L","+") # dof L,+
+#        Rm = getLocalIndex("R","-") # dof R,-
+#        Rp = getLocalIndex("R","+") # dof R,+
+#
+#        # get left and right absorption cross sections
+#        cxaL = cx_prev[i][0].sig_a
+#        cxaR = cx_prev[i][1].sig_a
+#
+#        # get left and right temperatures
+#        TL = hydro_prev[i][0].T
+#        TR = hydro_prev[i][1].T
+#
+#        # get constants
+#        c = GC.SPD_OF_LGT
+#        a = GC.RAD_CONSTANT
+#
+#        # compute Planckian terms
+#        planckL = 0.5*cxaL*a*c*TL**4
+#        planckR = 0.5*cxaR*a*c*TR**4
+#        
+#        # return local Q values
+#        Q_local = np.zeros(4)
+#        Q_local[Lm] = planckL
+#        Q_local[Lp] = planckL
+#        Q_local[Rm] = planckR
+#        Q_local[Rp] = planckR
+#
+#        return Q_local
+#
+#    #--------------------------------------------------------------------------------
+#    ## Computes old Planckian term,
+#    #  \f$\frac{1}{2}\sigma_a^n a c (T^n)^4\f$
+#    #
+#    #  @param[in] i          element id
+#    #  @param[in] cx_old     old cross sections \f$\sigma^n\f$
+#    #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
+#    #
+#    def evalOld(self, i, cx_old, hydro_old, **kwargs):
+#
+#       return self.evalImplicit(i, cx_prev=cx_old, hydro_prev=hydro_old)
+#
+#    #--------------------------------------------------------------------------------
+#    ## Computes older Planckian term,
+#    #  \f$\frac{1}{2}\sigma_a^{n-1} a c (T^{n-1})^4\f$
+#    #
+#    #  @param[in] i            element id
+#    #  @param[in] cx_older     older cross sections \f$\sigma^{n-1}\f$
+#    #  @param[in] hydro_older  older hydro states \f$\mathbf{H}^{n-1}\f$
+#    #
+#    def evalOlder(self, i, cx_older, hydro_older, **kwargs):
+#
+#       return self.evalImplicit(i, cx_prev=cx_older, hydro_prev=hydro_older)
 
 #====================================================================================
 ## Derived class for computing drift term,
@@ -610,8 +683,7 @@ class DriftTerm(TransientSourceTerm):
     #  @param[in] hydro_prev  previous hydro states \f$\mathbf{H}^k\f$
     #  @param[in] rad_prev    previous radiation
     #
-    def evalImplicit(self, i, cx_prev=None, hydro_prev=None,
-           rad_prev=None, **kwargs):
+    def evalImplicit(self, i, cx_prev, hydro_prev, rad_prev, **kwargs):
 
         # get local indices
         Lm = getLocalIndex("L","-") # dof L,-
@@ -654,12 +726,10 @@ class DriftTerm(TransientSourceTerm):
     #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
     #  @param[in] rad_old    old radiation
     #
-    def evalOld(self, i, cx_old=None, hydro_old=None,
-           rad_old=None, **kwargs):
+    def evalOld(self, i, cx_old, hydro_old, rad_old, **kwargs):
 
        return self.evalImplicit(i, cx_prev=cx_old, hydro_prev=hydro_old,
            rad_prev=rad_old)
-
 
     #--------------------------------------------------------------------------------
     ## Computes older drift term,
@@ -670,8 +740,7 @@ class DriftTerm(TransientSourceTerm):
     #  @param[in] hydro_older  older hydro states \f$\mathbf{H}^{n-1}\f$
     #  @param[in] rad_older    older radiation
     #
-    def evalOlder(self, i, cx_older=None, hydro_older=None,
-           rad_older=None, **kwargs):
+    def evalOlder(self, i, cx_older, hydro_older, rad_older, **kwargs):
 
        return self.evalImplicit(i, cx_prev=cx_older, hydro_prev=hydro_older,
            rad_prev=rad_older)
@@ -699,8 +768,7 @@ class AnisotropicSourceTerm(TransientSourceTerm):
     #  @param[in] hydro_prev  previous hydro states \f$\mathbf{H}^k\f$
     #  @param[in] rad_prev    previous radiation
     #
-    def evalImplicit(self, i, cx_prev=None, hydro_prev=None,
-           rad_prev=None, **kwargs):
+    def evalImplicit(self, i, cx_prev, hydro_prev, rad_prev, **kwargs):
 
         # get left and right total cross sections
         cxtL = cx_prev[i][0].sig_t
@@ -732,8 +800,7 @@ class AnisotropicSourceTerm(TransientSourceTerm):
     #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
     #  @param[in] rad_old    old radiation
     #
-    def evalOld(self, i, cx_old=None, hydro_old=None,
-           rad_old=None, **kwargs):
+    def evalOld(self, i, cx_old, hydro_old, rad_old, **kwargs):
 
        return self.evalImplicit(i, cx_prev=cx_old, hydro_prev=hydro_old,
            rad_prev=rad_old)
@@ -747,8 +814,7 @@ class AnisotropicSourceTerm(TransientSourceTerm):
     #  @param[in] hydro_older  older hydro states \f$\mathbf{H}^{n-1}\f$
     #  @param[in] rad_older    older radiation
     #
-    def evalOlder(self, i, cx_older=None, hydro_older=None,
-           rad_older=None, **kwargs):
+    def evalOlder(self, i, cx_older, hydro_older, rad_older, **kwargs):
 
        return self.evalImplicit(i, cx_prev=cx_older, hydro_prev=hydro_older,
            rad_prev=rad_older)

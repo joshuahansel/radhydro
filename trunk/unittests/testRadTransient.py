@@ -17,7 +17,7 @@ from crossXInterface import ConstantCrossSection
 from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotAngularFlux, plotScalarFlux, computeScalarFlux
 from utilityFunctions import computeDiscreteL1Norm
-from radiationTimeStepper import RadiationTimeStepper
+from radiationTimeStepper import takeRadiationStep
 from radUtilities import extractAngularFluxes
 from radiation import Radiation
 
@@ -62,9 +62,6 @@ class TestRadTransient(unittest.TestCase):
        rad_old   = Radiation(np.zeros(n_dofs))
        rad_older = deepcopy(rad_old)
    
-       # create time-stepper
-       radiation_time_stepper = RadiationTimeStepper(mesh, time_stepper)
-
        # transient loop
        transient_incomplete = True # boolean flag signalling end of transient
        while transient_incomplete:
@@ -78,10 +75,13 @@ class TestRadTransient(unittest.TestCase):
               t += dt
 
            # take radiation step
-           rad = radiation_time_stepper.takeStep(
+           rad = takeRadiationStep(
+              mesh          = mesh,
+              time_stepper  = time_stepper,
+              problem_type  = 'rad_only',
               dt            = dt,
-              bc_flux_left  = psi_left,
-              bc_flux_right = psi_right,
+              psi_left      = psi_left,
+              psi_right     = psi_right,
               cx_older      = cross_sects,
               cx_old        = cross_sects,
               cx_new        = cross_sects,

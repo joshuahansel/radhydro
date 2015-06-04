@@ -15,7 +15,6 @@ from crossXInterface import ConstantCrossSection
 from radiationSolveSS import radiationSolveSS
 from musclHancock import HydroState
 from transientSource import * 
-from radiationTimeStepper import RadiationTimeStepper
 import globalConstants as GC
 from TRTUtilities import convSpecHeatErgsEvToJksKev, \
                          computeEquivIntensity, \
@@ -85,25 +84,24 @@ class TestTRTOnly(unittest.TestCase):
                HydroState(u=0,rho=rho2,spec_heat=c_v2,int_energy=e2, gamma=gam)) )
 
 
-      #keep copy of original cross sections
+      # keep copy of original cross sections
       cx_orig = deepcopy(cross_sects)
 
       # time step size and c*dt
       dt = 0.001
       t = 0.
-      t_end = 1.0
-      c_dt = GC.SPD_OF_LGT*dt
+      t_end = 0.001
   
       # create the steady-state source
       n = 4*mesh.n_elems
       Q = np.zeros(n)
   
-      #initialize radiation
+      # initialize radiation
       psi_left  = computeEquivIntensity(T_l)
       psi_right = computeEquivIntensity(T_r)
       rad_old   = Radiation([psi_right for i in range(n)]) #equilibrium solution
 
-      #initiialize  hydro old
+      # initiialize  hydro old
       hydro_old = deepcopy(hydro_states)
 
       # time-stepper
@@ -123,8 +121,11 @@ class TestTRTOnly(unittest.TestCase):
           else:
              t += dt
 
-          c_dt = GC.SPD_OF_LGT*dt
-
+          # print each time step if run standalone
+          if __name__ == '__main__':
+             print("t = %0.3f -> %0.3f:"
+                % (t-dt,t) )
+  
           # perform nonlinear solve
           hydro_new, rad_new = nonlinearSolve(
              mesh         = mesh,
@@ -137,86 +138,14 @@ class TestTRTOnly(unittest.TestCase):
              hydro_old    = hydro_old,
              hydro_guess  = hydro_states,
              rad_old      = rad_old)
-
-#          # construct newton state handler
-#          newton_handler = NewtonStateHandler(mesh,
-#                               time_stepper=time_stepper,
-#                               cx_new = cross_sects,
-#                               hydro_guess=hydro_states)
-#
-#          # nonlinear iteration tolerance
-#          tol = 1.E-9
-#
-#          # initialize previous hydro states
-#          #hydro_prev = hydro_states
-#
-#          # perform nonlinear iterations:
-#          converged = False
-#          k = 0
-#          while not converged:
-#
-#              # increment iteration counter
-#              k += 1
-#
-#              hydro_prev = newton_handler.getNewHydroStates()
-#
-#              # get the modified scattering cross sections
-#              cross_sects = newton_handler.getEffectiveOpacities(dt)
-#
-#              # take radiation step, currently hardcoded here
-#              transient_source = TransientSource(mesh, time_stepper, problem_type='rad_mat',
-#                      newton_handler=newton_handler)
-#                  
-#              # evaluate transient source, including linearized planckian
-#              Q_tr = transient_source.evaluate(
-#                  dt            = dt,
-#                  bc_flux_left  = psi_left,
-#                  bc_flux_right = psi_right,
-#                  cx_older      = cx_orig,
-#                  cx_old        = cx_orig,
-#                  cx_new        = cross_sects,
-#                  rad_old       = rad_old ,
-#                  hydro_star    = hydro_old)
-#
-#              # solve the transient system
-#              alpha = 1./(GC.SPD_OF_LGT*dt)
-#              rad = radiationSolveSS(mesh, cross_sects, Q_tr,
-#                 bc_psi_left = psi_left,
-#                 bc_psi_right = psi_right,
-#                 diag_add_term = alpha, implicit_scale = beta[time_stepper] )
-#
-#              #update internal energies 
-#              newton_handler.updateIntEnergy(rad.E,dt,hydro_star = hydro_old)
-#
-#              # check nonlinear convergence
-#              hydro_new = newton_handler.getNewHydroStates()
-#              rel_diff = computeL2RelDiff(hydro_new, hydro_prev, aux_func=lambda x: x.e)
-#              print("Iteration %d: Difference = %7.3e" % (k,rel_diff))
-#              if rel_diff < tol:
-#                 print("Nonlinear iteration converged")
-#                 break
-#
-#              #store new to prev
-#              hydro_prev = hydro_new
                   
-          # print each time step if run standalone
-          if __name__ == '__main__':
-             print("t = %0.3f -> %0.3f:"
-                % (t-dt,t) )
-  
+          # print the difference between old and new solutions
           print "Difference in time steps: ", computeL2RelDiff(hydro_old, hydro_new,
-                  aux_func=lambda x: x.e)
+                  aux_func=lambda x: x.e), "\n"
 
-          # save oldest solutions
-          rad_older = deepcopy(rad_old)
-  
           # save old solutions
           hydro_old = deepcopy(hydro_new)
           rad_old   = deepcopy(rad_new)
-
-          # store hydro
-          #hydro_states = hydro_new
-
 
       # plot solutions if run standalone
       if __name__ == "__main__":
