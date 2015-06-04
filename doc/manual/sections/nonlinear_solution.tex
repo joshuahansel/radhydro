@@ -9,8 +9,9 @@ using local predicted fluxes or a Riemann solver).  Then, a non-linear system
 must be solved.  Consider the case of the non-linear system to be solved for
 Crank Nicolson over a time step from $t_n$ to $t_{n+1}$.  The changes to the
 non-linear system for the predictor and corrector time steps will only affect
-the choice of $\dt$ the end time state, and the known source terms on the right
-hand side, which come from known previous states in time.  The non-linear
+the choice of $\dt$, the scale factor ($1/2$ for CN) on implicit terms, the end time
+state, and the known source term $Q_E^k$ yet to be defined on the right
+hand side. All terms in $Q_k$ are known from previous states in time or iteration $k$.  The non-linear
 equations to be solved in this case are, dropping spatial differencing indices,
 \begin{equation}
   \frac{\rho^{n+1}\left(u^{k+1}-u^*\right)}{\dt} = 
@@ -54,7 +55,7 @@ algebraic manipulation:
    \frac{E^{k+1} - E^*}{\dt} &= - \frac{1}{2}\left[\sa^k c \left(
    a(T^k)^4 + \beta^k(e^{k+1} - e^k)  - \E^{k+1}\right)\right]+Q_E^k \pec
 \end{align*}
-and adding and subtracting $\frac{\rho^{n+1}e^k}{\dt}$ on the left hand side gives
+Adding and subtracting $\frac{\rho^{n+1}e^k}{\dt}$ on the left hand side gives
 \begin{multline*}
    \frac{E^{k+1}-\rho^{n+1} e^k + \rho^{n+1} e^k - E^*}{\dt} = \\
    -\frac{1}{2}\left[\sa^{k}c\left(
@@ -111,10 +112,71 @@ terms simplified, giving the source term
 \end{multline}
 The above expression can be substituted for the emission source in the S$_2$
 equations, including an effective scattering cross section given by $\sigma_a^k
-\nu_{1/2}^k$.  After solving for $\E^{k+1}$, a new internal energy can be estimated
+\nu_{1/2}^k$. It is important to note there is no CN scale factor of 1/2 out front of
+this term, so that factor is still included in the substitution into the S$_2$
+equations.
+
+After solving for $\E^{k+1}$, a new internal energy can be estimated
 using Eq.~\eqref{eq:energy_update}. It is important to use this linearized
-equation to ensure energy conservation.  This process can now be repeated until
+equation to ensure energy conservation.  We manipulate Eq.~\eqref{eq:energy_update}
+to simplify the expression.  We use the fact
+that
+\begin{equation}
+   (1 - \nu_{1/2}) = \frac{1}{1+\frac{1}{2}\sigma_a^kc\Delta_t\frac{\beta^k}{\rho}}.
+\end{equation}
+which simplifies the equation for the new internal energy $e^{k+1}$ to
+\begin{multline}
+    e^{k+1} = \frac{1}{2}\frac{(1-\nu_{1/2})}{\rho}\left[\sigma_a^k c\Delta t \left(c\E
+    - ac(T^k)^4\right) + 2\Delta t Q_E^k \right] \\ - (1 -
+    \nu_{1/2})\left(\frac{1}{2}[(u^{k+1})^2 - (u^{k})^2]-e^*\right) + \nu_{1/2}e^k
+\end{multline}
+
+This process can now be repeated until
 convergence, beginning with a solve of Eq.~\eqref{eq:vel_update} with updated
 radiation quantities.  Once the system is converged, the EOS can be used to
 update $p^{n+1}$.
+
+\subsection{Generalized to different time steppers}
+
+We can generalize the linearization solution process for BDF2, BE, and CN. To do this, we
+write the original equation as
+\begin{align*}
+   \frac{E^{k+1} - E^*}{\dt} &= - \alpha \left[\sa^k c \left(
+   a(T^{k+1})^4 - \E^{k+1}\right)\right]+Q_E^k \\
+\end{align*}
+where for BDF2
+\begin{multline}
+    Q^{k,\text{BDF2}}_E = -\frac{1}{6}\left[\sa c\left( aT^4 - \E\right)\right]^{n-1}
+    -\frac{1}{6}\left[\sa c\left( aT^4 - \E\right)\right]^{n} \\
+    +\BDF{\sigma_t \frac{u}{c} \left( \F - \frac{4}{3} \E u \right)}{n-1}{n}{k},
+\end{multline}
+for CN
+\begin{multline}
+    Q^{k,\text{CN}}_E = -\half\left[\sa c\left( aT^4 - \E\right)\right]^n\\
+   +\CN{\sigma_t \frac{u}{c} \left( \F - \frac{4}{3} \E u \right)}{n}{k},
+\end{multline}
+and for BE
+\begin{equation*}
+    Q^{k,\text{BE}}_E = \sigma_t \frac{u}{c} \left( \F - \frac{4}{3} \E u \right)^k.
+\end{equation*}
+The scale factor $\alpha$ is 1, 1/2, 2/3 for BE, CN, and BDF2, respectively. With
+these definitions, the planckian source term becomes
+\begin{multline}
+   \sigma_a^k a c\left(T^{k+1}\right)^4 = \left(1 - \nu_{\alpha}^k\right)
+   \sigma_a^k a c (T^k)^4 + \sigma_a^k c \nu_{\alpha}^k \E^{k+1}\\
+   +\frac{\nu_{\alpha}^k}{\alpha} Q_E^k - \frac{\rho\nu_{\alpha}^k}{\alpha\dt}
+   \left[(e^k - e^*) + \frac{1}{2}((u^{k+1})^2 - (u^*)^2)\right] \pep
+\end{multline}
+with 
+\begin{equation}
+    \nu^k_{\alpha} = \frac{\alpha\sigma_a c\Delta t \frac{\beta^k}{\rho}}{1 +
+    \alpha\sigma_a c\Delta t \frac{\beta^k}{\rho}}.
+\end{equation}
+The energy update equation becomes
+\begin{multline}
+    e^{k+1} = \alpha\frac{(1-\nu_{\alpha})}{\rho}\left[\sigma_a^k c\Delta t \left(c\E
+    - ac(T^k)^4\right) + \frac{\Delta t}{\alpha} Q_E^k \right] \\ - (1 -
+    \nu_{\alpha})\left(\frac{1}{2}[(u^{k+1})^2 - (u^{k})^2]\right)
+    +(1-\nu_\alpha)e^*+ \nu_{\alpha}e^k
+\end{multline}
 

@@ -162,9 +162,12 @@ class NewtonStateHandler(TransientSourceTerm):
 
                 #Calculate planckian from T_prev (t_k)
                 planck_prev = sig_a*a*c*T_prev**4.
+
+                #Will need scale factor
+                scale = self.scale
                 
                 #Calculate a new internal energy and store it (NEED SCALE FACTORS)
-                e_new = (1.-nu) * dt/state.rho * (sig_a*c*E[i][x] - planck_prev) \
+                e_new = (1.-nu) * scale* dt/state.rho * (sig_a*c*E[i][x] - planck_prev) \
                         + (1.-nu)*e_star + nu*e_prev
                 self.hydro_states[i][x].e = e_new
 
