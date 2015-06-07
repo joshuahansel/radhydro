@@ -14,8 +14,6 @@ from mesh import Mesh
 from crossXInterface import ConstantCrossSection
 from radiationSolveSS import radiationSolveSS
 from musclHancock import HydroState
-from transientSource import * 
-from radiationTimeStepper import RadiationTimeStepper
 import globalConstants as GC
 from TRTUtilities import convSpecHeatErgsEvToJksKev, \
                          computeEquivIntensity, \
@@ -27,6 +25,7 @@ from plotUtilities import printTupled, plotTemperatures
 from utilityFunctions import computeL2RelDiff
 from radiation import Radiation
 from nonlinearSolve import nonlinearSolve
+from transientSource import computeRadiationSource
 
 
 ## Derived unittest class to test source builder
@@ -91,7 +90,7 @@ class TestTRTOnly(unittest.TestCase):
       # time step size and c*dt
       dt = 0.001
       t = 0.
-      t_end = 1.0
+      t_end = 0.04
       c_dt = GC.SPD_OF_LGT*dt
   
       # create the steady-state source
@@ -108,7 +107,7 @@ class TestTRTOnly(unittest.TestCase):
       hydro_old = deepcopy(hydro_states)
 
       # time-stepper
-      time_stepper = "BDF2"
+      time_stepper = "BE"
       beta = {"CN":0.5, "BDF2":2./3., "BE":1.}
 
       # transient loop
@@ -154,15 +153,20 @@ class TestTRTOnly(unittest.TestCase):
               # get the modified scattering cross sections
               cross_sects = newton_handler.getEffectiveOpacities(dt)
 
-              # take radiation step, currently hardcoded here
-              transient_source = TransientSource(mesh, time_stepper, problem_type='rad_mat',
-                      newton_handler=newton_handler)
-                  
+              #evaluate new plackian term
+              planckian_new = newton_handler.evalPlanckianImplicit(dt=dt, hydro_star
+                      = hydro_old)
+
+
               # evaluate transient source, including linearized planckian
-              Q_tr = transient_source.evaluate(
+              Q_tr = computeRadiationSource(
+                  mesh          = mesh,
+                  time_stepper   = time_stepper,
+                  problem_type   = 'rad_mat',
+                  planckian_new  = planckian_new,
                   dt            = dt,
-                  bc_flux_left  = psi_left,
-                  bc_flux_right = psi_right,
+                  psi_left      = psi_left,
+                  psi_right     = psi_right,
                   cx_older      = cx_orig,
                   cx_old        = cx_orig,
                   cx_new        = cross_sects,
@@ -215,7 +219,7 @@ class TestTRTOnly(unittest.TestCase):
 
       # plot solutions if run standalone
       if __name__ == "__main__":
-          plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new)
+          plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=True)
 
   
 # run main function from unittest module

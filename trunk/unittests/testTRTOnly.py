@@ -90,7 +90,7 @@ class TestTRTOnly(unittest.TestCase):
       # time step size and c*dt
       dt = 0.001
       t = 0.
-      t_end = 0.001
+      t_end = 1.0
   
       # create the steady-state source
       n = 4*mesh.n_elems

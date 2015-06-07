@@ -12,7 +12,6 @@
 #  derives in detail the equations being generated here.
 #
 from musclHancock    import HydroState
-from transientSource import TransientSourceTerm
 from crossXInterface import CrossXInterface
 from copy            import deepcopy
 import globalConstants as GC
@@ -22,7 +21,7 @@ import utilityFunctions as UT
 #===================================================================================
 ## Main class to handle newton solve and temperature updates, etc.
 #
-class NewtonStateHandler(TransientSourceTerm):
+class NewtonStateHandler(object):
 
     #--------------------------------------------------------------------------------
     ## Constructor
@@ -38,7 +37,6 @@ class NewtonStateHandler(TransientSourceTerm):
     #
     def __init__(self,mesh,cx_new=None,hydro_guess=None,time_stepper='BE'):
 
-        TransientSourceTerm.__init__(self,mesh,time_stepper)
 
         #store scale coefficient from time discretization for computing nu
         scale = {"CN":0.5, "BE":1., "BDF2":2./3.}
@@ -51,6 +49,9 @@ class NewtonStateHandler(TransientSourceTerm):
 
         #Store the cross sections, you will be updating these 
         self.cx_new = cx_new
+
+        #Create and store the known source terms Q_E^k. This will be updated
+        #self.E = luate
 
 
     #---------------------------------------------------------------------------------
@@ -118,15 +119,29 @@ class NewtonStateHandler(TransientSourceTerm):
     # and of opposite sign) in the actual transport equation. This will result in
     # (1-nu) factors multiplying the sources, but we dont worry about that here, just
     # build it as \f$Q_E^k\f$
-    def getQMaterialMotion():
+    def evalMatCouplingQE():
 
         if self.time_stepper == "BE":
+
+            #Add
+
+            raise NotImplementedError("Just need to add Q from docs")
+
+        elif self.time_stepper == "BDF2":
+
+
+            raise NotImplementedError("Just need to add Q from docs")
+
+
+        elif self.time_stepper == "CN":
+
+            #add in term from planckian and absorption old
 
             raise NotImplementedError("Just need to add Q from docs")
 
         else:
 
-            raise NotImplementedError("Just need to add the Q's from docs")
+            raise NotImplementedError("Invalid time stepper")
 
     ## Computes new velocities \f$u^{k+1}\f$
     #
@@ -145,8 +160,12 @@ class NewtonStateHandler(TransientSourceTerm):
         a = GC.RAD_CONSTANT
         c = GC.SPD_OF_LGT
 
+        #Evaluate knwon srt term QE for all the elements
+        #QE_elems = evalMatCouplingQE(
+
         #loop over cells
         for i in xrange(len(self.hydro_states)):
+
 
             #loop over left and right value
             for x in range(2):
@@ -169,8 +188,10 @@ class NewtonStateHandler(TransientSourceTerm):
                 #Will need scale factor
                 scale = self.scale
 
-                QE = 0.0 # TODO: fix this
+                #Evaluate extra terms from rad hydro
+                QE = 0.
                 
+
                 #Calculate a new internal energy and store it (TODO: NEEDS Q AND KIN. ERG. TERM INCLUDED)
                 e_new = (1.-nu)*scale*dt/state.rho * (sig_a*c*(E_new[i][x] - aT4)\
                    + 2.0*QE) + (1.-nu)*e_star + nu*e_prev
@@ -187,8 +208,9 @@ class NewtonStateHandler(TransientSourceTerm):
     #                                 motion these come from the MUSCL hancock. It is
     #                                 assumed they have been adjusted to use the
     #                                 correct slope before this function is called
+    #  @param[in] dt           time step
     #
-    def evalImplicit(self, i, hydro_star=None, dt=None,**kwargs):
+    def evalPlanckianImplicit(self, hydro_star=None, dt=None,**kwargs):
         
         #calculate at left and right, isotropic emission source
         cx_new = self.cx_new #local reference
@@ -197,74 +219,40 @@ class NewtonStateHandler(TransientSourceTerm):
         a = GC.RAD_CONSTANT
         c = GC.SPD_OF_LGT
 
-        planckian = [0.0,0.0]
-        for edge in range(2):
+        #loop over cells
+        Q = []
+        for i in range(self.mesh.n_elems):
 
-            #get temperature for this cell, at index k
-            state = self.hydro_states[i][edge]
-            T     = state.getTemperature()
+            planckian = [0.0,0.0]
+            for edge in range(2):
 
-            #old state from hydro
-            state_star = hydro_star[i][edge]
+                #get temperature for this cell, at index k
+                state = self.hydro_states[i][edge]
+                T     = state.getTemperature()
 
-            #Update cross section just in case
-            cx_new[i][edge].updateCrossX(state.rho,T)
+                #old state from hydro
+                state_star = hydro_star[i][edge]
 
-            sig_a = cx_new[i][edge].sig_a
-            nu    = getNu(T,sig_a,state.rho,state.spec_heat,dt,self.scale)
+                #Update cross section just in case
+                cx_new[i][edge].updateCrossX(state.rho,T)
 
-            #Calculate planckian
-            emission = (1. - nu )*sig_a*a*c*T**4.
-            
-            #add in additional term from internal energy
-            planckian[edge] = emission - (
-                    nu*state.rho/(self.scale*dt)* (state.e  - state_star.e ) )
+                sig_a = cx_new[i][edge].sig_a
+                nu    = getNu(T,sig_a,state.rho,state.spec_heat,dt,self.scale)
 
-        #Store the (isotropic) sources in correct index
-        Q = np.zeros(4)
-        Q[UT.getLocalIndex("L","-")] = 0.5*planckian[0]
-        Q[UT.getLocalIndex("L","+")] = 0.5*planckian[0]
-        Q[UT.getLocalIndex("R","-")] = 0.5*planckian[1]
-        Q[UT.getLocalIndex("R","+")] = 0.5*planckian[1]
-        
+                #Calculate planckian
+                emission = (1. - nu )*sig_a*a*c*T**4.
+                
+                #add in additional term from internal energy
+                planckian[edge] = emission - (
+                        nu*state.rho/(self.scale*dt)* (state.e  - state_star.e ) )
+
+                planckian[edge] *= 0.5
+
+            #Store the (isotropic) sources in correct index
+            Q.append(tuple(planckian))
+
         return Q
 
-    #--------------------------------------------------------------------------------
-    ## Evaluate old planckian. No need to use linearization, will conserve energy
-    #
-    def evalOld(self, i, hydro_old=None, cx_old=None,**kwargs):
-
-        #calculate at left and right, isotropic emission source
-        planckian = [0.0,0.0]
-        for edge in range(2):
-
-            #get temperature for this cell, at index k
-            state = hydro_old[i][edge]
-            T     = state.getTemperature()
-
-            #Cross section
-            sig_a = cx_old[i][edge].sig_a
-
-            #Calculate planckian (with isotropic term included)
-            planckian[edge] = 0.5*sig_a*GC.RAD_CONSTANT*GC.SPD_OF_LGT*T**4.
-
-        #Store the (isotropic) sources in correct index
-        Q = np.zeros(4)
-        Q[UT.getLocalIndex("L","-")] = planckian[0]
-        Q[UT.getLocalIndex("L","+")] = planckian[0]
-        Q[UT.getLocalIndex("R","-")] = planckian[1]
-        Q[UT.getLocalIndex("R","+")] = planckian[1]
-        
-        return Q
-        raise NotImplementedError("not done")
-
-    #--------------------------------------------------------------------------------
-    ## Evaluate older term. Just call the evalOld function as in other source terms
-    #
-    def evalOlder(self, i, hydro_older=None, cx_older=None, **kwargs):
-
-        # Use old function but with older arguments.
-        return self.evalOld(i, hydro_old=hydro_older, cx_old=cx_older)
 
 #=====================================================================================
 # Miscellaneous functions that do not need to be a member function

@@ -78,8 +78,7 @@ from radUtilities import mu
 #                           'rad_only', 'rad_mat', or 'rad_hydro'.
 #                           Descriptions are above.
 #
-def computeRadiationSource(mesh, time_stepper, problem_type,
-   dt, psi_left, psi_right, planckian_term=None, **kwargs):
+def computeRadiationSource(mesh, time_stepper, problem_type, **kwargs):
 
    # create list of transient source terms
    terms = [OldIntensityTerm(mesh, time_stepper), 
@@ -94,27 +93,13 @@ def computeRadiationSource(mesh, time_stepper, problem_type,
 
    elif problem_type == 'rad_mat':
 
-       if planckian_term == None:
-          raise IOError('A Planckian term must be supplied for nonlinear problems')
-       else:
-          if not isinstance(planckian_term, TransientSourceTerm):
-             raise NotImplementedError('Planckian term must inherit'\
-               ' from TransientSourceTerm')
-          else:
-             terms.append(planckian_term)
+       terms.append(PlanckianTerm(mesh, time_stepper))
 
    elif problem_type == 'rad_hydro':
 
-       if planckian_term == None:
-          raise IOError('A Planckian term must be supplied for nonlinear problems')
-       else:
-          if not isinstance(planckian_term, TransientSourceTerm):
-             raise NotImplementedError('Planckian term must inherit'\
-               ' from TransientSourceTerm')
-          else:
-             terms.append(planckian_term,
-                          DriftTerm      (mesh, time_stepper),
-                          AnisotropicTerm(mesh, time_stepper))
+       terms.append(PlanckianTerm(mesh, time_stepper),
+                    DriftTerm(mesh, time_stepper),
+                    AnisotropicTerm(mesh, time_stepper))
 
    else:
 
@@ -125,8 +110,7 @@ def computeRadiationSource(mesh, time_stepper, problem_type,
    Q_tr = np.zeros(n)
    for term in terms:
        # compute source contribution for this term
-       Q_term = term.computeTerm(dt=dt, psi_left=psi_left, psi_right=psi_right,
-          **kwargs)
+       Q_term = term.computeTerm(**kwargs)
        # add to total
        Q_tr += Q_term
 
@@ -326,7 +310,7 @@ class StreamingTerm(TransientSourceTerm):
     #  @param[in] i         element id
     #  @param[in] rad_old   old radiation
     #
-    def evalOld(self, i, rad_old, psi_left, psi_right, **kwargs):
+    def evalOld(self, i, rad_old=None, psi_left=None, psi_right=None, **kwargs):
 
         # get local indices
         Lm = getLocalIndex("L","-") # dof L,-
@@ -376,7 +360,7 @@ class StreamingTerm(TransientSourceTerm):
     #  @param[in] i           element id
     #  @param[in] rad_older   older radiation
     #
-    def evalOlder(self, i, rad_older, psi_left, psi_right, **kwargs):
+    def evalOlder(self, i, rad_older=None, psi_left=None, psi_right=None, **kwargs):
 
         # Use old function but with older arguments.
         # carefully pass in **kwargs to avoid duplicating
@@ -581,84 +565,6 @@ class SourceTerm(TransientSourceTerm):
         # Use old function but with older arguments
         return self.evalOld(i, Q_old=Q_older)
 
-##====================================================================================
-### Derived class for computing Planckian term,
-##  \f$\frac{1}{2}\sigma_a a c T^4\f$
-##
-#class PlanckianTerm(TransientSourceTerm):
-#
-#    #-------------------------------------------------------------------------------
-#    ## Constructor
-#    #
-#    def __init__(self, *args):
-#
-#        # call base class constructor
-#        TransientSourceTerm.__init__(self, *args)
-#
-#    #--------------------------------------------------------------------------------
-#    ## Computes implicit Planckian term,
-#    #  \f$\frac{1}{2}\sigma_a^k a c (T^k)^4\f$
-#    #
-#    #  @param[in] i           element id
-#    #  @param[in] cx_prev     previous cross sections \f$\sigma^k\f$
-#    #  @param[in] hydro_prev  previous hydro states \f$\mathbf{H}^k\f$
-#    #
-#    def evalImplicit(self, i, cx_prev, hydro_prev, **kwargs):
-#
-#        # get local indices
-#        Lm = getLocalIndex("L","-") # dof L,-
-#        Lp = getLocalIndex("L","+") # dof L,+
-#        Rm = getLocalIndex("R","-") # dof R,-
-#        Rp = getLocalIndex("R","+") # dof R,+
-#
-#        # get left and right absorption cross sections
-#        cxaL = cx_prev[i][0].sig_a
-#        cxaR = cx_prev[i][1].sig_a
-#
-#        # get left and right temperatures
-#        TL = hydro_prev[i][0].T
-#        TR = hydro_prev[i][1].T
-#
-#        # get constants
-#        c = GC.SPD_OF_LGT
-#        a = GC.RAD_CONSTANT
-#
-#        # compute Planckian terms
-#        planckL = 0.5*cxaL*a*c*TL**4
-#        planckR = 0.5*cxaR*a*c*TR**4
-#        
-#        # return local Q values
-#        Q_local = np.zeros(4)
-#        Q_local[Lm] = planckL
-#        Q_local[Lp] = planckL
-#        Q_local[Rm] = planckR
-#        Q_local[Rp] = planckR
-#
-#        return Q_local
-#
-#    #--------------------------------------------------------------------------------
-#    ## Computes old Planckian term,
-#    #  \f$\frac{1}{2}\sigma_a^n a c (T^n)^4\f$
-#    #
-#    #  @param[in] i          element id
-#    #  @param[in] cx_old     old cross sections \f$\sigma^n\f$
-#    #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
-#    #
-#    def evalOld(self, i, cx_old, hydro_old, **kwargs):
-#
-#       return self.evalImplicit(i, cx_prev=cx_old, hydro_prev=hydro_old)
-#
-#    #--------------------------------------------------------------------------------
-#    ## Computes older Planckian term,
-#    #  \f$\frac{1}{2}\sigma_a^{n-1} a c (T^{n-1})^4\f$
-#    #
-#    #  @param[in] i            element id
-#    #  @param[in] cx_older     older cross sections \f$\sigma^{n-1}\f$
-#    #  @param[in] hydro_older  older hydro states \f$\mathbf{H}^{n-1}\f$
-#    #
-#    def evalOlder(self, i, cx_older, hydro_older, **kwargs):
-#
-#       return self.evalImplicit(i, cx_prev=cx_older, hydro_prev=hydro_older)
 
 #====================================================================================
 ## Derived class for computing drift term,
@@ -819,3 +725,90 @@ class AnisotropicSourceTerm(TransientSourceTerm):
        return self.evalImplicit(i, cx_prev=cx_older, hydro_prev=hydro_older,
            rad_prev=rad_older)
 
+#====================================================================================
+## Derived class for computing placnkian emission source term,
+# \f$\frac{1}{2}\sigma_a a c T^4\f$
+#
+# The evalImplicit function requires a passed in argument planckian_new. Note that we
+# cannot simply due T_new^4 because it will not be consistent with the linearization,
+# which will result in inaccurate energy conservation.
+#
+class PlanckianTerm(TransientSourceTerm):
+
+    #-------------------------------------------------------------------------------
+    ## Constructor
+    #
+    def __init__(self, *args):
+
+        # call base class constructor
+        TransientSourceTerm.__init__(self, *args)
+
+    #--------------------------------------------------------------------------------
+    ## Computes implicit Planckian term,
+    #  \f$\frac{1}{2}\sigma_a^k a c (T^k)^4\f$
+    #
+    #  @param[in] i             element id
+    #  @param[in] cx_prev       previous cross sections \f$\sigma^k\f$
+    #  @param[in] planckian_new current estimate of the planckian emission passed in
+    #                           as L,R tuple list for all elements
+    def evalImplicit(self, i, planckian_new = None,  **kwargs):
+
+        # get local indices
+        Lm = getLocalIndex("L","-") # dof L,-
+        Lp = getLocalIndex("L","+") # dof L,+
+        Rm = getLocalIndex("R","-") # dof R,-
+        Rp = getLocalIndex("R","+") # dof R,+
+
+        # compute Planckian terms, 1/2 for isotropic
+        planckL = 0.5*planckian_new[i][0]
+        planckR = 0.5*planckian_new[i][1]
+        
+        # return local Q values
+        Q_local = np.zeros(4)
+        Q_local[Lm] = planckL
+        Q_local[Lp] = planckL
+        Q_local[Rm] = planckR
+        Q_local[Rp] = planckR
+
+        return Q_local
+
+    #--------------------------------------------------------------------------------
+    ## Evaluate old planckian. No need to use linearization, will conserve energy
+    #  \f$\frac{1}{2}\sigma_a^n a c (T^n)^4\f$
+    #
+    #  @param[in] i          element id
+    #  @param[in] cx_old     old cross sections \f$\sigma^n\f$
+    #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
+    def evalOld(self, i, hydro_old=None, cx_old=None,**kwargs):
+
+        #calculate at left and right, isotropic emission source
+        planckian = [0.0,0.0]
+        for edge in range(2):
+
+            #get temperature for this cell, at index k
+            state = hydro_old[i][edge]
+            T     = state.getTemperature()
+
+            #Cross section
+            sig_a = cx_old[i][edge].sig_a
+
+            #Calculate planckian (with isotropic term included)
+            planckian[edge] = 0.5*sig_a*GC.RAD_CONSTANT*GC.SPD_OF_LGT*T**4.
+
+        #Store the (isotropic) sources in correct index
+        Q = np.zeros(4)
+        Q[UT.getLocalIndex("L","-")] = planckian[0]
+        Q[UT.getLocalIndex("L","+")] = planckian[0]
+        Q[UT.getLocalIndex("R","-")] = planckian[1]
+        Q[UT.getLocalIndex("R","+")] = planckian[1]
+        
+        return Q
+        raise NotImplementedError("not done")
+
+    #--------------------------------------------------------------------------------
+    ## Evaluate older term. Just call the evalOld function as in other source terms
+    #
+    def evalOlder(self, i, hydro_older=None, cx_older=None, **kwargs):
+
+        # Use old function but with older arguments.
+        return self.evalOld(i, hydro_old=hydro_older, cx_old=cx_older)
