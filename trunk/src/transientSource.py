@@ -396,7 +396,7 @@ class ReactionTerm(TransientSourceTerm):
     #  @param[in] rad_old   old radiation
     #  @param[in] cx_old    old cross sections
     #
-    def evalOld(self, i, rad_old, cx_old, **kwargs):
+    def evalOld(self, i, rad_old=None, cx_old=None, **kwargs):
 
         # get local indices
         Lm = getLocalIndex("L","-") # dof L,-
@@ -781,29 +781,17 @@ class PlanckianTerm(TransientSourceTerm):
     #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
     def evalOld(self, i, hydro_old=None, cx_old=None,**kwargs):
 
-        #calculate at left and right, isotropic emission source
-        planckian = [0.0,0.0]
-        for edge in range(2):
-
-            #get temperature for this cell, at index k
-            state = hydro_old[i][edge]
-            T     = state.getTemperature()
-
-            #Cross section
-            sig_a = cx_old[i][edge].sig_a
-
-            #Calculate planckian (with isotropic term included)
-            planckian[edge] = 0.5*sig_a*GC.RAD_CONSTANT*GC.SPD_OF_LGT*T**4.
+        #use function forward to external function
+        planckian = evalPlanckianOld(i, hydro_old, cx_old)
 
         #Store the (isotropic) sources in correct index
         Q = np.zeros(4)
-        Q[UT.getLocalIndex("L","-")] = planckian[0]
-        Q[UT.getLocalIndex("L","+")] = planckian[0]
-        Q[UT.getLocalIndex("R","-")] = planckian[1]
-        Q[UT.getLocalIndex("R","+")] = planckian[1]
-        
+        Q[getLocalIndex("L","-")] = 0.5*planckian[0]
+        Q[getLocalIndex("L","+")] = 0.5*planckian[0]
+        Q[getLocalIndex("R","-")] = 0.5*planckian[1]
+        Q[getLocalIndex("R","+")] = 0.5*planckian[1]
+
         return Q
-        raise NotImplementedError("not done")
 
     #--------------------------------------------------------------------------------
     ## Evaluate older term. Just call the evalOld function as in other source terms
@@ -812,3 +800,34 @@ class PlanckianTerm(TransientSourceTerm):
 
         # Use old function but with older arguments.
         return self.evalOld(i, hydro_old=hydro_older, cx_old=cx_older)
+
+
+
+
+#=====================================================================================
+## Functions used by source term builders as well as newton state handler. Thus they
+#  are external functions from which objects that need them use function forwarding
+#  to access. This limits code duplication
+#  \f$\frac{1}{2}\sigma_a^n a c (T^n)^4\f$
+#
+#  @param[in] i          element id
+#  @param[in] cx_old     old cross sections \f$\sigma^n\f$
+#  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
+def evalPlanckianOld(i, hydro_old, cx_old):
+
+    #calculate at left and right, isotropic emission source
+    planckian = [0.0,0.0]
+    for edge in range(2):
+
+        #get temperature for this cell, at index k
+        state = hydro_old[i][edge]
+        T     = state.getTemperature()
+
+        #Cross section
+        sig_a = cx_old[i][edge].sig_a
+
+        #Calculate planckian (with isotropic term included)
+        planckian[edge] = sig_a*GC.RAD_CONSTANT*GC.SPD_OF_LGT*T**4.
+
+    return tuple(planckian)
+

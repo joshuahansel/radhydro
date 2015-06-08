@@ -13,7 +13,7 @@ from utilityFunctions import computeL2RelDiff
 #  @return new hydro and rad solutions
 #
 def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
-   cx_old, hydro_old, hydro_guess, rad_old, tol=1.0e-9):
+   cx_old, hydro_old, hydro_guess, rad_old,rad_older=None,cx_older=None,hydro_older=None,tol=1.0e-9):
 
    if problem_type != 'rad_mat':
       raise NotImplementedError("Nonlinear solve function currently only solves\
@@ -38,6 +38,16 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
        # newton_handler returns a deepcopy, not a name copy
        hydro_prev = newton_handler.getNewHydroStates()
 
+       #Update the QE term TODO this should be called 
+       # inside the class. Probably need a flag set in newton handler
+       # to ensure it is called before self.QE is ever used
+       newton_handler.updateMatCouplingQE(cx_old=cx_old,
+                                          cx_older=cx_older,
+                                          hydro_old=hydro_old,
+                                          hydro_older=hydro_older,
+                                          rad_old = rad_old,
+                                          rad_older=rad_older)
+
        # get the modified scattering cross sections
        cx_mod_prev = newton_handler.getEffectiveOpacities(dt)
 
@@ -53,10 +63,13 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
            psi_left      = psi_left,
            psi_right     = psi_right,
            cx_old        = cx_old,
+           cx_older      = cx_older,
            cx_new        = cx_mod_prev,
            rad_old       = rad_old,
+           rad_older     = rad_older,
            hydro_star    = hydro_old,
-           hydro_old     = hydro_old)
+           hydro_old     = hydro_old,
+           hydro_older   = hydro_older)
 
        # update internal energy
        newton_handler.updateIntEnergy(rad_new.E, dt, hydro_star = hydro_old)
