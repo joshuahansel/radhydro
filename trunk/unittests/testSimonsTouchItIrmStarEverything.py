@@ -24,6 +24,7 @@ from copy import deepcopy
 from plotUtilities import printTupled, plotTemperatures
 from utilityFunctions import computeL2RelDiff
 from radiation import Radiation
+from radiationTimeStepper import takeRadiationStep
 from nonlinearSolve import nonlinearSolve
 from transientSource import computeRadiationSource
 
@@ -128,14 +129,11 @@ class TestTRTOnly(unittest.TestCase):
           # construct newton state handler
           newton_handler = NewtonStateHandler(mesh,
                                time_stepper=time_stepper,
-                               cx_new = cross_sects,
+                               cx_new = cx_orig,
                                hydro_guess=hydro_states)
 
           # nonlinear iteration tolerance
           tol = 1.E-9
-
-          # initialize previous hydro states
-          #hydro_prev = hydro_states
 
           #initialize copies
           hydro_older = deepcopy(hydro_old)
@@ -145,6 +143,55 @@ class TestTRTOnly(unittest.TestCase):
           k = 0
           while not converged:
 
+#               # increment iteration counter
+#               k += 1
+#
+#               # newton_handler returns a deepcopy, not a name copy
+#               hydro_prev = newton_handler.getNewHydroStates()
+#
+#               # get the modified scattering cross sections
+#               cx_mod_prev = newton_handler.getEffectiveOpacities(dt)
+#
+#               planckian_new = newton_handler.evalPlanckianImplicit(dt=dt, hydro_star= hydro_old)
+#
+#               # evaluate transient source, including linearized planckian
+#               Q_tr = computeRadiationSource(
+#                   mesh          = mesh,
+#                   time_stepper   = time_stepper,
+#                   problem_type   = 'rad_mat',
+#                   planckian_new  = planckian_new,
+#                   dt            = dt,
+#                   psi_left      = psi_left,
+#                   psi_right     = psi_right,
+#                   cx_older      = cx_orig,
+#                   cx_old        = cx_orig,
+#                   cx_new        = cx_mod_prev,
+#                   rad_old       = rad_old ,
+#                   rad_older     = rad_older,
+#                   hydro_star    = hydro_old,
+#                   hydro_older   = hydro_older,
+#                   hydro_old     = hydro_old)
+# 
+#               # solve the transient system
+#               alpha = 1./(GC.SPD_OF_LGT*dt)
+#               rad_new = radiationSolveSS(mesh, cx_mod_prev, Q_tr,
+#                  bc_psi_left = psi_left,
+#                  bc_psi_right = psi_right,
+#                  diag_add_term = alpha, implicit_scale = beta[time_stepper] )
+#
+#               # update internal energy
+#               newton_handler.updateIntEnergy(rad_new.E, dt, hydro_star = hydro_old)
+#
+#               # check nonlinear convergence
+#               hydro_new = newton_handler.getNewHydroStates()
+#               rel_diff = computeL2RelDiff(hydro_new, hydro_prev, aux_func=lambda x: x.e)
+#               print("  Iteration %d: Difference = %7.3e" % (k,rel_diff))
+#               if rel_diff < tol:
+#                  print("  Nonlinear iteration converged")
+#                  break
+#
+#               # store new to prev
+#               hydro_prev = hydro_new
               # increment iteration counter
               k += 1
 
@@ -156,7 +203,6 @@ class TestTRTOnly(unittest.TestCase):
               #evaluate new plackian term
               planckian_new = newton_handler.evalPlanckianImplicit(dt=dt, hydro_star
                       = hydro_old)
-
 
               # evaluate transient source, including linearized planckian
               Q_tr = computeRadiationSource(
@@ -182,6 +228,7 @@ class TestTRTOnly(unittest.TestCase):
                  bc_psi_left = psi_left,
                  bc_psi_right = psi_right,
                  diag_add_term = alpha, implicit_scale = beta[time_stepper] )
+
 
               #update internal energies 
               newton_handler.updateIntEnergy(rad_new.E,dt,hydro_star = hydro_old)
@@ -214,7 +261,7 @@ class TestTRTOnly(unittest.TestCase):
           rad_old   = deepcopy(rad_new)
 
           # store hydro
-          #hydro_states = hydro_new
+          hydro_states = hydro_new
 
 
       # plot solutions if run standalone

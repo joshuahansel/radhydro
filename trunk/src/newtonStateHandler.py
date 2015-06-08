@@ -3,11 +3,6 @@
 #  terms and handles temperature updates during a non-linear TRT solve.
 #  Also contains auxilary functions for evaluating TRT functions of interest
 #
-#  This class is eventually passed to the source builder as source. Although it is
-#  has additional features, it is easier to have this class directly implement the
-#  evalImplicit etc. functions than using forwarding functions and potentially having
-#  the wrong states.
-#
 #  The documentation for the linearization and solution of non-linear system 
 #  derives in detail the equations being generated here.
 #
@@ -245,8 +240,6 @@ class NewtonStateHandler(object):
                 #add in additional term from internal energy
                 planckian[edge] = emission - (
                         nu*state.rho/(self.scale*dt)* (state.e  - state_star.e ) )
-
-                planckian[edge] *= 0.5
 
             #Store the (isotropic) sources in correct index
             Q.append(tuple(planckian))

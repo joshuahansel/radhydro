@@ -41,19 +41,22 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
        # get the modified scattering cross sections
        cx_mod_prev = newton_handler.getEffectiveOpacities(dt)
 
+       planckian_new = newton_handler.evalPlanckianImplicit(dt=dt, hydro_star= hydro_old)
+
        # evaluate transient source, including linearized planckian
        rad_new = takeRadiationStep(
            mesh          = mesh,
            time_stepper  = time_stepper,
            problem_type  = problem_type,
-           planckian_term = newton_handler,
+           planckian_new = planckian_new,
            dt            = dt,
            psi_left      = psi_left,
            psi_right     = psi_right,
            cx_old        = cx_old,
            cx_new        = cx_mod_prev,
            rad_old       = rad_old,
-           hydro_star    = hydro_old)
+           hydro_star    = hydro_old,
+           hydro_old     = hydro_old)
 
        # update internal energy
        newton_handler.updateIntEnergy(rad_new.E, dt, hydro_star = hydro_old)

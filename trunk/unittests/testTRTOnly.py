@@ -90,7 +90,7 @@ class TestTRTOnly(unittest.TestCase):
       # time step size and c*dt
       dt = 0.001
       t = 0.
-      t_end = 1.0
+      t_end = 0.04
   
       # create the steady-state source
       n = 4*mesh.n_elems
@@ -149,7 +149,7 @@ class TestTRTOnly(unittest.TestCase):
 
       # plot solutions if run standalone
       if __name__ == "__main__":
-          plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new)
+          plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=True)
 
   
 # run main function from unittest module
