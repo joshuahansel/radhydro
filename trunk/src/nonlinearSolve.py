@@ -1,8 +1,6 @@
 ## @package src.nonlinearSolve
 #  Provides functions for performing nonlinear solves
 #
-#  TODO: generalize to accept all problem types
-#
 
 from copy import deepcopy
 from radiationTimeStepper import takeRadiationStep
@@ -16,14 +14,24 @@ from hydroSource import updateInternalEnergy, QEHandler
 #  @return new hydro and rad solutions
 #
 def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
-   cx_old, hydro_old, hydro_star, rad_old, rad_older=None,
-   cx_older=None, hydro_older=None, tol=1.0e-9):
+   cx_old, hydro_old, hydro_star, rad_old,
+   rad_older=None, cx_older=None, hydro_older=None, tol=1.0e-9,
+   add_ext_src=False, rho_src_func=None, u_src_func=None, E_src_func=None,
+   psim_src_func=None, psip_src_func=None):
 
    # assert that that older arguments were passed if using BDF2
    if time_stepper == 'BDF2':
       assert(rad_older   is not None)
       assert(hydro_older is not None)
       assert(cx_older    is not None)
+
+   # assert source functions provided if extraneous sources indicated
+   if add_ext_src:
+      assert rho_src_func  is not None, 'Source functions must be provided' 
+      assert u_src_func    is not None, 'Source functions must be provided'
+      assert E_src_func    is not None, 'Source functions must be provided'
+      assert psim_src_func is not None, 'Source functions must be provided'
+      assert psip_src_func is not None, 'Source functions must be provided'
 
    # initialize iterates to the old quantities
    hydro_new  = deepcopy(hydro_old)
@@ -95,7 +103,8 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
            hydro_star    = hydro_star,
            hydro_old     = hydro_old,
            hydro_older   = hydro_older,
-           QE            = QE)
+           QE            = QE,
+           add_ext_source = add_ext_src)
 
        # update internal energy
        updateInternalEnergy(

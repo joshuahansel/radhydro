@@ -79,7 +79,8 @@ from utilityFunctions import getNu
 #                           'rad_only', 'rad_mat', or 'rad_hydro'.
 #                           Descriptions are above.
 #
-def computeRadiationSource(mesh, time_stepper, problem_type, **kwargs):
+def computeRadiationSource(mesh, time_stepper, problem_type, add_ext_source=False,
+   **kwargs):
 
    # create list of transient source terms
    terms = [OldIntensityTerm(mesh, time_stepper), 
@@ -90,17 +91,26 @@ def computeRadiationSource(mesh, time_stepper, problem_type, **kwargs):
    # create list of source terms according to problem type
    if problem_type == 'rad_only':
 
+       # add extraneous source term
        terms.append(SourceTerm(mesh, time_stepper))
 
    elif problem_type == 'rad_mat':
 
        terms.append(PlanckianTerm(mesh, time_stepper))
 
+       # add extraneous source term if specified
+       if add_ext_source:
+          terms.append(Source(mesh, time_stepper))
+
    elif problem_type == 'rad_hydro':
 
        terms.append(PlanckianTerm(mesh, time_stepper),
                     DriftTerm(mesh, time_stepper),
                     AnisotropicTerm(mesh, time_stepper))
+
+       # add extraneous source term if specified
+       if add_ext_source:
+          terms.append(Source(mesh, time_stepper))
 
    else:
 

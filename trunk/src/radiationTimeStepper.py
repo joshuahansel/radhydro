@@ -19,13 +19,14 @@ beta = {"CN":0.5, "BDF2":2./3., "BE":1.}
 #                           e.g., 'CN'
 #
 def takeRadiationStep(mesh, time_stepper, problem_type, dt,
-   cx_new, psi_left, psi_right, **kwargs):
+   cx_new, psi_left, psi_right, add_ext_source=False, **kwargs):
 
    # evaluate transient source
    Q_tr = computeRadiationSource(
       mesh           = mesh,
       time_stepper   = time_stepper,
       problem_type   = problem_type,
+      add_ext_source = add_ext_source,
       dt             = dt,
       psi_left       = psi_left,
       psi_right      = psi_right,
