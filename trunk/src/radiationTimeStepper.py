@@ -36,12 +36,12 @@ def takeRadiationStep(mesh, time_stepper, problem_type, dt,
 
    # solve transient system
    rad = radiationSolveSS(
-      mesh,
-      cx_new,
-      Q_tr,
-      bc_psi_left = psi_left,
-      bc_psi_right = psi_right,
-      diag_add_term = alpha,
+      mesh           = mesh,
+      cross_x        = cx_new,
+      Q              = Q_tr,
+      bc_psi_left    = psi_left,
+      bc_psi_right   = psi_right,
+      diag_add_term  = alpha,
       implicit_scale = beta[time_stepper] )
 
    return rad

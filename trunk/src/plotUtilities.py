@@ -7,6 +7,22 @@ from numpy import array
 import globalConstants as GC
 from matplotlib import rc # for rendering tex in plots
 from radUtilities import computeScalarFlux
+from sympy import symbols, lambdify
+
+# Plots a function provided with a symbolic expression
+#
+def plotSymbolicFunction(x_points, expr_orig, substitutions, legend_label, y_label):
+
+   plt.figure()
+   expr = expr_orig.subs(substitutions)
+   func = lambdify(symbols('x'), expr, "numpy")
+   y_points = func(x_points)
+   plt.plot(x_points, y_points, label=legend_label)
+   plt.xlabel('$x$')
+   plt.ylabel(y_label)
+   plt.legend(loc='best')
+   plt.show()
+
 
 ## Function to plot angular flux.
 #

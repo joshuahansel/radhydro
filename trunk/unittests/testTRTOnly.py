@@ -6,20 +6,17 @@
 import sys
 sys.path.append('../src')
 
-from random import random
 import numpy as np
 import unittest
 
 from mesh import Mesh
 from crossXInterface import ConstantCrossSection
-from radiationSolveSS import radiationSolveSS
 from musclHancock import HydroState
-from transientSource import * 
 import globalConstants as GC
 from TRTUtilities import convSpecHeatErgsEvToJksKev, \
                          computeEquivIntensity, \
                          computeRadTemp
-from newtonStateHandler import NewtonStateHandler                         
+#from newtonStateHandler import NewtonStateHandler                         
 from radUtilities import *
 from copy import deepcopy
 from plotUtilities import printTupled, plotTemperatures
@@ -67,19 +64,19 @@ class TestTRTOnly(unittest.TestCase):
 
       #Construct hydro states and cross sections
       cross_sects = []
-      hydro_states = []
+      hydro = []
       for i in range(mesh.n_elems):  
       
          if mesh.getElement(i).x_cent < 0.5:
             cross_sects.append( (ConstantCrossSection(sig_s1, sig_s1+sig_a1),
                                  ConstantCrossSection(sig_s1, sig_s1+sig_a1)) )
-            hydro_states.append( (
+            hydro.append( (
                HydroState(u=0,rho=rho1,int_energy=e1,gamma=gam,spec_heat=c_v1),
                HydroState(u=0,rho=rho1,int_energy=e1,gamma=gam,spec_heat=c_v1)) )
          else:
             cross_sects.append((ConstantCrossSection(sig_s2, sig_a2+sig_s2),
                                 ConstantCrossSection(sig_s2, sig_a2+sig_s2)))
-            hydro_states.append( (
+            hydro.append( (
                HydroState(u=0,rho=rho2,int_energy=e2,spec_heat=c_v2, gamma=gam), 
                HydroState(u=0,rho=rho2,spec_heat=c_v2,int_energy=e2, gamma=gam)) )
 
@@ -102,7 +99,7 @@ class TestTRTOnly(unittest.TestCase):
       rad_old   = Radiation([psi_right for i in range(n)]) #equilibrium solution
 
       # initiialize  hydro old
-      hydro_old = deepcopy(hydro_states)
+      hydro_old = deepcopy(hydro)
 
       # time-stepper
       time_stepper = "BE"
@@ -136,7 +133,7 @@ class TestTRTOnly(unittest.TestCase):
              psi_right    = psi_right,
              cx_old       = cross_sects,
              hydro_old    = hydro_old,
-             hydro_guess  = hydro_states,
+             hydro_star   = hydro_old,
              rad_old      = rad_old)
                   
           # print the difference between old and new solutions

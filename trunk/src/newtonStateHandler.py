@@ -33,7 +33,7 @@ class NewtonStateHandler(object):
     # @param[in] rad_guess      a guess for E and F at n+1. This is use to estimate
     #                           terms resulting from the co-moving frame flux
     #
-    def __init__(self,mesh,cx_new=None,hydro_guess=None,time_stepper='BE',problem_type='mat_trt'):
+    def __init__(self,mesh,cx_new,hydro_guess,time_stepper='BE',problem_type='mat_trt'):
 
 
         #store scale coefficient from time discretization for computing nu
@@ -94,12 +94,12 @@ class NewtonStateHandler(object):
                 rho   = state.rho
 
                 #Make sure cross section is updated with temperature
-                cx_orig[i][x].updateCrossX(rho=rho, temp=T) #if constant this call does nothing
+                cx_orig[i][x].updateCrossX(state) #if constant this call does nothing
 
                 #Calculate the effective scattering cross sections
                 sig_a_og = cx_orig[i][x].sig_a
                 sig_s_og = cx_orig[i][x].sig_s
-                nu    = getNu(T,sig_a_og,state.rho,state.spec_heat,dt,self.scale)
+                nu    = getNu(T,sig_a_og,rho,state.spec_heat,dt,self.scale)
             
                 #Create new FIXED cross section instance. No need to add scale term
                 #here because it will be included in scattering source term
@@ -109,6 +109,12 @@ class NewtonStateHandler(object):
             cx_effective.append(tuple(cx_i))
 
         return cx_effective
+
+    #--------------------------------------------------------------------------------
+    ## Compute source for the velocity update
+    #
+    def computeMomentumSource():
+       return
 
     #--------------------------------------------------------------------------------
     ## Function to evaluate \f$Q_E^k\f$ in documentation. This is essentially everything
@@ -126,21 +132,23 @@ class NewtonStateHandler(object):
     #                                 This is needed by all time steppers if coupled
     #                                 to hydro
     #
-    def updateMatCouplingQE(self, rad_new = None, rad_old = None, rad_older = None, 
-                             cx_old = None, cx_older = None, 
-                             hydro_old = None, hydro_older = None):
+    def updateMatCouplingQE(self, rad_prev, rad_old, rad_older, 
+                             cx_prev, cx_old, cx_older,
+                             hydro_old, hydro_older):
 
+        # NOTE: I've commented out the following because I made rad_prev mandatory
         #Check problem type and ensure rad_new was passed in
-        if rad_new == None:
-            if self.problem_type == "rad_hydro":
-                raise IOError("You must pass in an estimate of the new radiation to updateMatCouplingQE")
+        #if rad_new == None:
+        #    if self.problem_type == "rad_hydro":
+        #        raise IOError("You must pass in an estimate of the new radiation to updateMatCouplingQE")
             
 
         #Use external class to evaluate QE for you
         src_handler = QEHandler(self.mesh, self.time_stepper)
-        self.QE_elems = src_handler.computeTerm(rad_new=rad_new,
+        self.QE_elems = src_handler.computeTerm(rad_prev=rad_prev,
                                           rad_old=rad_old,
                                           rad_older=rad_older,
+                                          cx_prev=cx_prev,
                                           cx_old=cx_old,
                                           cx_older=cx_older,
                                           hydro_old=hydro_old,
@@ -151,31 +159,22 @@ class NewtonStateHandler(object):
     #------------------------------------------------------------------------------------
     ## Computes new velocities \f$u^{k+1}\f$
     #
-    def updateVelocity():
+    def updateVelocity(hydro_star, dt):
 
-       # TODO: do this
-       # If it is TRT only, then just set u to zero every time
-       # else compute using functions defined at bottom of this file 
-       #
-       # TODO: here we will update self.QE
        return
 
     #--------------------------------------------------------------------------------
     ## Computes a new internal energy \f$e^{k+1}\f$ in each of the states, based on a passed in
     #  solution for E^{k+1}
     #
-    def updateIntEnergy(self, E_new, dt, hydro_star=None):
-
+    def updateIntEnergy(self, rad_new, dt, hydro_star):
+ 
         # constants
         a = GC.RAD_CONSTANT
         c = GC.SPD_OF_LGT
 
-        #Evaluate knwon srt term QE for all the elements
-        #QE_elems = evalMatCouplingQE(
-
         #loop over cells
         for i in xrange(len(self.hydro_states)):
-
 
             #loop over left and right value
             for x in range(2):
@@ -202,7 +201,7 @@ class NewtonStateHandler(object):
                 QE = self.QE_elems[i][x]
 
                 #Calculate a new internal energy and store it (TODO: NEEDS KIN. ERG. TERM INCLUDED)
-                e_new = (1.-nu)*scale*dt/state.rho * (sig_a*c*(E_new[i][x] - aT4)\
+                e_new = (1.-nu)*scale*dt/state.rho * (sig_a*c*(rad_new.E[i][x] - aT4)\
                    + QE/self.scale) + (1.-nu)*e_star + nu*e_prev
                 self.hydro_states[i][x].e = e_new
 
@@ -219,7 +218,7 @@ class NewtonStateHandler(object):
     #                                 correct slope before this function is called
     #  @param[in] dt           time step
     #
-    def evalPlanckianImplicit(self, hydro_star=None, dt=None,**kwargs):
+    def evalPlanckianImplicit(self, hydro_star, dt, **kwargs):
 
         #calculate at left and right, isotropic emission source
         cx_new = self.cx_new #local reference
@@ -243,7 +242,7 @@ class NewtonStateHandler(object):
                 state_star = hydro_star[i][edge]
 
                 #Update cross section just in case
-                cx_new[i][edge].updateCrossX(state.rho,T)
+                cx_new[i][edge].updateCrossX(state)
 
                 sig_a = cx_new[i][edge].sig_a
                 nu    = getNu(T,sig_a,state.rho,state.spec_heat,dt,self.scale)
@@ -292,36 +291,38 @@ def getNu(T, sig_a, rho, spec_heat, dt, scale):
     return num/(1. + num)
 
 #-----------------------------------------------------------------------------------
-## Computes estimated energy gain due to the coupling to radiation energy field
-#  based on estimated co-moving frame flux. 
+## Computes estimated energy gain \f$Q\f$ due to the coupling to radiation energy field
+#  based on estimated co-moving frame flux. This is used in the energy update
+#  equation in the computation of \f$Q_E\f$:
 #  \f[
-#      Q = \sigma_t \frac{u}{c} \left(F - \frac{4}{3}E u\right)
+#      Q = \sigma_t \frac{u}{c} \left(\mathcal{F} - \frac{4}{3}\mathcal{E} u\right)
 #  \f]
-def evalEnergyExchange():
+#
+def evalEnergyExchange(i, rad, hydro, cx):
 
-    #TODO just multiply moment exchange by u
-    raise NotImplementedError("Have not implemented eval energy exchange term yet")
+    momentum_exchange_term = evalMomentumExchange(i, rad, hydro, cx)
+    return [momentum_exchange_term[x]*hydro[i][x].u for x in xrange(2)]
 
 
 #------------------------------------------------------------------------------------
-## Compute estimated momentum exchange due to the coupling to radiation
-# This will be used the in the velocity update equation
+## Compute estimated momentum exchange \f$Q\f$ due to the coupling to radiation,
+#  used the in the velocity update equation:
 #  \f[
 #      Q = \frac{\sigma_t}{c} \left(F - \frac{4}{3}E u\right)
 #  \f]
-def evalMomentumExchange():
+#
+def evalMomentumExchange(i, rad, hydro, cx):
 
-    #TODO evaluate for a single element
-    raise NotImplementedError("Have not implemented eval momentum exchange term yet")
+    return [cx[i][x].sig_t/GC.SPD_OF_LGT*(rad.F[i][x]
+       - 4.0/3.0*rad.E[i][x]*hydro[i][x].u) for x in xrange(2)]
 
 
 #------------------------------------------------------------------------------------
-# \f$\frac{1}{2}\sigma_a^k\phi
-def evalEnergyAbsorption(i, rad_old, cx_old):
+## Computes \f$\sigma_a\phi\f$
+#
+def evalEnergyAbsorption(i, rad, cx):
 
-    #Evaluate reaction rate at left and right values
-    phi = rad_old.phi
-    return [phi[i][x]*cx_old[i][x].sig_a for x in xrange(2)]
+    return [rad.phi[i][x]*cx[i][x].sig_a for x in xrange(2)]
 
 #=====================================================================================
 ## Class to simplify evaluating the Q_E^k term in linearization. It is similar to 
@@ -366,29 +367,29 @@ class QEHandler(TransientSourceTerm):
     #  no planckian 
     #
     #  @param[in] i             element id
-    def evalImplicit(self, i, rad_new=None, cx_orig=None, **kwargs):
+    #
+    def evalImplicit(self, i, rad_prev, hydro_prev, cx_prev, **kwargs):
 
-        #TODO add in evaluation of energy exchange term for rad hydro
-        return np.array([0.0,0.0])
+        Q_local = np.array(evalEnergyExchange(i, rad=rad_prev, hydro=hydro_prev,
+           cx=cx_prev))
+        return Q_local
 
     #--------------------------------------------------------------------------------
     ## Evaluate old term. This includes Planckian, as well as energy exchange term
     # 
-    def evalOld(self, i, rad_old = None, hydro_old=None, cx_old=None,**kwargs):
+    def evalOld(self, i, rad_old, hydro_old, cx_old, **kwargs):
 
-        #use function forward to external function
-        #TODO add in evaluation of energy exchange term for rad hydro
-        Q_local = np.array(evalEnergyAbsorption(i,rad_old,cx_old)) - np.array(evalPlanckianOld(i, hydro_old,cx_old))
-
+        Q_local = np.array(evalEnergyAbsorption(i, rad=rad_old, cx=cx_old))\
+           - np.array(evalPlanckianOld(i, hydro=hydro_old, cx=cx_old))\
+           + np.array(evalEnergyExchange(i, rad=rad_old, hydro=hydro_old, cx=cx_old))
         return Q_local
 
     #--------------------------------------------------------------------------------
     ## Evaluate older term. Just call the evalOld function as in other source terms
     #
-    def evalOlder(self, i, rad_older = None, hydro_older=None, cx_older=None, **kwargs):
+    def evalOlder(self, i, rad_older, hydro_older, cx_older, **kwargs):
 
-        # Use old function but with older arguments.
-        #TODO add in evaluation of energy exchange term for rad hydro
-        return self.evalOld(i, rad_old=rad_older, hydro_old=hydro_older, cx_old=cx_older)
+        return self.evalOld(i, rad_old=rad_older, hydro_old=hydro_older,
+           cx_old=cx_older)
 
 

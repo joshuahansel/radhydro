@@ -3,6 +3,8 @@
 
 from math import log, sqrt
 import numpy as np
+import globalConstants as GC
+from crossXInterface import CrossXInterface
 
 #-----------------------------------------------------------------------------------
 ## Converge f_L and f_R to f_a and f_x
@@ -158,3 +160,76 @@ def computeL2RelDiff(values1, values2, aux_func=None):
    norm_diff = np.linalg.norm(avg1 - avg2)
 
    return norm_diff/(max(norm1,norm2))
+
+## Computes effective scattering fraction \f$\nu^k\f$ in linearization
+#
+#  @param[in] T      Previous iteration temperature \f$T^k\f$
+#  @param[in] sig_a  Previous iteration absorption cross section \f$\sigma_a^k\f$
+#  @param[in] rho    New density \f$\rho^{n+1}\f$
+#  @param[in] spec_heat   Previous iteration specific heat \f$c_v^k\f$
+#  @param[in] dt          time step size \f$\Delta t\f$
+#  @param[in] scale       coefficient corresponding to time-stepper \f$\gamma\f$
+#
+def getNu(T, sig_a, rho, spec_heat, dt, scale):
+
+    ## compute \f$c\Delta t\f$
+    c_dt = GC.SPD_OF_LGT*dt
+
+    ## compute \f$\beta^k\f$
+    beta = 4.*GC.RAD_CONSTANT * T * T * T / spec_heat
+
+    # Evaluate numerator
+    num  = scale*sig_a*c_dt*beta/rho
+
+    return num/(1. + num)
+
+#--------------------------------------------------------------------------------
+## Computes effective cross sections for linearization. 
+#  
+#  The effective re-emission source is included as a scattering cross section
+#  given by
+#  \f[
+#      \tilde{\sigma_s} = \sigma_s + \nu\sigma_a(T^k),
+#  \f]
+#  where \f$\nu\f$ is the effective scattering ratio, which depends on the
+#  temporal discretization.
+#
+#
+def computeEffectiveOpacities(time_stepper, dt, cx_prev, hydro_prev):
+
+    # get coefficient corresponding to time-stepper
+    scales = {"CN":0.5, "BE":1., "BDF2":2./3.}
+    scale = scales[time_stepper]
+
+    cx_effective = []
+
+    # loop over cells:
+    for i in range(len(cx_prev)):
+
+        cx_i = []
+
+        # loop over edges
+        for x in range(2): 
+
+            # get previous state quantities
+            state = hydro_prev[i][x]
+            T         = state.getTemperature()
+            rho       = state.rho
+            spec_heat = state.spec_heat
+
+            # get cross sections
+            sig_a = cx_prev[i][x].sig_a
+            sig_s = cx_prev[i][x].sig_s
+
+            # compute effective scattering ratio
+            nu = getNu(T, sig_a, rho, spec_heat, dt, scale)
+        
+            #Create new FIXED cross section instance. No need to add scale term
+            #here because it will be included in scattering source term
+            sig_s_effective = nu*sig_a + sig_s
+            cx_i.append( CrossXInterface(sig_s_effective, sig_s+sig_a) )
+
+        cx_effective.append(tuple(cx_i))
+
+    return cx_effective
+

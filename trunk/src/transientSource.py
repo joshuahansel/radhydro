@@ -51,6 +51,7 @@ from mesh import Mesh
 import globalConstants as GC
 from utilityFunctions import getIndex, getLocalIndex
 from radUtilities import mu
+from utilityFunctions import getNu
 
 ## Computes the radiation transient source
 #
@@ -310,7 +311,7 @@ class StreamingTerm(TransientSourceTerm):
     #  @param[in] i         element id
     #  @param[in] rad_old   old radiation
     #
-    def evalOld(self, i, rad_old=None, psi_left=None, psi_right=None, **kwargs):
+    def evalOld(self, i, rad_old, psi_left, psi_right, **kwargs):
 
         # get local indices
         Lm = getLocalIndex("L","-") # dof L,-
@@ -360,7 +361,7 @@ class StreamingTerm(TransientSourceTerm):
     #  @param[in] i           element id
     #  @param[in] rad_older   older radiation
     #
-    def evalOlder(self, i, rad_older=None, psi_left=None, psi_right=None, **kwargs):
+    def evalOlder(self, i, rad_older, psi_left, psi_right, **kwargs):
 
         # Use old function but with older arguments.
         # carefully pass in **kwargs to avoid duplicating
@@ -396,7 +397,7 @@ class ReactionTerm(TransientSourceTerm):
     #  @param[in] rad_old   old radiation
     #  @param[in] cx_old    old cross sections
     #
-    def evalOld(self, i, rad_old=None, cx_old=None, **kwargs):
+    def evalOld(self, i, rad_old, cx_old, **kwargs):
 
         # get local indices
         Lm = getLocalIndex("L","-") # dof L,-
@@ -745,13 +746,56 @@ class PlanckianTerm(TransientSourceTerm):
 
     #--------------------------------------------------------------------------------
     ## Computes implicit Planckian term,
-    #  \f$\frac{1}{2}\sigma_a^k a c (T^k)^4\f$
+    #  \f$\frac{1}{2}\sigma_a^k a c (T^{k+1})^4\f$,
+    #  which is linearized.
+    #
+    #  Note that the term
+    #  \f$\frac{1}{2}\sigma_a^k c \nu^k \mathcal{E}^{k+1}\f$
+    #  is not evaluated here but is instead evaluated as part of the scattering
+    #  term \f$\sigma_s^k\phi^{k+1}\f$ by making the substitution
+    #  \[
+    #     \sigma_s^k\phi^{k+1} \rightarrow \tilde{\sigma_s^k}\phi^{k+1},
+    #  \]
+    #  where \f$\tilde{\sigma_s^k} \equiv \sigma_s^k + \nu^k\sigma_a^k\f$.
+    #   
     #
     #  @param[in] i             element id
     #  @param[in] cx_prev       previous cross sections \f$\sigma^k\f$
-    #  @param[in] planckian_new current estimate of the planckian emission passed in
-    #                           as L,R tuple list for all elements
-    def evalImplicit(self, i, planckian_new = None,  **kwargs):
+    #
+    def evalImplicit(self, i, dt, cx_prev, hydro_prev, hydro_star, QE, **kwargs):
+
+        # get coefficient corresponding to time-stepper
+        scales = {"CN":0.5, "BE":1., "BDF2":2./3.}
+        scale = scales[self.time_stepper]
+      
+        # get constants
+        a = GC.RAD_CONSTANT
+        c = GC.SPD_OF_LGT
+
+        # compute Planckian term for each edge on element
+        planckian = [0.0,0.0]
+        for edge in range(2):
+
+            # get previous quantities
+            state_prev = hydro_prev[i][edge]
+            T         = state_prev.getTemperature()
+            e_prev    = state_prev.e
+            rho       = state_prev.rho
+            spec_heat = state_prev.spec_heat
+            sig_a     = cx_prev[i][edge].sig_a
+
+            # get star quantities
+            state_star = hydro_star[i][edge]
+            e_star = state_star.e
+
+            nu = getNu(T, sig_a, rho, spec_heat, dt, scale)
+            QE_elem = QE[i][edge]
+
+            # compute Planckian
+            emission = (1.0 - nu)*sig_a*a*c*T**4
+            planckian[edge] = emission \
+                -  ( nu*rho/(scale*dt)*(e_prev - e_star) ) \
+                + nu*QE_elem/scale
 
         # get local indices
         Lm = getLocalIndex("L","-") # dof L,-
@@ -759,16 +803,12 @@ class PlanckianTerm(TransientSourceTerm):
         Rm = getLocalIndex("R","-") # dof R,-
         Rp = getLocalIndex("R","+") # dof R,+
 
-        # compute Planckian terms, 1/2 for isotropic
-        planckL = 0.5*planckian_new[i][0]
-        planckR = 0.5*planckian_new[i][1]
-        
         # return local Q values
         Q_local = np.zeros(4)
-        Q_local[Lm] = planckL
-        Q_local[Lp] = planckL
-        Q_local[Rm] = planckR
-        Q_local[Rp] = planckR
+        Q_local[Lm] = 0.5*planckian[0]
+        Q_local[Lp] = 0.5*planckian[0]
+        Q_local[Rm] = 0.5*planckian[1]
+        Q_local[Rp] = 0.5*planckian[1]
 
         return Q_local
 
@@ -779,7 +819,8 @@ class PlanckianTerm(TransientSourceTerm):
     #  @param[in] i          element id
     #  @param[in] cx_old     old cross sections \f$\sigma^n\f$
     #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
-    def evalOld(self, i, hydro_old=None, cx_old=None,**kwargs):
+    #
+    def evalOld(self, i, hydro_old, cx_old,**kwargs):
 
         #use function forward to external function
         planckian = evalPlanckianOld(i, hydro_old, cx_old)
@@ -796,23 +837,24 @@ class PlanckianTerm(TransientSourceTerm):
     #--------------------------------------------------------------------------------
     ## Evaluate older term. Just call the evalOld function as in other source terms
     #
-    def evalOlder(self, i, hydro_older=None, cx_older=None, **kwargs):
+    def evalOlder(self, i, hydro_older, cx_older, **kwargs):
 
         # Use old function but with older arguments.
         return self.evalOld(i, hydro_old=hydro_older, cx_old=cx_older)
 
 
-
-
 #=====================================================================================
-## Functions used by source term builders as well as newton state handler. Thus they
+# Functions used by source term builders as well as newton state handler. Thus they
 #  are external functions from which objects that need them use function forwarding
-#  to access. This limits code duplication
-#  \f$\frac{1}{2}\sigma_a^n a c (T^n)^4\f$
+#  to access.
+
+
+## Evaluates a Planckian term \f$\sigma_a^n a c (T^n)^4\f$.
 #
 #  @param[in] i          element id
 #  @param[in] cx_old     old cross sections \f$\sigma^n\f$
 #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
+#
 def evalPlanckianOld(i, hydro_old, cx_old):
 
     #calculate at left and right, isotropic emission source

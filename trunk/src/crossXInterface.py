@@ -58,7 +58,7 @@ class CrossXInterface(object):
     #  @param[in] args   arbitrary number of arguments
     #  @param[in] kwargs arbitrary number of keyword arguments
     #----------------------------------------------------------------------------
-    def updateCrossX(self,*args,**kwargs):
+    def updateCrossX(self,hydro):
 
         return
 
@@ -75,7 +75,7 @@ class ConstantCrossSection(CrossXInterface):
 
     ## Update function for cross sections
     #
-    def updateCrossX(self,*args,**kwargs):
+    def updateCrossX(self,hydro):
     
         # cross sections are constant; no update is required
         return
@@ -108,12 +108,10 @@ class InvCubedCrossX(CrossXInterface):
     #  @param[in] self          self
     #  @param[in] sigma_s_micro \f$\sigma_s^{'''}\f$, the micro scattering
     #             cross section, equal to \f$\frac{\sigma_s}{\rho}\f$
-    #  @param[in] rho           \f$\rho\f$, density
-    #  @param[in] temp          \f$T\f$, temperature
     #  @param[in] scale_coeff   \f$c_a\f$, the scale coefficient in
     #             \f$\sigma_a = c_a \rho T^{-3}\f$
     #----------------------------------------------------------------------------
-    def __init__(self, sigma_s_micro, rho, temp, scale_coeff=1.0):
+    def __init__(self, sigma_s_micro, hydro, scale_coeff=1.0):
 
         ## scale coefficient \f$c_a\f$ in \f$\sigma_a = c_a \rho T^{-3}\f$
         self.coeff = scale_coeff    
@@ -125,19 +123,29 @@ class InvCubedCrossX(CrossXInterface):
         CrossXInterface.__init__(self,sig_s,0.0)
 
         # update sigma_a and sigma_t
-        self.updateCrossX(rho,temp)
+        self.updateCrossX(hydro)
 
     #----------------------------------------------------------------------------
     ## Update function for cross sections.
     #
     #  @param[in] self self
-    #  @param[in] rho  \f$\rho\f$, density
-    #  @param[in] temp \f$T\f$, temperature
+    #
     #----------------------------------------------------------------------------
-    def updateCrossX(self,rho,temp):
+    def updateCrossX(self,hydro):
     
-        # set the base class values
+        # get temperature and density
+        temp = hydro.getTemperature()
+        rho  = hydro.rho
         self.sig_a = rho*self.coeff/(temp**3.) 
         self.sig_s = self.sig_s
         self.sig_t = self.sig_s + self.sig_a
+
+#===================================================================================
+## Updates all cross sections
+#
+def updateCrossSections(cx,hydro):
+
+   for i in range(len(hydro)):
+      for edge in [0,1]:
+         cx[i][edge].updateCrossX(hydro[i][edge])
 

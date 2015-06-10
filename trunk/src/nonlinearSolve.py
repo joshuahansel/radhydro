@@ -4,26 +4,32 @@
 #  TODO: generalize to accept all problem types
 #
 
-from newtonStateHandler import NewtonStateHandler
+from copy import deepcopy
 from radiationTimeStepper import takeRadiationStep
-from utilityFunctions import computeL2RelDiff
+from utilityFunctions import computeL2RelDiff, computeEffectiveOpacities
+from crossXInterface import updateCrossSections
+from hydroSource import updateInternalEnergy, QEHandler
+   
 
 ## Performs nonlinear solve
 #
 #  @return new hydro and rad solutions
 #
 def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
-   cx_old, hydro_old, hydro_guess, rad_old,rad_older=None,cx_older=None,hydro_older=None,tol=1.0e-9):
+   cx_old, hydro_old, hydro_star, rad_old, rad_older=None,
+   cx_older=None, hydro_older=None, tol=1.0e-9):
 
-   if problem_type != 'rad_mat':
-      raise NotImplementedError("Nonlinear solve function currently only solves\
-         thermal radiative transfer problems")
+   # assert that that older arguments were passed if using BDF2
+   if time_stepper == 'BDF2':
+      assert(rad_older   is not None)
+      assert(hydro_older is not None)
+      assert(cx_older    is not None)
 
-   # construct newton state handler
-   newton_handler = NewtonStateHandler(mesh,
-                       time_stepper=time_stepper,
-                       cx_new=cx_old,
-                       hydro_guess=hydro_guess)
+   # initialize iterates to the old quantities
+   hydro_new  = deepcopy(hydro_old)
+   hydro_prev = deepcopy(hydro_old)
+   rad_prev   = deepcopy(rad_old)
+   cx_prev    = deepcopy(cx_old)
 
    # initialize convergence flag and iteration counter
    converged = False
@@ -35,55 +41,85 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
        # increment iteration counter
        k += 1
 
-       # newton_handler returns a deepcopy, not a name copy
-       hydro_prev = newton_handler.getNewHydroStates()
+       # update velocity
+       if problem_type == 'rad_hydro':
+          updateVelocity(mesh         = mesh,
+                         time_stepper = time_stepper,
+                         dt           = dt, 
+                         cx_older     = cx_older,
+                         cx_old       = cx_old,
+                         cx_prev      = cx_prev,
+                         rad_older    = rad_older,
+                         rad_old      = rad_old,
+                         rad_prev     = rad_prev,
+                         hydro_older  = hydro_older,
+                         hydro_old    = hydro_old,
+                         hydro_star   = hydro_star,
+                         hydro_prev   = hydro_prev,
+                         hydro_new    = hydro_new)
 
-       #Update the QE term TODO this should be called 
-       # inside the class. Probably need a flag set in newton handler
-       # to ensure it is called before self.QE is ever used
-       newton_handler.updateMatCouplingQE(cx_old=cx_old,
-                                          cx_older=cx_older,
-                                          hydro_old=hydro_old,
-                                          hydro_older=hydro_older,
-                                          rad_old = rad_old,
-                                          rad_older=rad_older)
+       # compute QE
+       src_handler = QEHandler(mesh, time_stepper)
+       QE = src_handler.computeTerm(cx_prev     = cx_prev,
+                                    cx_old      = cx_old,
+                                    cx_older    = cx_older,
+                                    rad_prev    = rad_prev,
+                                    rad_old     = rad_old,
+                                    rad_older   = rad_older,
+                                    hydro_prev  = hydro_prev,
+                                    hydro_old   = hydro_old,
+                                    hydro_older = hydro_older)
 
        # get the modified scattering cross sections
-       cx_mod_prev = newton_handler.getEffectiveOpacities(dt)
-
-       planckian_new = newton_handler.evalPlanckianImplicit(dt=dt, hydro_star= hydro_old)
+       cx_mod_prev = computeEffectiveOpacities(
+          time_stepper = time_stepper,
+          dt           = dt,
+          cx_prev      = cx_prev,
+          hydro_prev   = hydro_prev)
 
        # evaluate transient source, including linearized planckian
        rad_new = takeRadiationStep(
            mesh          = mesh,
            time_stepper  = time_stepper,
            problem_type  = problem_type,
-           planckian_new = planckian_new,
            dt            = dt,
            psi_left      = psi_left,
            psi_right     = psi_right,
+           cx_new        = cx_mod_prev,
+           cx_prev       = cx_prev,
            cx_old        = cx_old,
            cx_older      = cx_older,
-           cx_new        = cx_mod_prev,
            rad_old       = rad_old,
            rad_older     = rad_older,
-           hydro_star    = hydro_old,
+           hydro_prev    = hydro_prev,
+           hydro_star    = hydro_star,
            hydro_old     = hydro_old,
-           hydro_older   = hydro_older)
+           hydro_older   = hydro_older,
+           QE            = QE)
 
        # update internal energy
-       newton_handler.updateIntEnergy(rad_new.E, dt, hydro_star = hydro_old)
+       updateInternalEnergy(
+          time_stepper = time_stepper,
+          dt           = dt,
+          QE           = QE,
+          cx_prev      = cx_prev,
+          rad_new      = rad_new,
+          hydro_new    = hydro_new,
+          hydro_prev   = hydro_prev,
+          hydro_star   = hydro_star)
 
        # check nonlinear convergence
-       hydro_new = newton_handler.getNewHydroStates()
+       # TODO: compute diff of rad solution as well to add to convergence criteria
        rel_diff = computeL2RelDiff(hydro_new, hydro_prev, aux_func=lambda x: x.e)
        print("  Iteration %d: Difference = %7.3e" % (k,rel_diff))
        if rel_diff < tol:
           print("  Nonlinear iteration converged")
           break
 
-       # store new to prev
-       hydro_prev = hydro_new
+       # reset previous iteration quantities if needed
+       hydro_prev = deepcopy(hydro_new)
+       rad_prev   = deepcopy(rad_new)
+       updateCrossSections(cx_prev,hydro_new)      
 
    # return new hydro and radiation
    return hydro_new, rad_new

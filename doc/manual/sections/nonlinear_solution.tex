@@ -174,9 +174,9 @@ with
 \end{equation}
 The energy update equation becomes
 \begin{multline}
-    e^{k+1} = \alpha\frac{(1-\nu_{\alpha})}{\rho}\left[\sigma_a^k c\Delta t \left(c\E
-    - ac(T^k)^4\right) + \frac{\Delta t}{\alpha} Q_E^k \right] \\ - (1 -
-    \nu_{\alpha})\left(\frac{1}{2}[(u^{k+1})^2 - (u^{k})^2]\right)
+    e^{k+1} = \alpha\frac{(1-\nu_{\alpha})\Delta t}{\rho}\left[\sigma_a^k c \left(
+    \E^{k+1} - a(T^k)^4\right) + \frac{Q_E^k}{\alpha} \right] \\ - (1 -
+    \nu_{\alpha})\left(\frac{1}{2}[(u^{k+1})^2 - (u^*)^2]\right)
     +(1-\nu_\alpha)e^*+ \nu_{\alpha}e^k
 \end{multline}
 
