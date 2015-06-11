@@ -1,5 +1,5 @@
 ## @package testCreateMMSSourceFunctions
-#  Contains unittest class to test the MMS source creator function
+#  Contains unittest class to test the MMS source creator functions
 
 # add source directory to module search path
 import sys
@@ -16,16 +16,16 @@ import unittest
 
 # local packages
 from plotUtilities import plotFunction
-from createMMSSourceFunctions import createMMSSourceFunctions
+from createMMSSourceFunctions import createMMSSourceFunctionsRadHydro
 
-## Derived unittest class to test the MMS source creator function
+## Derived unittest class to test the MMS source creator functions
 #
 class TestCreateMMSSourceFunctions(unittest.TestCase):
    def setUp(self):
       pass
    def tearDown(self):
       pass
-   def test_CreateMMSSourceFunctions(self):
+   def test_CreateMMSSourceFunctionsRadHydro(self):
       
       # declare symbolic variables
       x, t, alpha = symbols('x t alpha')
@@ -47,7 +47,7 @@ class TestCreateMMSSourceFunctions(unittest.TestCase):
       sigma_a_value = 1.0
       
       # create MMS source functions
-      rho_f, u_f, E_f, psim_f, psip_f = createMMSSourceFunctions(
+      rho_f, u_f, E_f, psim_f, psip_f = createMMSSourceFunctionsRadHydro(
          rho           = rho,
          u             = u,
          E             = E,

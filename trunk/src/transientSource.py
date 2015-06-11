@@ -100,7 +100,7 @@ def computeRadiationSource(mesh, time_stepper, problem_type, add_ext_source=Fals
 
        # add extraneous source term if specified
        if add_ext_source:
-          terms.append(Source(mesh, time_stepper))
+          terms.append(SourceTerm(mesh, time_stepper))
 
    elif problem_type == 'rad_hydro':
 
@@ -110,7 +110,7 @@ def computeRadiationSource(mesh, time_stepper, problem_type, add_ext_source=Fals
 
        # add extraneous source term if specified
        if add_ext_source:
-          terms.append(Source(mesh, time_stepper))
+          terms.append(SourceTerm(mesh, time_stepper))
 
    else:
 
@@ -882,4 +882,43 @@ def evalPlanckianOld(i, hydro_old, cx_old):
         planckian[edge] = sig_a*GC.RAD_CONSTANT*GC.SPD_OF_LGT*T**4.
 
     return tuple(planckian)
+
+
+## Computes an extraneous source vector for radiation.
+#
+#  The input function handles are functions of (x,t), and the output source
+#  is given in the ordering of radiation dofs.
+#
+#  @param[in] psim_src  function handle for the \f$\Psi^-\f$ extraneous source
+#  @param[in] psip_src  function handle for the \f$\Psi^+\f$ extraneous source
+#  @param[in] mesh      mesh
+#  @param[in] t         time at which to evaluate the function
+#
+#  @return source vector, in the ordering of radiation dofs
+#
+def computeRadiationExtraneousSource(psim_src, psip_src, mesh, t):
+
+   # initialize source vector
+   Q = np.zeros(mesh.n_elems*4)
+
+   # loop over elements
+   for i in range(mesh.n_elems):
+
+      # get left and right x points on element
+      xL = mesh.getElement(i).xl
+      xR = mesh.getElement(i).xr
+
+      # get global indices
+      iLm = getIndex(i,"L","-") # dof i,L,-
+      iLp = getIndex(i,"L","+") # dof i,L,+
+      iRm = getIndex(i,"R","-") # dof i,R,-
+      iRp = getIndex(i,"R","+") # dof i,R,+
+
+      # compute source
+      Q[iLm] = psim_src(xL, t)
+      Q[iLp] = psip_src(xL, t)
+      Q[iRm] = psim_src(xR, t)
+      Q[iRp] = psip_src(xR, t)
+
+   return Q
 

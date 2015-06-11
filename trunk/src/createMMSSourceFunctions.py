@@ -1,5 +1,5 @@
 ## @package src.createMMSSourceFunctions
-#  Contains function to create MMS source functions
+#  Contains functions to create MMS source functions
 
 # The following import allows for printing LaTeX formulas in display.
 # This script is best run with the ipython QTConsole, which can be
@@ -16,6 +16,73 @@ import numpy as np # numpy
 import globalConstants as GC
 
 ## Creates MMS source functions of (x,t) for each of the governing equations
+#  in the radiation-only system.
+#
+#  Currently, the provided expressions are assumed to contain only one
+#  parameter, called 'alpha'.
+#
+#  @return (psim_f, psip_f), where 'quantity_f' denotes
+#     a function handle for the source function of (x,t) to the equation
+#     corresponding to 'quantity'
+#
+def createMMSSourceFunctionsRadOnly(psim, psip,
+   sigma_s_value, sigma_a_value, alpha_value=0.0, display_equations=False):
+   
+   # declare symbolic variables
+   x, t, alpha = symbols('x t alpha')
+   sigs, sigt, c = symbols('sigma_s sigma_t c')
+   
+   # compute other radiation quantities
+   phi = psim + psip
+   
+   # temporal derivatives
+   dpsimdt  = diff(psim,t)
+   dpsipdt  = diff(psip,t)
+   
+   # spatial derivatives
+   dpsimdx  = diff(psim,x)
+   dpsipdx  = diff(psip,x)
+   
+   # compute sources
+   Qpsim = dpsimdt/c - dpsimdx/sqrt(3) + sigt*psim - sigs/2*phi
+   Qpsip = dpsipdt/c + dpsipdx/sqrt(3) + sigt*psip - sigs/2*phi
+   
+   # display equations
+   if display_equations:
+
+      # initialize printing to use prettiest format available (e.g., LaTeX, Unicode)
+      init_printing()
+
+      # create an equation and then display it
+      eq = Eq(symbols('Psi^-'),psim)
+      display(eq)
+      eq = Eq(symbols('Psi^+'),psip)
+      display(eq)
+      eq = Eq(symbols('Q_-'),Qpsim)
+      display(eq)
+      eq = Eq(symbols('Q_+'),Qpsip)
+      display(eq)
+   
+   # substitute for all symbols except x and t
+   substitutions = dict()
+   substitutions['alpha'] = alpha_value
+   substitutions['c']     = GC.SPD_OF_LGT
+   substitutions['sigma_s'] = sigma_s_value
+   sigma_t_value = sigma_s_value + sigma_a_value
+   substitutions['sigma_t'] = sigma_t_value
+
+   # make substitutions
+   Qpsim_sub = Qpsim.subs(substitutions)
+   Qpsip_sub = Qpsip.subs(substitutions)
+   
+   # create MMS source functions
+   psim_f = lambdify((symbols('x'),symbols('t')), Qpsim_sub, "numpy")
+   psip_f = lambdify((symbols('x'),symbols('t')), Qpsip_sub, "numpy")
+
+   return (psim_f, psip_f)
+
+
+## Creates MMS source functions of (x,t) for each of the governing equations
 #  in the full RH system.
 #
 #  Currently, the provided expressions are assumed to contain only one
@@ -25,7 +92,7 @@ import globalConstants as GC
 #     a function handle for the source function of (x,t) to the equation
 #     corresponding to 'quantity'
 #
-def createMMSSourceFunctions(rho, u, E, psim, psip,
+def createMMSSourceFunctionsRadHydro(rho, u, E, psim, psip,
    sigma_s_value, sigma_a_value, gamma_value, cv_value,
    alpha_value, display_equations=False):
    

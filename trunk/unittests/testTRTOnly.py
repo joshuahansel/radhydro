@@ -15,7 +15,7 @@ from TRTUtilities import convSpecHeatErgsEvToJksKev, \
                          computeRadTemp
 from plotUtilities import plotTemperatures
 from radiation import Radiation
-from transient import runRadiationMaterialTransient
+from transient import runNonlinearTransient
 
 ## Unit test class for a 2-material TRT problem, using BE time discretization.
 #
@@ -84,10 +84,11 @@ class TestTRTOnly(unittest.TestCase):
       time_stepper = "BE"
 
       # if run standalone, then be verbose
-      verbose = True
+      if __name__ == '__main__':
+         verbose = True
 
       # run transient
-      rad_new, hydro_new = runRadiationMaterialTransient(
+      rad_new, hydro_new = runNonlinearTransient(
          mesh         = mesh,
          time_stepper = time_stepper,
          problem_type = 'rad_mat',

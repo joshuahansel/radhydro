@@ -10,6 +10,7 @@ from copy import deepcopy
 import unittest
 import operator # for adding tuples to each other elementwise
 from math import pi, sin, cos
+import sympy as sym
 
 from mesh import Mesh
 from crossXInterface import ConstantCrossSection
@@ -21,6 +22,8 @@ import globalConstants as GC
 from integrationUtilities import computeL1ErrorLD
 from utilityFunctions import computeConvergenceRates, printConvergenceTable
 from radiation import Radiation
+from createMMSSourceFunctions import createMMSSourceFunctionsRadOnly
+from transient import runLinearTransient
 
 ## Derived unittest class to run a transient radiation MMS problem
 #
@@ -45,37 +48,27 @@ class TestRadSpatialConvergence(unittest.TestCase):
 
    def runConvergenceTest(self,time_stepper):
 
+      # transient options
+      dt_start = 0.01 # time step size
+      t_start  = 0.0  # start time
+      t_end    = 0.1  # end time
+   
       # constant cross section values
       sig_s = 1.0
       sig_a = 2.0
 
-      # transient options
-      dt_start = 0.01 # time step size
-      t_start  = 0.0  # begin time
-      t_end    = 0.1  # end time
-   
       # boundary fluxes
       psi_left  = 0.0
       psi_right = 0.0
    
-      # speed of light
-      c = GC.SPD_OF_LGT
-
-      # pointwise source for minus direction
-      def QMMSm(t,x,sigs,sigt):
-         return 2.0/c*sin(pi*(1.0-x)) - 2.0*mu["-"]*pi*t*cos(pi*(1.0-x))\
-            + 2.0*sigt*t*sin(pi*(1.0-x)) - sigs/2.0*(t*sin(pi*x)\
-            + 2.0*t*sin(pi*(1.0-x)))
-
-      # pointwise source for plus direction
-      def QMMSp(t,x,sigs,sigt):
-         return 1.0/c*sin(pi*x) + mu["+"]*pi*t*cos(pi*x)\
-            + sigt*t*sin(pi*x) - sigs/2.0*(t*sin(pi*x)\
-            + 2.0*t*sin(pi*(1.0-x)))
-
       # compute exact scalar flux solution
       def exactScalarFlux(x):
          return t_end*sin(pi*x) + 2.0*t_end*sin(pi*(1.0-x))
+
+      # create symbolic expressions for MMS solution
+      x, t, alpha = sym.symbols('x t alpha')
+      psim = 2*t*sym.sin(sym.pi*(1-x))
+      psip = t*sym.sin(sym.pi*x)
 
       # number of elements
       n_elems = 10
@@ -95,7 +88,7 @@ class TestRadSpatialConvergence(unittest.TestCase):
       for cycle in xrange(n_cycles):
 
          if __name__ == '__main__':
-            print("Cycle %d of %d: n_elems = %d" % (cycle+1,n_cycles,n_elems))
+            print("\nCycle %d of %d: n_elems = %d" % (cycle+1,n_cycles,n_elems))
 
          # create uniform mesh
          mesh = Mesh(n_elems, 1.0)
@@ -107,87 +100,42 @@ class TestRadSpatialConvergence(unittest.TestCase):
                          ConstantCrossSection(sig_s, sig_s+sig_a))
                          for i in xrange(mesh.n_elems)]
   
-         # MMS source
-         def QMMS(t,mesh,cx):
-            Q = np.zeros(mesh.n_elems * 4)
-            for i in xrange(mesh.n_elems):
-               # get global indices
-               iLm = getIndex(i,"L","-") # dof i,L,-
-               iLp = getIndex(i,"L","+") # dof i,L,+
-               iRm = getIndex(i,"R","-") # dof i,R,-
-               iRp = getIndex(i,"R","+") # dof i,R,+
-  
-               # get x points of element
-               el = mesh.getElement(i)
-               xL = el.xl
-               xR = el.xr
-  
-               # get cross section values
-               sigsL = cx[i][0].sig_s
-               sigtL = cx[i][0].sig_t
-               sigsR = cx[i][1].sig_s
-               sigtR = cx[i][1].sig_t
-  
-               # compute source
-               Q[iLm] = QMMSm(t,xL,sigsL,sigtL)
-               Q[iLp] = QMMSp(t,xL,sigsL,sigtL)
-               Q[iRm] = QMMSm(t,xR,sigsR,sigtR)
-               Q[iRp] = QMMSp(t,xR,sigsR,sigtR)
-  
-            return Q
-  
-         # zero IC
-         n_dofs = mesh.n_elems * 4
-         rad_old   = Radiation(np.zeros(n_dofs))
-         rad_older = deepcopy(rad_old)
-         Q_older   = QMMS(0.0,mesh,cross_sects)
-         Q_old     = QMMS(0.0,mesh,cross_sects)
-     
-         # transient loop
-         dt = dt_start
-         t = t_start
-         transient_incomplete = True # boolean flag signalling end of transient
-         while transient_incomplete:
-     
-            # adjust time step size if necessary
-            if t + dt >= t_end:
-               dt = t_end - t
-               t = t_end
-               transient_incomplete = False # signal end of transient
-            else:
-               t += dt
- 
-            # compute new source
-            Q_new = QMMS(t,mesh,cross_sects)
- 
-            # take radiation step
-            rad = takeRadiationStep(
-               mesh          = mesh,
-               time_stepper  = time_stepper,
-               problem_type  = 'rad_only',
-               dt            = dt,
-               psi_left      = psi_left,
-               psi_right     = psi_right,
-               cx_older      = cross_sects,
-               cx_old        = cross_sects,
-               cx_new        = cross_sects,
-               rad_older     = rad_older,
-               rad_old       = rad_old,
-               Q_older       = Q_older,
-               Q_old         = Q_old,
-               Q_new         = Q_new)
- 
-            # save oldest solutions
-            rad_older = deepcopy(rad_old)
-            Q_older   = deepcopy(Q_old)
+         # create source function handles
+         psim_src, psip_src = createMMSSourceFunctionsRadOnly(
+            psim = psim,
+            psip = psip,
+            sigma_s_value = sig_s,
+            sigma_a_value = sig_a)
     
-            # save old solutions
-            rad_old = deepcopy(rad)
-            Q_old   = deepcopy(Q_new)
+         # IC
+         n_dofs = mesh.n_elems * 4
+         rad_IC = Radiation(np.zeros(n_dofs))
+  
+         # if run standalone, then be verbose
+         if __name__ == '__main__':
+            verbose = True
+         else:
+            verbose = False
+  
+         # run transient
+         rad_new = runLinearTransient(
+            mesh         = mesh,
+            time_stepper = time_stepper,
+            dt_option    = 'constant',
+            dt_constant  = dt_start,
+            t_start      = t_start,
+            t_end        = t_end,
+            psi_left     = psi_left,
+            psi_right    = psi_right,
+            cross_sects  = cross_sects,
+            rad_IC       = rad_IC,
+            psim_src     = psim_src,
+            psip_src     = psip_src,
+            verbose      = verbose)
 
          # compute L1 error
          L1_error.append(\
-            computeL1ErrorLD(mesh, rad.phi, exactScalarFlux))
+            computeL1ErrorLD(mesh, rad_new.phi, exactScalarFlux))
 
          # double number of elements for next cycle
          n_elems *= 2

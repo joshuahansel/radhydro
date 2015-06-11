@@ -10,16 +10,16 @@ from pylab import *
 import numpy as np
 from copy import deepcopy
 import unittest
-import operator # for adding tuples to each other elementwise
+import operator
 
 from mesh import Mesh
 from crossXInterface import ConstantCrossSection
 from radiationSolveSS import radiationSolveSS
-from plotUtilities import plotAngularFlux, plotScalarFlux, computeScalarFlux
+from plotUtilities import plotScalarFlux, computeScalarFlux
 from utilityFunctions import computeDiscreteL1Norm
-from radiationTimeStepper import takeRadiationStep
-from radUtilities import extractAngularFluxes
 from radiation import Radiation
+from transient import runLinearTransient
+from transientSource import computeRadiationExtraneousSource
 
 ## Derived unittest class to run a transient radiation problem
 #
@@ -42,7 +42,7 @@ class TestRadTransient(unittest.TestCase):
    
        # transient options
        dt = 0.1              # time step size
-       t  = 0.0              # begin time
+       t_start  = 0.0        # start time
        t_end = 10.0          # end time
        time_stepper = 'BDF2' # time-stepper
    
@@ -50,74 +50,57 @@ class TestRadTransient(unittest.TestCase):
        psi_left  = 2.5
        psi_right = 2.2
    
-       # create the steady-state source
-       n_dofs = mesh.n_elems * 4
-       Q = 2.4 * np.ones(n_dofs)
+       # create source function handles
+       psim_src = lambda x,t: 2.4
+       psip_src = lambda x,t: 2.4
    
+       # IC
+       n_dofs = mesh.n_elems * 4
+       rad_IC = Radiation(np.zeros(n_dofs))
+
+       # if run standalone, then be verbose
+       if __name__ == '__main__':
+          verbose = True
+       else:
+          verbose = False
+
+       # run transient
+       rad_new = runLinearTransient(
+          mesh         = mesh,
+          time_stepper = time_stepper,
+          dt_option    = 'constant',
+          dt_constant  = dt,
+          t_start      = t_start,
+          t_end        = t_end,
+          psi_left     = psi_left,
+          psi_right    = psi_right,
+          cross_sects  = cross_sects,
+          rad_IC       = rad_IC,
+          psim_src     = psim_src,
+          psip_src     = psip_src,
+          verbose      = verbose)
+
        # compute the steady-state solution
+       Q = computeRadiationExtraneousSource(psim_src, psip_src, mesh, t_start)
        rad_ss = radiationSolveSS(mesh, cross_sects, Q,
           bc_psi_right = psi_right, bc_psi_left = psi_left)
-   
-       # run transient solution from arbitrary IC, such as zero
-       rad_old   = Radiation(np.zeros(n_dofs))
-       rad_older = deepcopy(rad_old)
-   
-       # transient loop
-       transient_incomplete = True # boolean flag signalling end of transient
-       while transient_incomplete:
-   
-           # adjust time step size if necessary
-           if t + dt >= t_end:
-              dt = t_end - t
-              t = t_end
-              transient_incomplete = False # signal end of transient
-           else:
-              t += dt
 
-           # take radiation step
-           rad = takeRadiationStep(
-              mesh          = mesh,
-              time_stepper  = time_stepper,
-              problem_type  = 'rad_only',
-              dt            = dt,
-              psi_left      = psi_left,
-              psi_right     = psi_right,
-              cx_older      = cross_sects,
-              cx_old        = cross_sects,
-              cx_new        = cross_sects,
-              rad_older     = rad_older,
-              rad_old       = rad_old,
-              Q_older       = Q,
-              Q_old         = Q,
-              Q_new         = Q)
+       # compute difference of transient and steady-state scalar flux
+       phi_diff = [tuple(map(operator.sub, rad_new.phi[i], rad_ss.phi[i]))
+          for i in xrange(len(rad_new.phi))]
 
-           # compute difference of transient and steady-state scalar flux
-           phi_diff = [tuple(map(operator.sub, rad.phi[i], rad_ss.phi[i]))
-              for i in xrange(len(rad.phi))]
-
-           # compute discrete L1 norm of difference
-           L1_norm_diff = computeDiscreteL1Norm(phi_diff)
-
-           # print each time step if run standalone
-           if __name__ == '__main__':
-              print("t = %0.3f -> %0.3f: L1 norm of diff with steady-state: %7.3e"
-                 % (t-dt,t,L1_norm_diff))
+       # compute discrete L1 norm of difference
+       L1_norm_diff = computeDiscreteL1Norm(phi_diff)
    
-           # save oldest solutions
-           rad_older = deepcopy(rad_old)
-   
-           # save old solutions
-           rad_old = deepcopy(rad)
-   
-       # plot solutions if run standalone
-       if __name__ == "__main__":
-          plotScalarFlux(mesh, rad.psim, rad.psip, scalar_flux_exact=rad_ss.phi,
-             exact_data_continuous=False)
-
-       # assert that solution has converged
+       # assert that solution has converged to steady-state
        n_decimal_places = 12
        self.assertAlmostEqual(L1_norm_diff,0.0,n_decimal_places)
        
+       # plot solutions if run standalone
+       if __name__ == "__main__":
+          plotScalarFlux(mesh, rad_new.psim, rad_new.psip,
+             scalar_flux_exact=rad_ss.phi, exact_data_continuous=False)
+
     
 # run main function from unittest module
 if __name__ == '__main__':
