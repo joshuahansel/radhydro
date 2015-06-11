@@ -1,5 +1,3 @@
-## @package src.musclHancock
-#  Solves a hydrodynamics problem using MUSCL-Hancock.
 
 import numpy as np
 import matplotlib as plt
@@ -7,6 +5,7 @@ from pylab import *
 from math import sqrt, isinf
 from copy import deepcopy
 from utilityFunctions import *
+from hydroState import HydroState
 
 #--------------------------------------------------------------------------------------
 ## Main is my original hydro code, we shouldnt need this anymore but it is here
@@ -42,7 +41,6 @@ def main():
     #pick initial time step
     c_init = max(sqrt(gamma*p_left/rho_left)+u_left,sqrt(gamma*p_right/rho_right)+u_right)
     dt_init = cfl*dx/c_init
-    print "new dt: ", dt_init
 
     #Can create lists of things in multiple ways
     spat_coors = []
@@ -53,16 +51,13 @@ def main():
     x = np.array(spat_coors) #Similar to a matlab vector
     x_cent = [0.5*(x[i]+x[i+1]) for i in range(len(x)-1)] #for plotting cell centers
 
- 
-    i_left = int(0.3*n)
-    i_right = int(0.7*n)
-
-    #made up spec heat
+    n_left = int(0.3*n)
+    n_right = int(0.7*n)
 
     #Create cell centered variables
-    states = [HydroState(u=u_left,p=p_left,gamma=gamma,rho=rho_left) for i in range(i_left)]
+    states = [HydroState(u=u_left,p=p_left,gamma=gamma,rho=rho_left) for i in range(n_left)]
     states = states + [HydroState(u=u_right,p=p_right,gamma=gamma,rho=rho_right) for i in
-            range(i_right)]
+            range(n_right)]
 
     #-----------------------------------------------------------------
     # Solve Problem
@@ -81,6 +76,8 @@ def main():
             dt = t_end - t + 0.000000001
             t += dt
 
+        print("t = %f -> %f" % (t-dt,t))
+
         #Create vectors of conserved quantities
         rho = [s.rho for s in states]
         mom = [s.rho*s.u for s in states]
@@ -91,7 +88,6 @@ def main():
         mom_l, mom_r = slopeReconstruction(mom)
         erg_l, erg_r = slopeReconstruction(erg)
 
-
         #Compute left and right states
         states_l = [deepcopy(i) for i in states] #initialize 
         states_r = [deepcopy(i) for i in states]
@@ -99,15 +95,6 @@ def main():
         for i in range(len(rho_l)):
             states_l[i].updateState(rho_l[i], mom_l[i], erg_l[i])
             states_r[i].updateState(rho_r[i], mom_r[i], erg_r[i])
-
-
-        #plotHydroSolutions(x,states=states_l)
-        #plotHydroSolutions(x,states=states_r)
-    
-        #Check for positivity in all vars
- #       if not all( [(i > 0.0) for i in rho_l+rho_r+erg_l+erg_r] ):
-  #          raise ValueError("Have a negative conserved quantity")
-
 
         #Initialize predicited conserved quantities
         rho_l_p = [0.0 for i in range(len(rho_l))]
@@ -137,15 +124,12 @@ def main():
             states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
             states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
 
-    #    plotHydroSolutions(x,states=states_l)
-    #    plotHydroSolutions(x,states=states_r)
-
         #Solve for fluxes and values at faces
         rho_F = [0.0 for i in range(n+1)]
         mom_F = [0.0 for i in range(n+1)]
         erg_F = [0.0 for i in range(n+1)]
 
-        #Solve Rieman problem at each face, for each quantity
+        #Solve Riemann problem at each face, for each quantity
         #For boundaries it is easily defined
         rho_F[0] = rhoFlux(states_l[0])
         mom_F[0] = momFlux(states_l[0])
@@ -164,12 +148,6 @@ def main():
             erg_F[i+1] = riem_solver(erg_r_p[i], erg_l_p[i+1], states_r[i],
                     states_l[i+1], ergFlux)
 
-
-   #     plt.figure(3)
-  #      plt.plot(x,rho_F)
- #       plt.plot(x,mom_F)
-#        plt.plot(x,erg_F)
-
         #Advance conserved values based on edge fluxes
         for i in range(len(rho)):
 
@@ -177,34 +155,17 @@ def main():
             mom[i] = advCons(mom[i],dx,dt,mom_F[i],mom_F[i+1])
             erg[i] = advCons(erg[i],dx,dt,erg_F[i],erg_F[i+1])
 
-
-        #figure(3)
-      #  plt.plot(x_cent,rho)
-      #  plt.plot(x_cent ,mom)
-      #  plt.plot(x_cent,erg)
-      #  plt.show(block=False)
-
         #Advance primitive variables
         for i in range(len(states)):
             states[i].updateState(rho[i],mom[i],erg[i])
-        
-        #plotHydroSolutions(x,states=states)
         
         #Compute a new time step
         c = [sqrt(i.p*i.gamma/i.rho)+abs(i.u) for i in states]
         dt_vals = [cfl*(x[i+1]-x[i])/c[i] for i in range(len(c))]
         dt = min(dt_vals)
-        print "new dt:", dt
 
-    #plot solution, reads latex commands
-    #plotHydroSolutions(x,states=states) 
-    """ keyword arguments are cool.  After the
-        standard "pass by reference" variables, the keyword varialbes can be specified in
-        any order.  It is a little confusing since the keywords can have the same name as
-        the vars, i.e., u (keyword) = u(variable)"""
-    
-    for i in states:
-        print i
+    # plot solution
+    plotHydroSolutions(x,states)
 
 
 #-------------------------------------------------------------------------------------
@@ -220,7 +181,6 @@ def main():
 # @param[in] dt             time step size for this hydro solve. To predict values at 
 #                           0.5 dt, pass in 1.0 dt
 # 
-#
 # @return
 #       -#  predicted states at averages
 #       -#  predicted states slopes
@@ -237,10 +197,10 @@ def hydroPredictor(mesh, states_old_a, dt):
     for i in mesh.elements:
         spat_coors += [i.xl]
     spat_coors += [mesh.elements[-1].xr]
-    x = np.array(spat_coors) #Similar to a matlab vector
+    x = np.array(spat_coors)
     x_cent = [0.5*(x[i]+x[i+1]) for i in range(len(x)-1)] #for plotting cell centers
 
-    #Intialize cell centered variables as passed in
+    #Initialize cell centered variables as passed in
     states = states_old_a
 
     #-----------------------------------------------------------------
@@ -292,7 +252,6 @@ def hydroPredictor(mesh, states_old_a, dt):
     for i in range(len(rho_l)):
         states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
         states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
-
 
     #Return states at left and right values
     return states_l, states_r
@@ -387,81 +346,6 @@ def hydroCorrector(mesh, states_old_a, states_l, states_r, dt):
 
     return states_a
 
-
-## Class for defining the hydrodynamic state at a point
-class HydroState:
-    'This class handles all states at a point'
-
-    #Constructor, all function definitions must be passed 'self', but when called
-    #outside of the class you do not need to pass it in, it is implied.
-    #define that it is a member function
-
-    #constructor
-    def __init__(self, u=None ,rho=None,p=None,gamma=None, 
-            spec_heat=None, int_energy=None, temp=None):
-
-        self.u = u
-        self.rho = rho
-        self.gamma = gamma
-        self.spec_heat = spec_heat #this is assumed constant
-
-        #Make sure p, T, and e are all consistent and not duplicate
-        if p != None:
-                
-            self.p = p
-            self.e = getIntErg(gamma,rho,p)
-
-        elif int_energy != None or temp != None: #check if T or e specificied
-
-            if temp != None:
-                self.e = computeIntEnergy(temp) #update int erg to be consistent with temp
-            else:
-                self.e = int_energy
-             
-            self.p = getPressure(gamma,rho,self.e)
-
-        else:
-            raise IOError("You must specify pressure, energy, or temperature in"
-                " HydroState constructor")
-
-    #solve for new values based on a consState variables
-    def updateState(self, rho, mom, erg):
-
-        self.rho = rho
-        self.u = mom/rho
-        self.e = erg/rho - 0.5*self.u*self.u
-        self.p = getPressure(self.gamma, self.rho, self.e) 
-
-    def getSoundSpeed(self):
-
-        return sqrt(self.gamma*self.p/self.rho)
-
-    #-------------------------------------------------------------------------------
-    # Get temperature based on internal energy and constant specific heat
-    #
-    def getTemperature(self):
-
-        return self.e/(self.spec_heat)
-
-    #-------------------------------------------------------------------------------
-    # Update internal energy based on temperature
-    def computeIntEnergy(self,temp):
-
-        return temp*(self.rho*self.spec_heat)
-
-    #Defin fancy function to compare values
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
-        else:
-            return False
-
-    #Define a function for printing out the class
-    def __str__(self):
-
-        return "u: %.4f rho: %.4f e: %.4f p: %.4f" % (self.u, self.rho, self.e, self.p)
-
-
 #------------------------------------------------------------------------------------
 # Define some functions for evaluating fluxes for different state variables
 #------------------------------------------------------------------------------------
@@ -544,24 +428,6 @@ def advCons(val, dx, dt, f_left, f_right):
     return val + dt/dx*(f_left - f_right)
     
 
-
-#Can also have non class functions like usual
-#------------------------------------------------------------------------------------
-def getVolume(x1,x2):
-
-    return (x2-x1)*1.
-
-#------------------------------------------------------------------------------------
-def getPressure(gamma,rho,e):
-
-    return (gamma-1.)*rho*e
-
-#------------------------------------------------------------------------------------
-def getIntErg(gamma, rho, p):
-
-    return p/((gamma-1.)*rho)
-
-
 # ----------------------------------------------------------------------------------
 def minMod(a,b):
 
@@ -571,7 +437,6 @@ def minMod(a,b):
         return max(a,b)
     else:
         return 0.
-
 
 #------------------------------------------------------------------------------------
 def HLLSolver(U_l, U_r, L, R, flux): #quantity of interest U, state to the left, state to right
@@ -675,25 +540,6 @@ def plotHydroSolutions(x,states=None): #Default func values is trivial
 
     plt.figure(figsize=(11,8.5))
 
-    #get the exact values
-#    f = open('exact_results.txt', 'r')
-#    x_e = []
-#    u_e = []
-#    p_e = []
-#    rho_e = []
-#    e_e = []
-#    for line in f:
-#        if len(line.split())==1:
-#            t = line.split()
-#        else:
-#            data = line.split()
-#            x_e.append(float(data[0]))
-#            u_e.append(float(data[1]))
-#            p_e.append(float(data[2]))
-#            rho_e.append(float(data[4]))
-#            e_e.append(float(data[3]))
-
-
     if states==None:
         raise ValueError("Need to pass in states")
     else:
@@ -710,7 +556,7 @@ def plotHydroSolutions(x,states=None): #Default func values is trivial
     #get edge values
     x_cent = x
     if len(x) == len(states)+1:
-        x_cent = [0.5*(x[i]+x[i+1]) for i in xrange(len(x))]
+        x_cent = [0.5*(x[i]+x[i+1]) for i in xrange(len(states))]
     
     if u != None:
         plotSingle(x_cent,u,"$u$")
@@ -758,11 +604,7 @@ def plot2D(x,y,x_ex,y_ex,ylabl):
 plot2D.fig_num=0
 
 
-#--------------------------------------------------------------------------------------
-"""Python does not require a main, but by doing it this way, all functions will be
-processed before it calls main, so no functions are undefined"""
+#-------------------------------------------------------------------------------------
 if __name__ == "__main__":
     main()
-
-
 

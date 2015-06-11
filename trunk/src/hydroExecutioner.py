@@ -5,11 +5,15 @@ import numpy as np
 from numpy import       array
 from mesh import        Mesh
 from math import        sqrt
-from musclHancock import   hydroPredictor, main, HydroState, \
+from hydroState import HydroState
+from musclHancock import hydroPredictor, \
                         plotHydroSolutions, hydroCorrector
 
 ## Main executioner for Hydro solve. Currently in a testing state.
 def solveHydroProblem():
+
+    # option to print solution
+    print_solution = False
 
     #-------------------------------------------------------------------------------
     # Construct initial hydro states, probably create an initializer class
@@ -60,7 +64,6 @@ def solveHydroProblem():
         c = [sqrt(i.p*i.gamma/i.rho)+abs(i.u) for i in states_a]
         dt_vals = [cfl*(mesh.elements[i].dx)/c[i] for i in range(len(c))]
         dt = min(dt_vals)
-        print "new dt:", dt
 
         t += dt
         #shorten last step to be exact
@@ -69,6 +72,8 @@ def solveHydroProblem():
             dt = t_end - t + 0.000000001
             t += dt
 
+        print("t = %f -> %f" % (t-dt,t))
+
         #Solve predictor step
         states_l, states_r = hydroPredictor(mesh, states_a, dt)
 
@@ -76,12 +81,16 @@ def solveHydroProblem():
         states_a = hydroCorrector(mesh, states_a, states_l, states_r, dt)
 
 
+    # plot solution
     spat_coors = [i.x_cent for i in mesh.elements]
     plotHydroSolutions(spat_coors,states=states_a)
-    for i in states_a:
-        print i
-    
 
+    # print solution
+    if print_solution:
+       for state in states_a:
+          print state
+    
 
 if __name__ == "__main__":
     solveHydroProblem()
+

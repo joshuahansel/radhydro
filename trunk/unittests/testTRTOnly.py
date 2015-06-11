@@ -9,7 +9,7 @@ import unittest
 
 from mesh import Mesh
 from crossXInterface import ConstantCrossSection
-from musclHancock import HydroState
+from hydroState import HydroState
 from TRTUtilities import convSpecHeatErgsEvToJksKev, \
                          computeEquivIntensity, \
                          computeRadTemp
