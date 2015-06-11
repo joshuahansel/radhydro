@@ -3,41 +3,78 @@
 %===============================================================================
 \subsection{Pseudocode}
 %-------------------------------------------------------------------------------
-Let $\H$ denote the hydrodynamic unknowns, i.e., $(\rho_i,u_i,E_i)\,\forall i$,
-let $\R$ denote the radiation unknowns, i.e., $(\Psi_{i,L}^\pm,\Psi_{i,R}^\pm)
-\,\forall i$, and let $\U$ denote both hydrodynamic and radiation
-unknowns. The pseudocode is listed below:
+Let $\H$ denote the hydrodynamic unknowns, stored as cell average quantities,
+i.e., $\fn{\rho_i,(\rho u)_i,E_i}\,\forall i$,
+and let $\R$ denote the radiation unknowns, stored as edge quantities,
+i.e., $(\Psi_{i,L}^\pm,\Psi_{i,R}^\pm)\,\forall i$.
+In the radiation solve and energy
+source update equation, hydrodynamics quantities must be evaluated at the
+edges as given in Equation \eqref{eq:hydro_edge}.
+The hydrodynamic slope quantities defined by Equation \eqref{eq:slopes} are denoted
+by $\Delta$, representing $(\Delta_i)\,\forall i$.
+The notation $[\H^n,\Delta^m]$ denotes that the edge hydrodynamic quantities
+at state $n$ are computed using the averages at state $n$ and slopes at
+state $m$, e.g., for an arbitrary hydrodynamics quantity $H$,
+$H\iR^n = H_i^n + \half\Delta_i^m$.
+
+The pseudocode is listed below:
+%   $\H^* =$ MUSCLHancockRiemann($\H^n,\H^{n+\fourth},\half\dt$)
+%   ts = 'CN'
+%   $\U^k = \U^n$
+%   for each iteration $k$
+%      $u^{k+1} =$ hydroMomentumSourceUpdate($\U^{n+\fourth},\H^*,\U^k,\fourth\dt$,ts)
+%      $\Psi^{k+1} =$ radiationSolve($\U^{n+\fourth},\U^k,\fourth\dt$,ts)
+%      $E^{k+1} =$ hydroEnergySourceUpdate($\U^{n+\fourth},\H^*,\U^k,\fourth\dt$,ts)
+%      converged = checkConvergence($\U^k,\U^{k+1}$)
+%      if converged, then exit
+%   end iteration loop
+%   $\U^{n+\half} = \U^{k+1}$
 
 \begin{lstlisting}[mathescape,columns=fullflexible,
    basicstyle=\fontfamily{lmvtt}\selectfont]
-$\U^0 =$ computeInitialConditions()
-for each time step $n$
+$\R^0, \H^0 =$ computeInitialConditions()
+for each time step $n=0:n_{max}$
 
-   $\dt =$ computeTimeStepSize($\U^n$)
+   $\dt =$ computeTimeStepSize($\H^n$)
 
-   $\H^* =$ MUSCLHancockEvolve($\H^n,\half\dt$)
+   $\H^*,\Delta^n =$ MUSCLHancockEvolve($\H^n,\half\dt$)
    ts = 'CN'
-   $\U^k = \U^n$
+   $\R^k = \R^n$
+   $\H^k = \H^n$
    for each iteration $k$
-      $u^{k+1} =$ hydroMomentumSourceUpdate($\U^n,\H^*,\U^k,\fourth\dt$,ts)
-      $\Psi^{k+1} =$ radiationSolve($\U^n,\U^k,\fourth\dt$,ts)
-      $E^{k+1} =$ hydroEnergySourceUpdate($\U^n,\H^*,\U^k,\fourth\dt$,ts)
-      converged = checkConvergence($\U^k,\U^{k+1}$)
+      $(u_i^{k+1}) =$ momentumUpdate($\R^n,\R^k,\H^n,\H^*,\H^k,\fourth\dt$,ts)
+      $(\Psi\iL^{k+1},\Psi\iR^{k+1}) =$ radiationSolve(
+         $\R^n,\R^k,[\H^n,\Delta^n],[\H^k,\Delta^n],[\H^{k+1},\Delta^n],\fourth\dt$,ts)
+      $(E\iL^{k+1},E\iR^{k+1}) =$ energyUpdate(
+         $\R^n,\R^k,[\H^n,\Delta^n],[\H^*,\Delta^n],[\H^k,\Delta^n],\fourth\dt$,ts)
+      $(E_i^{k+1}) = \half(E\iL^{k+1}) + \half(E\iR^{k+1})$
+      converged = checkConvergence($\R^k,\R^{k+1},\H^k,\H^{k+1}$)
       if converged, then exit
+      $\R^k = \R^{k+1}$
+      $\H^k = \H^{k+1}$
    end iteration loop
-   $\U^{n+\fourth} = \U^{k+1}$
+   $\R^{n+\fourth} = \R^{k+1}$
+   $\H^{n+\fourth} = \H^{k+1}$
 
    $\H^* =$ MUSCLHancockRiemann($\H^n,\H^{n+\fourth},\half\dt$)
    ts = 'CN'
-   $\U^k = \U^n$
+   $\R^k = \R^{n+\fourth}$
+   $\H^k = \H^{n+\fourth}$
    for each iteration $k$
-      $u^{k+1} =$ hydroMomentumSourceUpdate($\U^{n+\fourth},\H^*,\U^k,\fourth\dt$,ts)
-      $\Psi^{k+1} =$ radiationSolve($\U^{n+\fourth},\U^k,\fourth\dt$,ts)
-      $E^{k+1} =$ hydroEnergySourceUpdate($\U^{n+\fourth},\H^*,\U^k,\fourth\dt$,ts)
-      converged = checkConvergence($\U^k,\U^{k+1}$)
+      $(u_i^{k+1}) =$ momentumUpdate($\R^{n+\fourth},\R^k,
+         \H^{n+\fourth},\H^*,\H^k,\fourth\dt$,ts)
+      $(\Psi\iL^{k+1},\Psi\iR^{k+1}) =$ radiationSolve(
+         $\R^{n+\fourth},\R^k,[\H^{n+\fourth},\Delta^{n}],[\H^k,\Delta^{n}],[\H^{k+1},\Delta^n],\fourth\dt$,ts)
+      $(E\iL^{k+1},E\iR^{k+1}) =$ energyUpdate(
+         $\R^n,\R^k,[\H^{n+\fourth},\Delta^{n}],[\H^*,\Delta^{n}],[\H^k,\Delta^{n}],\fourth\dt$,ts)
+      $(E_i^{k+1}) = \half(E\iL^{k+1}) + \half(E\iR^{k+1})$
+      converged = checkConvergence($\R^k,\R^{k+1},\H^k,\H^{k+1}$)
       if converged, then exit
+      $\R^k = \R^{k+1}$
+      $\H^k = \H^{k+1}$
    end iteration loop
-   $\U^{n+\half} = \U^{k+1}$
+   $\R^{n+\half} = \R^{k+1}$
+   $\H^{n+\half} = \H^{k+1}$
 
    $\H^* =$ MUSCLHancockEvolve($\H^{n+\half},\half\dt$)
    ts = 'CN'

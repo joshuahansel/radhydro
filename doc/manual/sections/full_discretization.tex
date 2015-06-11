@@ -3,6 +3,11 @@
 %===============================================================================
 \subsection{Fluid Momentum Source Update Equation}
 %-------------------------------------------------------------------------------
+The momentum source update equations are cell-centered and thus
+radiation quantities must be evaluated at cell centers, which
+since the radiation solution has a linear representation, simply
+amounts to averaging the quantities at the left and right edges.
+
 \subsubsection{Crank-Nicolson}
 %-------------------------------------------------------------------------------
 For a step $t^n\rightarrow t^{n+1}$,
@@ -29,15 +34,26 @@ For a step $t^{n+\half}\rightarrow t^{n+1}$,
 %-------------------------------------------------------------------------------
 \subsection{Fluid Energy Source Update Equation}
 %-------------------------------------------------------------------------------
+The energy source update equations are edge-centered and thus hydrodynamic
+quantities need to be evaluated at the edges, e.g., for an arbitrary
+hydrodynamic quantity $H$:
+\begin{equation}
+  H_{i,L}^n = H_i^n - \frac{\Delta H_i^n}{2} \pec\quad
+  H_{i,R}^n = H_i^n + \frac{\Delta H_i^n}{2} \pep
+\end{equation}
+The equations presented in this section correspond to the left edge $i,L$;
+right edge equations are identical, obtained by replacing ``$L$'' with
+``$R$'' in the left edge equations.
+
 \subsubsection{Crank-Nicolson}
 %-------------------------------------------------------------------------------
 For a step $t^n\rightarrow t^{n+1}$,
 \begin{equation}\begin{split}
-  \frac{E_i^{k+1}-E_i^*}{\dt} = &
-  -\half\left[\sigma_{a} c\left(aT^4 - \E\right)\right]_i^n
-  -\half\left[\sigma_{a}^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]_i\\
-  &+\half\left[\sigma_{t}\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^n
-   +\half\left[\sigma_{t}\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^k
+  \frac{E\iL^{k+1}-E\iL^*}{\dt} = &
+  -\half\left[\sigma_{a} c\left(aT^4 - \E\right)\right]\iL^n
+  -\half\left[\sigma_{a}^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]\iL\\
+  &+\half\left[\sigma_{t}\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]\iL^n
+   +\half\left[\sigma_{t}\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]\iL^k
   \pep
 \lequ{hydroECNfull}
 \end{split}\end{equation}
@@ -46,13 +62,13 @@ For a step $t^n\rightarrow t^{n+1}$,
 %-------------------------------------------------------------------------------
 For a step $t^{n+\half}\rightarrow t^{n+1}$,
 \begin{equation}\begin{split}
-  \frac{E_i^{k+1}-E_i^*}{\half\dt} = &
-  -\sixth\left[\sigma_a c\left(aT^4 - \E\right)\right]_i^n
-  -\sixth\left[\sigma_a c\left(aT^4 - \E\right)\right]_i^{n+\half}\\
-  &-\frac{2}{3}\left[\sigma_a^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]_i
-   +\sixth\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^n\\
-  &+\sixth\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^{n+\half}
-   +\frac{2}{3}\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^k
+  \frac{E\iL^{k+1}-E\iL^*}{\half\dt} = &
+  -\sixth\left[\sigma_a c\left(aT^4 - \E\right)\right]\iL^n
+  -\sixth\left[\sigma_a c\left(aT^4 - \E\right)\right]\iL^{n+\half}\\
+  &-\frac{2}{3}\left[\sigma_a^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]\iL
+   +\sixth\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]\iL^n\\
+  &+\sixth\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]\iL^{n+\half}
+   +\frac{2}{3}\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]\iL^k
   \pep
 \lequ{hydroEBDF2full}
 \end{split}\end{equation}
