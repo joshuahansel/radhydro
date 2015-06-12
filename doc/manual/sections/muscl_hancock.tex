@@ -1,5 +1,5 @@
 %===============================================================================
-\section{MUSCL-Hancock Algorithm}
+\subsection{MUSCL-Hancock Equations}
 %===============================================================================
 
 The homogeneous Euler equations may be expressed in conservative form as
@@ -18,7 +18,7 @@ The first half of a MUSCL-Hancock step $t^n\rightarrow t^n+\dt$
 consists of constructing a linear representation of the solution
 using slopes $\Delta_i^n$:
 \begin{subequations}\label{eq:hydro_edge}
-\begin{equation}
+\begin{equation}\label{eq:edge_hydro}
   \H\iL^n = \H_i^n - \frac{\Delta_i^n}{2} \pec
   \quad
   \H\iR^n = \H_i^n + \frac{\Delta_i^n}{2} \pec

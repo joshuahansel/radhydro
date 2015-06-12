@@ -3,22 +3,26 @@
 \usepackage{amsmath}
 \usepackage{color}
 \usepackage{listings}
+\usepackage{etoolbox} % for toggles
 \usepackage[colorlinks]{hyperref}
+
+% load list of user-defined commands
 \input{newcommands}
 
+% toggle for developer mode; otherwise paper mode
+\newtoggle{DEVELOPERMODE}
+%\toggletrue{DEVELOPERMODE}
+\togglefalse{DEVELOPERMODE}
+
 \begin{document}
+
 \tableofcontents
 \newpage
 
 \input{sections/introduction}
-\input{sections/overview}
 \input{sections/scheme}
-%\input{sections/muscl_hancock}
-\input{sections/spatial_discretization}
-%\input{sections/temporal_discretization}
-\input{sections/full_discretization}
-\input{sections/nonlinear_solution}
-%\input{sections/implementation}
+\input{sections/discretized_equations}
+\input{sections/linearization}
 \input{sections/test_problems}
 
 \end{document}

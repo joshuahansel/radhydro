@@ -1,25 +1,31 @@
-\section{Scheme Description}
+\section{The Scheme}
 
-First, some notation is defined for the scheme that follows:
-\[
-   \R^n \equiv \{\Psi^\pm\iL,\Psi^\pm\iR\} \quad\forall i
-\]
-\[
-   \H^n \equiv \{\rho_i^n, (\rho u)_i^n, E_i^n\} \quad\forall i
-\]
-\[
-   \delta e^n \equiv \{\delta e_i^n\} \quad\forall i
-\]
-\[
-   \Delta^n \equiv \{\Delta\rho_i^n, \Delta(\rho u)_i^n, \Delta E_i^n\} \quad\forall i
-\]
-\[
-   \sigma^n \equiv \{\sigma_{s,i,L}^n, \sigma_{s,i,R}^n,
+The solution for a time step $t^n\rightarrow t+^{n+1}$ consists of four
+nonlinear solves:
+
+\begin{enumerate}
+  \item Crank-Nicolson step from $t^n$ to $t^{n+\fourth}$
+  \item Crank-Nicolson step from $t^n$ to $t^{n+\half}$
+  \item Crank-Nicolson step from $t^{n+\half}$ to $t^{n+\frac{3}{4}}$
+  \item TR/BDF-2 step from $t^{n+\half}$ to $t^{n+1}$
+\end{enumerate}
+
+First, some notation is defined; the following are quantities that are stored
+throughout the calculation:
+\begin{center}
+\begin{tabular}{l}
+   $\R^n \equiv \{\Psi^\pm\iL,\Psi^\pm\iR\} \quad\forall i$ \\
+   $\H^n \equiv \{\rho_i^n, (\rho u)_i^n, E_i^n\} \quad\forall i$ \\
+   $\delta e^n \equiv \{\delta e_i^n\} \quad\forall i$ \\
+   $\Delta^n \equiv \{\Delta\rho_i^n, \Delta(\rho u)_i^n, \Delta E_i^n\} \quad\forall i$ \\
+   $\sigma^n \equiv \{\sigma_{s,i,L}^n, \sigma_{s,i,R}^n,
    \sigma_{a,i,L}^n, \sigma_{a,i,R}^n, \sigma_{t,i,L}^n, \sigma_{t,i,R}^n\}
-   \quad\forall i
-\]
-These are the quantities that are stored throughout the
-calculation. Other quantities are computed when needed.
+   \quad\forall i$
+\end{tabular}
+\end{center}
+Other quantities are computed when needed.
+
+Now begins a description of the proposed scheme:
 
 \begin{enumerate}
 
@@ -35,7 +41,7 @@ size must be computed in accordance with the CFL condition.
 $t^n$ to $t^{n+\fourth}$.
 
 \begin{enumerate}
-\item \textbf{Perform Cycle 1 MUSCL-Hancock Predictor.} First, slopes $\Delta^n$ are
+\item \textbf{Perform MUSCL-Hancock Predictor.} First, slopes $\Delta^n$ are
 computed.
 Then a linear representation of the solution is created, and the
 the MUSCL-Hancock predictor is performed to obtain $\H^*$, the

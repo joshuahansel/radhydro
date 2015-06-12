@@ -1,46 +1,111 @@
 %===============================================================================
-\section{Fully Discretized Equations}\lsec{full}
+\section{The Discretized Equations}\lsec{full}
 %===============================================================================
+
+\input{sections/muscl_hancock}
+
+%-------------------------------------------------------------------------------
 \subsection{Fluid Momentum Source Update Equation}
 %-------------------------------------------------------------------------------
 The momentum source update equations are cell-centered and thus
 radiation quantities must be evaluated at cell centers, which
 since the radiation solution has a linear representation, simply
-amounts to averaging the quantities at the left and right edges.
+amounts to averaging the quantities at the left and right edges:
+\begin{equation}
+  \F_i = \half\F\iL + \half\F\iR
+\end{equation}
+\begin{equation}
+  \E_i = \half\E\iL + \half\E\iR
+\end{equation}
+\begin{equation}
+  \sigma_{t,i} = \half\sigma_{t,i,L} + \half\sigma_{t,i,R} 
+\end{equation}
 
-\subsubsection{Crank-Nicolson}
-%-------------------------------------------------------------------------------
+The Crank-Nicolson discretization of the velocity update equation is the
+following:
+
 \momentumUpdateCN{n}{}{_i}{\lequ{hydromCNfull}}
 
-\subsubsection{TR/BDF-2}
-%-------------------------------------------------------------------------------
+The BDF2 discretization of the velocity update equation is the
+following:
+
 \momentumUpdateBDFTwo{n-1}{n}{}{_i}{\lequ{hydromBDF2full}}
 
 %-------------------------------------------------------------------------------
 \subsection{Fluid Energy Source Update Equation}
 %-------------------------------------------------------------------------------
-The energy source update equations are edge-centered and thus hydrodynamic
-quantities need to be evaluated at the edges, e.g., for an arbitrary
-hydrodynamic quantity $H$:
+The energy source update equations are evaluated at the edges and thus hydrodynamic
+quantities need to be evaluated at the edges. The stored solution values
+consist of the cell average unknowns for the conservative variables $[\rho,\rho u,E]$
+and their slopes $\Delta$, which come from the predictor step of MUSCL-Hancock,
+as given by Equation \requ{slopes}. Evaluation of edge densities is achieved
+by applying the slopes as given by Equation \eqref{eq:edge_hydro}:
 \begin{equation}
-  H_{i,L}^n = H_i^n - \frac{\Delta H_i^n}{2} \pec\quad
-  H_{i,R}^n = H_i^n + \frac{\Delta H_i^n}{2} \pep
+   \rho\iL^k = \rho_i^k - \frac{\Delta\rho_i^n}{2} \pep
 \end{equation}
-The equations presented in this section correspond to the left edge $i,L$;
-right edge equations are identical, obtained by replacing ``$L$'' with
-``$R$'' in the left edge equations.
+Note that the slopes $\Delta$ are only updated in the MUSCL-Hancock predictor
+step. Thus, quantities at $t^{n+1}$ also use the $\Delta^n$ slopes. For the
+BDF2 discretization, where evaluation of quantities at $t^{n-1}$ is required,
+the old slopes $\Delta^{n-1}$ are used. Evaluation of edge velocities is
+achieved by evaluating the edge conservative variables $\rho$ and $\rho u$
+and then computing velocity from these:
+\begin{equation}
+   u\iL^k = \frac{(\rho u)\iL^k}{\rho\iL^k}
+          = \frac{(\rho u)_i^k - \frac{\Delta(\rho u)_i^n}{2}}
+                 {\rho_i^k - \frac{\Delta\rho_i^n}{2}} \pep
+\end{equation}
+As explained in Section \ref{diffusion_limit}, internal energies (as well
+as temperatures) use slopes that are independent of the MUSCL-Hancock slopes.
+These internal energy slopes are denoted by $\delta e$. Evaluation
+of edge internal energies is thus performed as follows:
+\begin{equation}
+   e\iL^k = e_i^k - \frac{\delta e_i^n}{2} \pep
+\end{equation}
+Edge temperatures are computed from the edge internal energies:
+\begin{equation}
+   T\iL^k = \frac{e\iL^k}{c_v} \pep
+\end{equation}
+Again, quantities at $t^{n+1}$ still use old slopes $\delta e^n$. These
+slopes are updated at the end of each full MUSCL-Hancock step, i.e.,
+when the nonlinear iteration for the corrector step converges, the
+slopes $\delta e_i^{n+1}$ are computed from the converged edge internal energies:
+\begin{equation}
+   \delta e_i^{n+1} = e\iR^{k+1} - e\iL^{k+1} \pep
+\end{equation}
 
-\subsubsection{Crank-Nicolson}
-%-------------------------------------------------------------------------------
+The Crank-Nicolson discretization of the energy update equation is the following:
+
 \energyUpdateCN{n}{}{\iL}{\lequ{hydroECNfull}}
 
-\subsubsection{TR/BDF-2}
-%-------------------------------------------------------------------------------
+The right edge equations are identical in form, obtained by replacing ``$L$'' with
+``$R$'' in the left edge equations.
+The BDF2 discretization of the energy update equation is the following:
+
 \energyUpdateBDFTwo{n-1}{n}{}{\iL}{\lequ{hydroEBDF2full}}
+
+Note that these energy update equations are not in the form in which they
+are actually solved in practice; the implicit term $\sigma_a^k a c (T^{k+1})^4$
+must be linearized. This procedure is detailed in Section \ref{sec:linearization}.
+The final form of the energy update equation is a direct update to the
+edge internal energies $\{e\iL^{k+1},e\iR^{k+1}\}$.
 
 %-------------------------------------------------------------------------------
 \subsection{\texorpdfstring{S$_2$}{S-2} Equations}
 %-------------------------------------------------------------------------------
+
+A lumped linear discontinuous (LLD) spatial discretization is employed
+for the S$_2$ equations, so the angular flux
+unknowns are the left and right values $\Psi_{i,L}^\pm$ and
+$\Psi_{i,R}^\pm$ for each cell $i$. The spatially
+discretized equations result from integrating each half cell
+$(x_i-\frac{h_i}{2},x_i)$ and $(x_i,x_i+\frac{h_i}{2})$,
+where $x_i$ is the cell center, and $h_i$ is the cell width.
+
+% "if" block for developer mode
+\iftoggle{DEVELOPERMODE}{
+\input{sections/steady_state_s2}
+}{} % end of "if" block for developer mode; second pair of brackets is the "else" block
+
 \subsubsection{Crank-Nicolson}\lsec{S2fullCN}
 %-------------------------------------------------------------------------------
 \begin{equation}\lequ{S2CNfullL}\begin{split}
@@ -67,6 +132,9 @@ right edge equations are identical, obtained by replacing ``$L$'' with
    +\half\Q_{i,R}^{\pm,k} \pep
 \end{split}\end{equation}
 
+% "if" block for developer mode
+\iftoggle{DEVELOPERMODE}{
+
 These equations can be solved by solving steady-state S$_2$ equations
 of the form of Equations \requ{S2trL} and \requ{S2trR} by making
 the following definitions:
@@ -91,6 +159,8 @@ the following definitions:
   + \half\Q\iR^{\pm,n}
   + \half\Q\iR^{\pm,k}
 \end{multline}
+
+}{} % end of "if" block for developer mode; second pair of brackets is the "else" block
 
 \subsubsection{TR/BDF-2}\lsec{S2fullTRBDF2}
 %-------------------------------------------------------------------------------
@@ -126,6 +196,9 @@ the following definitions:
    +\frac{2}{3}\Q_{i,R}^{\pm,k} \pec
 \end{split}\end{equation}
 
+% "if" block for developer mode
+\iftoggle{DEVELOPERMODE}{
+
 These equations can be solved by solving steady-state S$_2$ equations
 of the form of Equations \requ{S2trL} and \requ{S2trR} by making
 the following definitions:
@@ -158,4 +231,6 @@ the following definitions:
   + \sixth\Q\iR^{\pm,n}
   + \frac{2}{3}\Q\iR^{\pm,k}
 \end{multline}
+
+}{} % end of "if" block for developer mode; second pair of brackets is the "else" block
 

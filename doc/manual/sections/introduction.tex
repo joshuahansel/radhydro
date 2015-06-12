@@ -124,17 +124,15 @@ and
   \Q^\pm = \frac{Q^\pm}{2}
 \end{equation}
 and rewriting the S$_2$ equations gives
-% \begin{equation}\lequ{S2Q}
-%   \frac{1}{c}\dydt{\psi^\pm} + \mu^\pm\dydx{\psi^\pm} + \sigma_t\psi^\pm
-%   = \frac{\sigma_s}{4\pi}\phi + \frac{1}{4\pi}Q^\pm \pec
-% \end{equation}
 \begin{equation}\lequ{S2Q}
   \frac{1}{c}\dydt{\Psi^\pm} + \mu^\pm\dydx{\Psi^\pm} + \sigma_t\Psi^\pm
   = \frac{\sigma_s}{2}\phi + \Q^\pm \pec
 \end{equation}
 where $\mu^\pm=\pm\frac{1}{\sqrt{3}}$.
 
-\subsection{Ensuring diffusion limit with correct energy slopes}
+%===============================================================================
+\subsection{Ensuring the Diffusion Limit}\label{diffusion_limit}
+%===============================================================================
 
 To ensure we get the diffusion limit, we need to have slopes defined by the radiation
 solver that are independent of the hydro solver.  In reality, in 1D this is not
@@ -144,3 +142,4 @@ old time step values in building our systems, it will be necessary to store the
 will just use the standard MUSCL formula and no modifications to the slope. Thus,
 E$^*$ is evaluated when evaluating the new
 total energies in the equations, we will use the following formula,
+
