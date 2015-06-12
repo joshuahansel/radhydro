@@ -6,6 +6,7 @@ from numpy import       array
 from mesh import        Mesh
 from math import        sqrt
 from hydroState import HydroState
+from hydroSlopes import HydroSlopes
 from musclHancock import hydroPredictor, \
                         plotHydroSolutions, hydroCorrector
 
@@ -74,11 +75,14 @@ def solveHydroProblem():
 
         print("t = %f -> %f" % (t-dt,t))
 
+        # compute slopes
+        slopes = HydroSlopes(states_a)
+
         #Solve predictor step
-        states_l, states_r = hydroPredictor(mesh, states_a, dt)
+        states_a = hydroPredictor(mesh, states_a, slopes, dt)
 
         #Solve corrector step
-        states_a = hydroCorrector(mesh, states_a, states_l, states_r, dt)
+        states_a = hydroCorrector(mesh, states_a, dt)
 
 
     # plot solution

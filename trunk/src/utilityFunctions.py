@@ -5,6 +5,7 @@ from math import log, sqrt
 import numpy as np
 import globalConstants as GC
 from crossXInterface import CrossXInterface
+from hydroState import HydroState
 
 #-----------------------------------------------------------------------------------
 ## Converge f_L and f_R to f_a and f_x
@@ -143,7 +144,7 @@ def computeDiscreteL1Norm(values):
 #
 #  @return  the discrete \f$L^2\f$ norm \f$\|y\|_1\f$
 #
-def computeL2RelDiff(values1, values2, aux_func=None):
+def computeL2RelDiffTuples(values1, values2, aux_func=None):
 
    #apply aux_func, if None default to just the value
    if aux_func == None:
@@ -158,6 +159,33 @@ def computeL2RelDiff(values1, values2, aux_func=None):
    norm1 = np.linalg.norm(avg1)
    norm2 = np.linalg.norm(avg2)
    norm_diff = np.linalg.norm(avg1 - avg2)
+
+   return norm_diff/(max(norm1,norm2))
+
+## Function to compute the L2 integral based on relative error of the larger 
+#  of the two values. Passed in values are arrays.
+#
+#  @param[in] values_1 array \f$\mathbf{y}\f$
+#  @param[in] values_2 array \f$\mathbf{y}\f$
+#  @param[in] aux_func optional function to apply to the values
+#
+#  @return  the discrete \f$L^2\f$ norm \f$\|y\|_2\f$
+#
+def computeL2RelDiff(values1, values2, aux_func=None):
+
+   #apply aux_func, if None default to just the value
+   if aux_func == None:
+       aux_func = lambda x: x
+   f = aux_func
+
+   # get values
+   vals1 = np.array([f(i) for i in values1])
+   vals2 = np.array([f(i) for i in values2])
+
+   #compute norms
+   norm1 = np.linalg.norm(vals1)
+   norm2 = np.linalg.norm(vals2)
+   norm_diff = np.linalg.norm(vals1 - vals2)
 
    return norm_diff/(max(norm1,norm2))
 
@@ -195,34 +223,37 @@ def getNu(T, sig_a, rho, spec_heat, dt, scale):
 #  temporal discretization.
 #
 #
-def computeEffectiveOpacities(time_stepper, dt, cx_prev, hydro_prev):
+def computeEffectiveOpacities(time_stepper, dt, cx_prev, hydro_prev,
+    slopes_old, e_slopes_old):
 
     # get coefficient corresponding to time-stepper
     scales = {"CN":0.5, "BE":1., "BDF2":2./3.}
     scale = scales[time_stepper]
 
-    cx_effective = []
+    cx_effective = list()
 
     # loop over cells:
     for i in range(len(cx_prev)):
 
-        cx_i = []
+        cx_i = list()
+
+        # get hydro state and specific heat
+        state = hydro_prev[i]
+        spec_heat = state.spec_heat
+
+        # get density and temperature at edges
+        rho = computeEdgeDensities(i, state, slopes_old)
+        T   = computeEdgeTemperatures(state, e_slopes_old[i])
 
         # loop over edges
         for x in range(2): 
-
-            # get previous state quantities
-            state = hydro_prev[i][x]
-            T         = state.getTemperature()
-            rho       = state.rho
-            spec_heat = state.spec_heat
 
             # get cross sections
             sig_a = cx_prev[i][x].sig_a
             sig_s = cx_prev[i][x].sig_s
 
             # compute effective scattering ratio
-            nu = getNu(T, sig_a, rho, spec_heat, dt, scale)
+            nu = getNu(T[x], sig_a, rho[x], spec_heat, dt, scale)
         
             #Create new FIXED cross section instance. No need to add scale term
             #here because it will be included in scattering source term
@@ -232,4 +263,108 @@ def computeEffectiveOpacities(time_stepper, dt, cx_prev, hydro_prev):
         cx_effective.append(tuple(cx_i))
 
     return cx_effective
+
+
+## Computes edge densities for a cell given hydro state and slopes
+#
+#  @param[in] i       cell index
+#  @param[in] state   average hydro state for cell \f$i\f$
+#  @param[in] slopes  HydroSlopes object
+#
+#  @return \f$(\rho_{i,L},\rho_{i,R})\f$
+#
+def computeEdgeDensities(i, state, slopes):
+
+   # compute edge velocities
+   rhoL = state.rho - 0.5*slopes.rho_slopes[i]
+   rhoR = state.rho + 0.5*slopes.rho_slopes[i]
+   return (rhoL, rhoR)
+
+
+## Computes edge velocities for a cell given hydro state and slopes
+#
+#  @param[in] i       cell index
+#  @param[in] state   average hydro state for cell \f$i\f$
+#  @param[in] slopes  HydroSlopes object
+#
+#  @return \f$(u_{i,L},u_{i,R})\f$
+#
+def computeEdgeVelocities(i, state, slopes):
+
+   # compute edge velocities
+   rho = state.rho
+   u   = state.u
+   mom = rho*u
+   rhoL = rho - 0.5*slopes.rho_slopes[i]
+   rhoR = rho + 0.5*slopes.rho_slopes[i]
+   momL = mom - 0.5*slopes.mom_slopes[i]
+   momR = mom + 0.5*slopes.mom_slopes[i]
+   return (momL / rhoL, momR / rhoR)
+
+
+## Computes edge temperatures for a cell given hydro state and internal energy slope
+#
+#  @param[in] state    average hydro state for cell \f$i\f$
+#  @param[in] e_slope  internal energy slope
+#
+#  @return \f$(T_{i,L},T_{i,R})\f$
+#
+def computeEdgeTemperatures(state, e_slope):
+
+   # compute internal energies at left and right edges
+   eL = state.e - 0.5*e_slope
+   eR = state.e + 0.5*e_slope
+
+   # get specific heat
+   cv = state.spec_heat
+
+   # compute edge temperature using internal energy slope
+   return (eL / cv, eR / cv)
+
+
+## Computes edge internal energies for a cell given hydro state and internal energy slope
+#
+#  @param[in] state    average hydro state for cell \f$i\f$
+#  @param[in] e_slope  internal energy slope
+#
+#  @return \f$(e_{i,L},e_{i,R})\f$
+#
+def computeEdgeInternalEnergies(state, e_slope):
+
+   # compute internal energies at left and right edges
+   eL = state.e - 0.5*e_slope
+   eR = state.e + 0.5*e_slope
+
+   # compute edge temperature using internal energy slope
+   return (eL, eR)
+
+
+## Updates all cross sections.
+#
+def updateCrossSections(cx,hydro,slopes,e_slopes):
+
+   # loop over cells
+   for i in range(len(hydro)):
+
+      # get cell average state, specific heat, gamma, and internal energy slope
+      state_avg = hydro[i]
+      spec_heat = state_avg.spec_heat
+      gamma = state_avg.gamma
+      de = e_slopes[i]
+
+      # compute edge quantities
+      rho = computeEdgeDensities(i, state_avg, slopes)
+      u = computeEdgeVelocities(i, state_avg, slopes)
+      e = computeEdgeInternalEnergies(state_avg, e_slopes[i])
+
+      # loop over edges and create state for each edge
+      for edge in [0,1]:
+
+         # create edge state
+         state = HydroState(rho=rho[edge],u=u[edge],int_energy=e[edge],
+            spec_heat=spec_heat, gamma=gamma)
+ 
+         # update edge cross section
+         cx[i][edge].updateCrossX(state)
+
 

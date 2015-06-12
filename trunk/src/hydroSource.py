@@ -1,10 +1,12 @@
+
 from crossXInterface import CrossXInterface
 from transientSource import TransientSourceTerm, evalPlanckianOld
 from copy            import deepcopy
 import globalConstants as GC
 import numpy as np
 import utilityFunctions as UT
-from utilityFunctions import getNu
+from utilityFunctions import getNu, computeEdgeVelocities, computeEdgeTemperatures,\
+   computeEdgeDensities, computeEdgeInternalEnergies
 
 #--------------------------------------------------------------------------------
 ## Updates velocities.
@@ -20,11 +22,8 @@ def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
     # loop over cells
     for i in range(mesh.n_elems):
 
-        # loop over edges
-        for x in range(2):
-
-            # update velocity
-            hydro_new[i][x].u = hydro_star[i][x].u + dt/hydro_new[i][x].rho*Q[i][x]
+        # update velocity
+        hydro_new[i].updateVelocity(hydro_star[i].u + dt/hydro_new[i].rho*Q[i])
 
 
 #--------------------------------------------------------------------------------
@@ -33,7 +32,7 @@ def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
 #  param[in,out] hydro_new  contains new velocities
 #
 def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
-    hydro_prev, hydro_star):
+    hydro_prev, hydro_star, slopes_old, e_slopes_old):
  
     # constants
     a = GC.RAD_CONSTANT
@@ -43,43 +42,65 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
     scales = {"CN":0.5, "BE":1., "BDF2":2./3.}
     scale = scales[time_stepper]
 
+    # initialize new internal energy slopes
+    e_slopes_new = np.zeros(len(hydro_new))
+
     # loop over cells
     for i in xrange(len(hydro_new)):
 
-        #loop over left and right value
+        # get hydro states
+        state_new  = hydro_new[i]
+        state_prev = hydro_prev[i]
+        state_star = hydro_star[i]
+
+        # compute edge densities
+        rho = computeEdgeDensities(i, state_star, slopes_old)
+
+        # compute edge velocities
+        u_new  = computeEdgeVelocities(i, state_new,  slopes_old)
+        u_star = computeEdgeVelocities(i, state_star, slopes_old)
+
+        # compute edge temperatures
+        T_prev = computeEdgeTemperatures(state_prev, e_slopes_old[i])
+
+        # compute edge internal energies
+        e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
+        e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
+
+        # loop over edges to compute new internal energies
+        e_new = np.zeros(2)
         for x in range(2):
 
             # get new quantities
-            state_new = hydro_new[i][x]
-            u_new = state_new.u
-            E = rad_new.E[i][x]
+            Er = rad_new.E[i][x]
 
             # get previous quantities
-            state_prev = hydro_prev[i][x]
-            T_prev  = state_prev.getTemperature()
-            aT4 = a*T_prev**4
-            e_prev = state_prev.e
+            aT4 = a*T_prev[x]**4
             sig_a = cx_prev[i][x].sig_a
             spec_heat = state_prev.spec_heat
 
-            # get star quantities
-            state_star = hydro_star[i][x]
-            e_star = state_star.e
-            u_star = state_star.u
-            rho = state_star.rho
-
             # compute effective scattering ratio
-            nu = getNu(T_prev, sig_a, rho, spec_heat, dt, scale)
+            nu = getNu(T_prev[x], sig_a, rho[x], spec_heat, dt, scale)
 
-            #Evaluate extra terms from rad hydro
+            # evaluate additional source terms
             QE_elem = QE[i][x]
 
             # compute new internal energy
-            e_new = (1.0-nu)*scale*dt/rho * (sig_a*c*(E - aT4) + QE_elem/scale)\
-               + (1.0-nu)*e_star + nu*e_prev - 0.5*(1.0-nu)*(u_new**2 - u_star**2)
+            e_new[x] = (1.0-nu)*scale*dt/rho[x] * (sig_a*c*(Er - aT4) + QE_elem/scale)\
+               + (1.0-nu)*e_star[x] + nu*e_prev[x]\
+               - 0.5*(1.0-nu)*(u_new[x]**2 - u_star[x]**2)
 
-            # put new internal energies in new hydro
-            hydro_new[i][x].e = e_new
+        # compute new average internal energy
+        e_new_avg = 0.5*e_new[0] + 0.5*e_new[1]
+
+        # put new internal energy in the new hydro state
+        hydro_new[i].updateStateDensityInternalEnergy(state_star.rho, e_new_avg)
+
+        # compute new internal energy slope
+        e_slopes_new[i] = e_new[1] - e_new[0]
+
+    # return new internal energy slopes
+    return e_slopes_new
 
 
 #-----------------------------------------------------------------------------------
@@ -90,10 +111,15 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
 #      Q = \sigma_t \frac{u}{c} \left(\mathcal{F} - \frac{4}{3}\mathcal{E} u\right)
 #  \f]
 #
-def evalEnergyExchange(i, rad, hydro, cx):
+def evalEnergyExchange(i, rad, hydro, cx, slopes):
 
-    momentum_exchange_term = evalMomentumExchange(i, rad, hydro, cx)
-    return [momentum_exchange_term[x]*hydro[i][x].u for x in xrange(2)]
+    # compute edge velocities
+    u = computeEdgeVelocities(i, hydro[i], slopes)
+
+    # compute momentum exchange term
+    momentum_exchange_term = evalMomentumExchange(i, rad, hydro, cx, slopes)
+
+    return [momentum_exchange_term[x]*u[x] for x in xrange(2)]
 
 
 #------------------------------------------------------------------------------------
@@ -103,10 +129,13 @@ def evalEnergyExchange(i, rad, hydro, cx):
 #      Q = \frac{\sigma_t}{c} \left(F - \frac{4}{3}E u\right)
 #  \f]
 #
-def evalMomentumExchange(i, rad, hydro, cx):
+def evalMomentumExchange(i, rad, hydro, cx, slopes):
+
+    # compute edge velocities
+    u = computeEdgeVelocities(i, hydro[i], slopes)
 
     return [cx[i][x].sig_t/GC.SPD_OF_LGT*(rad.F[i][x]
-       - 4.0/3.0*rad.E[i][x]*hydro[i][x].u) for x in xrange(2)]
+       - 4.0/3.0*rad.E[i][x]*u[x]) for x in xrange(2)]
 
 
 #------------------------------------------------------------------------------------
@@ -157,29 +186,32 @@ class QEHandler(TransientSourceTerm):
     ## Computes implicit terms in QE^k. Only an energy exchange term, there is 
     #  no planckian 
     #
-    def evalImplicit(self, i, rad_prev, hydro_prev, cx_prev, **kwargs):
+    def evalImplicit(self, i, rad_prev, hydro_prev, cx_prev, slopes_old, **kwargs):
 
         Q_local = np.array(evalEnergyExchange(i, rad=rad_prev, hydro=hydro_prev,
-           cx=cx_prev))
+           cx=cx_prev, slopes=slopes_old))
         return Q_local
 
     #--------------------------------------------------------------------------------
     ## Evaluate old term. This includes Planckian, as well as energy exchange term
     # 
-    def evalOld(self, i, rad_old, hydro_old, cx_old, **kwargs):
+    def evalOld(self, i, rad_old, hydro_old, cx_old, slopes_old, e_slopes_old, **kwargs):
 
         Q_local = np.array(evalEnergyAbsorption(i, rad=rad_old, cx=cx_old))\
-           - np.array(evalPlanckianOld(i, hydro=hydro_old, cx=cx_old))\
-           + np.array(evalEnergyExchange(i, rad=rad_old, hydro=hydro_old, cx=cx_old))
+           - np.array(evalPlanckianOld(i, hydro_old=hydro_old, cx_old=cx_old,
+                      e_slopes_old=e_slopes_old))\
+           + np.array(evalEnergyExchange(i, rad=rad_old, hydro=hydro_old, cx=cx_old,
+                      slopes=slopes_old))
         return Q_local
 
     #--------------------------------------------------------------------------------
     ## Evaluate older term. Just call the evalOld function as in other source terms
     #
-    def evalOlder(self, i, rad_older, hydro_older, cx_older, **kwargs):
+    def evalOlder(self, i, rad_older, hydro_older, cx_older, slopes_older,
+       e_slopes_older, **kwargs):
 
         return self.evalOld(i, rad_old=rad_older, hydro_old=hydro_older,
-           cx_old=cx_older)
+           cx_old=cx_older, slopes_old=slopes_older, e_slopes_old=e_slopes_older)
 
 
 ## Handles velocity update source term.
@@ -199,22 +231,20 @@ class VelocityUpdateSourceHandler(TransientSourceTerm):
     def computeTerm(self, **kwargs):
 
         # loop over all cells and build source 
-        Q = [[0.0,0.0] for i in range(self.mesh.n_elems)]
+        Q = [0.0 for i in range(self.mesh.n_elems)]
         for i in range(self.mesh.n_elems):
             
             # add the source from element i
-            Q_elem = list(self.func(i, **kwargs))
-            for x in range(2):
-
-                Q[i][x] += Q_elem[x]
+            Q_elem = self.func(i, **kwargs)
+            Q[i] += Q_elem
 
         return Q
 
     #--------------------------------------------------------------------------------
     def evalImplicit(self, i, rad_prev, hydro_prev, cx_prev, **kwargs):
 
-        Q_local = np.array(evalMomentumExchange(i, rad=rad_prev, hydro=hydro_prev,
-           cx=cx_prev))
+        Q_local = evalMomentumExchangeAverage(i, rad=rad_prev, hydro=hydro_prev,
+           cx=cx_prev)
         return Q_local
 
     #--------------------------------------------------------------------------------
@@ -228,5 +258,24 @@ class VelocityUpdateSourceHandler(TransientSourceTerm):
 
         return self.evalImplicit(i, rad_prev=rad_older, hydro_prev=hydro_older,
            cx_prev=cx_older)
+
+
+#------------------------------------------------------------------------------------
+## Compute estimated momentum exchange \f$Q\f$ due to the coupling to radiation,
+#  used the in the velocity update equation:
+#  \f[
+#      Q = \frac{\sigma_t}{c} \left(F - \frac{4}{3}E u\right)
+#  \f]
+#
+def evalMomentumExchangeAverage(i, rad, hydro, cx):
+
+    # compute average cross section
+    sig_t = 0.5*cx[i][0].sig_t + 0.5*cx[i][1].sig_t
+
+    # compute average radiation quantities
+    E = 0.5*rad.E[i][0] + 0.5*rad.E[i][1]
+    F = 0.5*rad.F[i][0] + 0.5*rad.F[i][1]
+
+    return sig_t_avg/GC.SPD_OF_LGT*(F - 4.0/3.0*E*hydro[i].u)
 
 

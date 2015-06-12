@@ -139,32 +139,36 @@ def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, filename='scalarFlux.p
    else:
       plt.show()
 
-def plotTemperatures(mesh, E, save=False, filename='Temperatures.pdf',
+
+## Plots hydrodynamic and radiation temperatures
+#
+def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
         hydro_states=None, print_values=False):
 
    # create new figure
    plt.figure()
 
    # create x-points
-   x            = makeXPoints(mesh)           # discontinuous x-points
-   x_continuous = makeContinuousXPoints(mesh) # continuous    x-points
+   x = mesh.getCellCenters()
+   #x            = makeXPoints(mesh)           # discontinuous x-points
+   #x_continuous = makeContinuousXPoints(mesh) # continuous    x-points
 
    # transform array of tuples into array
-   rad_T_array  = makeYPoints(E)
+   #rad_T_array  = makeYPoints(Er)
+   Er = computeAverageValues(Er_edge)
    a = GC.RAD_CONSTANT
-
-   rad_T_array = [pow(i/a, 0.25) for i in rad_T_array]
+   Tr = [pow(i/a, 0.25) for i in Er]
 
    # plot
    plt.rc('text', usetex=True)         # use tex to generate text
    plt.rc('font', family='sans-serif') # use sans-serif font family
-   plt.plot(x, rad_T_array, 'r-', label='$T_r$')
+   plt.plot(x, Tr, 'r-', label='$T_r$')
 
    #if necessary get temperature and plot it
    if hydro_states != None:
 
-       T = [(i[0].getTemperature(), i[1].getTemperature()) for i in hydro_states]
-       T = makeYPoints(T)
+       T = [state.getTemperature() for state in hydro_states]
+       #T = makeYPoints(T)
        plt.plot(x,T,'b-', label='$T_m$')
     
    # annotations
@@ -172,15 +176,13 @@ def plotTemperatures(mesh, E, save=False, filename='Temperatures.pdf',
    plt.ylabel('$T$ (keV)')
    plt.legend(loc='best')
 
-   #if print requested
+   # if print requested
    if print_values:
       print "  x   T_r    T_m   "
       print "-------------------"
       for i in range(len(x)):
 
-          print "%.12f" % x[i], "%.12f" % rad_T_array[i], "%.12f" % T[i]
-
-
+          print "%.12f" % x[i], "%.12f" % Tr[i], "%.12f" % T[i]
 
    # save if requested
    if save:
@@ -230,7 +232,7 @@ def makeContinuousXPoints(mesh):
 
 ## Function to transform array of tuples into array for plotting.
 #
-#  @param[in] tuple_sarray  array of tuples
+#  @param[in] tuples_sarray  array of tuples
 #  @return    array of the discontinuous data
 #
 def makeYPoints(tuples_array):
@@ -249,7 +251,13 @@ def makeYPoints(tuples_array):
    # return
    return y
 
+## Computes the average values for a list of 2-tuples
+#
+def computeAverageValues(tuple_list):
+   return [0.5*i[0] + 0.5*i[1] for i in tuple_list]
+
 ## Useful debugging function that just prints any tuple list
+#
 def printTupled(tuple_list):
 
     for i in tuple_list:

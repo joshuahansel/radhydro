@@ -39,7 +39,7 @@ class TestTransientSource(unittest.TestCase):
    def test_TransientSourceCN(self):
 
       # number of decimal places to test
-      n_decimal_places = 12
+      n_decimal_places = 11
 
       # create mesh
       n_elems = 5

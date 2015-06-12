@@ -65,15 +65,13 @@ class TestTRTOnly(unittest.TestCase):
          if mesh.getElement(i).x_cent < 0.5: # material 1
             cross_sects.append( (ConstantCrossSection(sig_s1, sig_s1+sig_a1),
                                  ConstantCrossSection(sig_s1, sig_s1+sig_a1)) )
-            hydro_IC.append( (
-               HydroState(u=0,rho=rho1,int_energy=e1,gamma=gam,spec_heat=c_v1),
-               HydroState(u=0,rho=rho1,int_energy=e1,gamma=gam,spec_heat=c_v1)) )
+            hydro_IC.append(
+               HydroState(u=0,rho=rho1,int_energy=e1,spec_heat=c_v1,gamma=gam))
          else: # material 2
             cross_sects.append((ConstantCrossSection(sig_s2, sig_a2+sig_s2),
                                 ConstantCrossSection(sig_s2, sig_a2+sig_s2)))
-            hydro_IC.append( (
-               HydroState(u=0,rho=rho2,int_energy=e2,spec_heat=c_v2, gamma=gam), 
-               HydroState(u=0,rho=rho2,spec_heat=c_v2,int_energy=e2, gamma=gam)) )
+            hydro_IC.append(
+               HydroState(u=0,rho=rho2,int_energy=e2,spec_heat=c_v2,gamma=gam))
   
       # initialize radiation to equilibrium solution
       psi_left  = computeEquivIntensity(T_l)
@@ -81,7 +79,7 @@ class TestTRTOnly(unittest.TestCase):
       rad_IC    = Radiation([psi_right for i in range(n_elems*4)])
 
       # time-stepper
-      time_stepper = "BE"
+      time_stepper = "BDF2"
 
       # if run standalone, then be verbose
       if __name__ == '__main__':

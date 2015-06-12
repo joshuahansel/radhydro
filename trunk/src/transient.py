@@ -2,12 +2,13 @@
 #  Contains functions to run transients.
 
 from copy import deepcopy
+import numpy as np
 
 from nonlinearSolve import nonlinearSolve
 from utilityFunctions import computeL2RelDiff
 from transientSource import computeRadiationExtraneousSource
 from takeRadiationStep import takeRadiationStep
-
+from hydroSlopes import HydroSlopes
 
 ## Runs transient for a radiation-only problem
 #
@@ -99,13 +100,16 @@ def runNonlinearTransient(mesh, time_stepper, problem_type,
 
    # initialize time and solutions
    t = t_start
-   cx_older = cross_sects
-   cx_old   = cross_sects
-   cx_new   = cross_sects
+   cx_older = deepcopy(cross_sects)
+   cx_old   = deepcopy(cross_sects)
+   cx_new   = deepcopy(cross_sects)
    rad_older = rad_IC
    rad_old   = rad_IC
    hydro_older = hydro_IC
    hydro_old   = hydro_IC
+   slopes_older = HydroSlopes(hydro_older)
+   e_slopes_old   = np.zeros(mesh.n_elems)
+   e_slopes_older = np.zeros(mesh.n_elems)
    
    # transient loop
    transient_incomplete = True # boolean flag signalling end of transient
@@ -129,21 +133,31 @@ def runNonlinearTransient(mesh, time_stepper, problem_type,
        if verbose:
           print("t = %0.3f -> %0.3f:" % (t-dt,t))
   
+       # compute slopes
+       slopes_old = HydroSlopes(hydro_old)
+
        # this is where MUSCL Hancock would go
        hydro_star = deepcopy(hydro_old)
 
        # perform nonlinear solve
-       hydro_new, rad_new = nonlinearSolve(
+       hydro_new, rad_new, cx_new, e_slopes_new = nonlinearSolve(
           mesh         = mesh,
           time_stepper = time_stepper,
           problem_type = 'rad_mat',
           dt           = dt,
           psi_left     = psi_left,
           psi_right    = psi_right,
-          cx_old       = cross_sects,
+          cx_old       = cx_old,
+          cx_older     = cx_older,
           hydro_old    = hydro_old,
+          hydro_older  = hydro_older,
           hydro_star   = hydro_star,
-          rad_old      = rad_old)
+          rad_old      = rad_old,
+          rad_older    = rad_older,
+          slopes_old   = slopes_old,
+          slopes_older = slopes_older,
+          e_slopes_old = e_slopes_old,
+          e_slopes_older = e_slopes_older)
             
        # print the difference between old and new solutions
        if verbose:
@@ -155,15 +169,15 @@ def runNonlinearTransient(mesh, time_stepper, problem_type,
        cx_older  = deepcopy(cx_old)
        rad_older = deepcopy(rad_old)
        hydro_older = deepcopy(hydro_old)
+       slopes_older = deepcopy(slopes_old)
+       e_slopes_older = deepcopy(e_slopes_old)
 
        # save old solutions
-       cx_old  = deepcopy(cx_new) # TODO: have cx_new returned by nonlinearSolve
+       cx_old  = deepcopy(cx_new)
        rad_old = deepcopy(rad_new)
        hydro_old = deepcopy(hydro_new)
+       e_slopes_old = deepcopy(e_slopes_new)
 
    # return final solutions
-   if problem_type == 'rad_only':
-      return rad_new
-   else:
-      return rad_new, hydro_new
+   return rad_new, hydro_new
 

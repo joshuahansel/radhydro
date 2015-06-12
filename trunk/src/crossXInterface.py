@@ -131,21 +131,12 @@ class InvCubedCrossX(CrossXInterface):
     #  @param[in] self self
     #
     #----------------------------------------------------------------------------
-    def updateCrossX(self,hydro):
+    def updateCrossX(self,state):
     
         # get temperature and density
-        temp = hydro.getTemperature()
-        rho  = hydro.rho
+        temp = state.getTemperature()
+        rho  = state.rho
         self.sig_a = rho*self.coeff/(temp**3.) 
         self.sig_s = self.sig_s
         self.sig_t = self.sig_s + self.sig_a
-
-#===================================================================================
-## Updates all cross sections
-#
-def updateCrossSections(cx,hydro):
-
-   for i in range(len(hydro)):
-      for edge in [0,1]:
-         cx[i][edge].updateCrossX(hydro[i][edge])
 

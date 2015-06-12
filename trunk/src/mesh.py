@@ -51,6 +51,10 @@ class Mesh:
 
         return self.elements[el_id]
 
+    ## Returns list of cell centers
+    #
+    def getCellCenters(self):
+       return [el.x_cent for el in self.elements]
 
 #================================================================================
 ## Element class.

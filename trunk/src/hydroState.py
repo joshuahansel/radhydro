@@ -41,6 +41,34 @@ class HydroState:
         self.e = erg/rho - 0.5*self.u*self.u
         self.p = getPressure(self.gamma, self.rho, self.e) 
 
+    ## Updates velocity.
+    #
+    #  @param[in] u  new velocity \f$u\f$
+    #
+    def updateVelocity(self, u):
+       self.u = u
+
+    ## Updates state based on density and internal energy.
+    #
+    #  This function is used by the radiation-hydrodynamics scheme to update
+    #  the hydro state with new internal energies when they are computed.
+    #  It is assumed that the velocity has already been updated earlier in
+    #  the time step with the updateVelocity() function. At this point,
+    #  both the new velocity field and the new thermodynamic state of the
+    #  fluid have been fully defined, so an update to all thermodynamic
+    #  quantities is performed in this function.
+    #
+    #  @param[in] rho  new density \f$\rho\f$
+    #  @param[in] e    new internal energy \f$e\f$
+    #
+    def updateStateDensityInternalEnergy(self, rho, e):
+
+       self.rho = rho
+       self.e   = e
+       self.p = getPressure(self.gamma, self.rho, self.e) 
+
+    ## Computes sound speed.
+    #
     def getSoundSpeed(self):
 
         return sqrt(self.gamma*self.p/self.rho)
@@ -72,6 +100,7 @@ class HydroState:
     def __str__(self):
 
         return "u: %.4f rho: %.4f e: %.4f p: %.4f" % (self.u, self.rho, self.e, self.p)
+
 
 ## Computes volume
 #
