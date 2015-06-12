@@ -10,26 +10,11 @@ amounts to averaging the quantities at the left and right edges.
 
 \subsubsection{Crank-Nicolson}
 %-------------------------------------------------------------------------------
-For a step $t^n\rightarrow t^{n+1}$,
-\begin{equation}
-  \frac{\rho_i^{n+1}\left(u_i^{k+1}-u_i^*\right)}{\dt} = 
-   \half\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^n
-  +\half\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^k
-  \pep
-\lequ{hydromCNfull}
-\end{equation}
+\momentumUpdateCN{n}{}{_i}{\lequ{hydromCNfull}}
 
 \subsubsection{TR/BDF-2}
 %-------------------------------------------------------------------------------
-For a step $t^{n+\half}\rightarrow t^{n+1}$,
-\begin{equation}\begin{split}
-  \frac{\rho_i^{n+1}\left(u_i^{k+1}-u_i^*\right)}{\half\dt} =  
-  & \sixth\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^n
-   +\sixth\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^{n+\half}\\
-  &+\frac{2}{3}\left[\frac{\sigma_t}{c}\left(\F-\frac{4}{3}\E u\right)\right]_i^k
-  \pep
-\lequ{hydromBDF2full}
-\end{split}\end{equation}
+\momentumUpdateBDFTwo{n-1}{n}{}{_i}{\lequ{hydromBDF2full}}
 
 %-------------------------------------------------------------------------------
 \subsection{Fluid Energy Source Update Equation}
@@ -47,50 +32,17 @@ right edge equations are identical, obtained by replacing ``$L$'' with
 
 \subsubsection{Crank-Nicolson}
 %-------------------------------------------------------------------------------
-For a step $t^n\rightarrow t^{n+1}$,
-\begin{equation}\begin{split}
-  \frac{E\iL^{k+1}-E\iL^*}{\dt} = &
-  -\half\left[\sigma_{a} c\left(aT^4 - \E\right)\right]\iL^n
-  -\half\left[\sigma_{a}^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]\iL\\
-  &+\half\left[\sigma_{t}\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]\iL^n
-   +\half\left[\sigma_{t}\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]\iL^k
-  \pep
-\lequ{hydroECNfull}
-\end{split}\end{equation}
+\energyUpdateCN{n}{}{\iL}{\lequ{hydroECNfull}}
 
 \subsubsection{TR/BDF-2}
 %-------------------------------------------------------------------------------
-For a step $t^{n+\half}\rightarrow t^{n+1}$,
-\begin{equation}\begin{split}
-  \frac{E\iL^{k+1}-E\iL^*}{\half\dt} = &
-  -\sixth\left[\sigma_a c\left(aT^4 - \E\right)\right]\iL^n
-  -\sixth\left[\sigma_a c\left(aT^4 - \E\right)\right]\iL^{n+\half}\\
-  &-\frac{2}{3}\left[\sigma_a^k c\left(a(T^{k+1})^4 - \E^{k+1}\right)\right]\iL
-   +\sixth\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]\iL^n\\
-  &+\sixth\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]\iL^{n+\half}
-   +\frac{2}{3}\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]\iL^k
-  \pep
-\lequ{hydroEBDF2full}
-\end{split}\end{equation}
+\energyUpdateBDFTwo{n-1}{n}{}{\iL}{\lequ{hydroEBDF2full}}
 
 %-------------------------------------------------------------------------------
 \subsection{\texorpdfstring{S$_2$}{S-2} Equations}
 %-------------------------------------------------------------------------------
 \subsubsection{Crank-Nicolson}\lsec{S2fullCN}
 %-------------------------------------------------------------------------------
-The fully discretized S$_2$ equations for a Crank-Nicolson step
-$t^n\rightarrow t^{n+1}$ are
-%\begin{equation}\lequ{S2CNfullL}\begin{split}
-%  \frac{1}{c}\frac{\psi\iL^{\pm,k+1}-\psi\iL^{\pm,n}}{\dt} = &
-%  -\half\mu^\pm\fn{\psi^{\pm,n}_i - \psi^{\pm,n}_{i-\half}}
-%  -\half\mu^\pm\fn{\psi^{\pm,k+1}_i - \psi^{\pm,k+1}_{i-\half}}\\
-%  &-\half\sigma_{t,i,L}^n\frac{h_i}{2}\psi\iL^{\pm,n}
-%   -\half\sigma_{t,i,L}^k\frac{h_i}{2}\psi\iL^{\pm,k+1}\\
-%  &+\half\frac{\sigma_{s,i,L}^n}{4\pi}\frac{h_i}{2}\phi\iL^n
-%   +\half\frac{\sigma_{s,i,L}^k}{4\pi}\frac{h_i}{2}\phi\iL^{k+1}\\
-%  &+\half\frac{1}{4\pi}\frac{h_i}{2}Q_{i,L}^{\pm,n}
-%   +\half\frac{1}{4\pi}\frac{h_i}{2}Q_{i,L}^{\pm,k} \pec
-%\end{split}\end{equation}
 \begin{equation}\lequ{S2CNfullL}\begin{split}
   \frac{1}{c}\frac{\Psi\iL^{\pm,k+1}-\Psi\iL^{\pm,n}}{\dt} = &
   -\half\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,n}_i - \Psi^{\pm,n}_{i-\half}}
@@ -100,20 +52,9 @@ $t^n\rightarrow t^{n+1}$ are
   &+\half\frac{\sigma_{s,i,L}^n}{2}\phi\iL^n
    +\half\frac{\sigma_{s,i,L}^k}{2}\phi\iL^{k+1}\\
   &+\half\Q_{i,L}^{\pm,n}
-   +\half\Q_{i,L}^{\pm,k} \pec
+   +\half\Q_{i,L}^{\pm,k} \pep
 \end{split}\end{equation}
 
-%\begin{equation}\lequ{S2CNfullR}\begin{split}
-%  \frac{1}{c}\frac{\psi\iR^{\pm,k+1}-\psi\iR^{\pm,n}}{\dt} = &
-%  -\half\mu^\pm\fn{\psi^{\pm,n}_{i+\half} - \psi^{\pm,n}_i}
-%  -\half\mu^\pm\fn{\psi^{\pm,k+1}_{i+\half} - \psi^{\pm,k+1}_i}\\
-%  &-\half\sigma_{t,i,R}^n\frac{h_i}{2}\psi\iR^{\pm,n}
-%   -\half\sigma_{t,i,R}^k\frac{h_i}{2}\psi\iR^{\pm,k+1}\\
-%  &+\half\frac{\sigma_{s,i,R}^n}{4\pi}\frac{h_i}{2}\phi\iR^n
-%   +\half\frac{\sigma_{s,i,R}^k}{4\pi}\frac{h_i}{2}\phi\iR^{k+1}\\
-%  &+\half\frac{1}{4\pi}\frac{h_i}{2}Q_{i,R}^{\pm,n}
-%   +\half\frac{1}{4\pi}\frac{h_i}{2}Q_{i,R}^{\pm,k} \pep
-%\end{split}\end{equation}
 \begin{equation}\lequ{S2CNfullR}\begin{split}
   \frac{1}{c}\frac{\Psi\iR^{\pm,k+1}-\Psi\iR^{\pm,n}}{\dt} = &
   -\half\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,n}_{i+\half} - \Psi^{\pm,n}_i}
@@ -123,7 +64,7 @@ $t^n\rightarrow t^{n+1}$ are
   &+\half\frac{\sigma_{s,i,R}^n}{2}\phi\iR^n
    +\half\frac{\sigma_{s,i,R}^k}{2}\phi\iR^{k+1}\\
   &+\half\Q_{i,R}^{\pm,n}
-   +\half\Q_{i,R}^{\pm,k} \pec
+   +\half\Q_{i,R}^{\pm,k} \pep
 \end{split}\end{equation}
 
 These equations can be solved by solving steady-state S$_2$ equations
@@ -132,18 +73,6 @@ the following definitions:
 \begin{equation}
   \alpha = \frac{1}{c\dt} \pec \quad \beta = \frac{1}{2}\pec
 \end{equation}
-%\begin{multline}
-%  \tilde{Q}_{i,L}^{\pm,k} = Q_{i,L}^{\pm,n} + Q_{i,L}^{\pm,k}
-%  + \sigma_{s,i,L}^n \phi_{i,L}^n - 4\pi\sigma_{t,i,L}^n \psi_{i,L}^{\pm,n}\\
-%  - \frac{8\pi}{h_i}\mu^\pm\fn{\psi^{\pm,n}_i - \psi^{\pm,n}_{i-\half}}
-%  + \frac{16\pi}{c\dt h_i}\psi_{i,L}^{\pm,n} \pec
-%\end{multline}
-%\begin{multline}
-%  \tilde{Q}_{i,R}^{\pm,k} = Q_{i,R}^{\pm,n} + Q_{i,R}^{\pm,k}
-%  + \sigma_{s,i,R}^n \phi_{i,R}^n - 4\pi\sigma_{t,i,R}^n \psi_{i,R}^{\pm,n}\\
-%  - \frac{8\pi}{h_i}\mu^\pm\fn{\psi^{\pm,n}_{i+\half} - \psi^{\pm,n}_i}
-%  + \frac{16\pi}{c\dt h_i}\psi_{i,R}^{\pm,n} \pep
-%\end{multline}
 \begin{multline}
   \tilde{\Q}_{i,L}^{\pm,k}
   = \frac{\Psi\iL^{\pm,n}}{c\dt}
@@ -165,23 +94,6 @@ the following definitions:
 
 \subsubsection{TR/BDF-2}\lsec{S2fullTRBDF2}
 %-------------------------------------------------------------------------------
-The fully discretized S$_2$ equations for a BDF-2 step
-$t^{n}\rightarrow t^{n+1}$ are
-%\begin{equation}\lequ{S2BDF2fullL}\begin{split}
-%  \frac{1}{c}\frac{\psi\iL^{\pm,k+1}-\psi\iL^{\pm,n}}{\dt} = &
-%   -\sixth\mu^\pm\fn{\psi^{\pm,n-1}_i - \psi^{\pm,n-1}_{i-\half}}
-%   -\sixth\mu^\pm\fn{\psi^{\pm,n}_i - \psi^{\pm,n}_{i-\half}}\\
-%  &-\frac{2}{3}\mu^\pm\fn{\psi^{\pm,k+1}_i - \psi^{\pm,k+1}_{i-\half}}\\
-%  &-\sixth\sigma_{t,i,L}^{n-1}\frac{h_i}{2}\psi\iL^{\pm,n-1}
-%   -\sixth\sigma_{t,i,L}^{n}  \frac{h_i}{2}\psi\iL^{\pm,n}
-%   -\frac{2}{3}\sigma_{t,i,L}^k\frac{h_i}{2}\psi\iL^{\pm,k+1}\\
-%  &+\sixth\frac{\sigma_{s,i,L}^{n-1}}{4\pi}\frac{h_i}{2}\phi\iL^{n-1}
-%   +\sixth\frac{\sigma_{s,i,L}^{n}}{4\pi}  \frac{h_i}{2}\phi\iL^{n}
-%   +\frac{2}{3}\frac{\sigma_{s,i,L}^k}{4\pi}\frac{h_i}{2}\phi\iL^{k+1}\\
-%  &+\sixth\frac{1}{4\pi}\frac{h_i}{2}Q_{i,L}^{\pm,n-1}
-%   +\sixth\frac{1}{4\pi}\frac{h_i}{2}Q_{i,L}^{\pm,n}
-%   +\frac{2}{3}\frac{1}{4\pi}\frac{h_i}{2}Q_{i,L}^{\pm,k} \pec
-%\end{split}\end{equation}
 \begin{equation}\lequ{S2BDF2fullL}\begin{split}
   \frac{1}{c}\frac{\Psi\iL^{\pm,k+1}-\Psi\iL^{\pm,n}}{\dt} = &
    -\sixth     \frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,n-1}_i - \Psi^{\pm,n-1}_{i-\half}}
@@ -198,21 +110,6 @@ $t^{n}\rightarrow t^{n+1}$ are
    +\frac{2}{3}\Q_{i,L}^{\pm,k} \pec
 \end{split}\end{equation}
 
-%\begin{equation}\lequ{S2BDF2fullR}\begin{split}
-%  \frac{1}{c}\frac{\psi\iR^{\pm,k+1}-\psi\iR^{\pm,n}}{\dt} = &
-%   -\sixth\mu^\pm\fn{\psi^{\pm,n-1}_{i+\half}      - \psi^{\pm,n-1}_i}
-%   -\sixth\mu^\pm\fn{\psi^{\pm,n}_{i+\half}        - \psi^{\pm,n}_i}\\
-%  &-\frac{2}{3}\mu^\pm\fn{\psi^{\pm,k+1}_{i+\half} - \psi^{\pm,k+1}_i}\\
-%  &-\sixth\sigma_{t,i,R}^{n-1}\frac{h_i}{2}\psi\iR^{\pm,n-1}
-%   -\sixth\sigma_{t,i,R}^{n}  \frac{h_i}{2}\psi\iR^{\pm,n}
-%   -\frac{2}{3}\sigma_{t,i,R}^k\frac{h_i}{2}\psi\iR^{\pm,k+1}\\
-%  &+\sixth\frac{\sigma_{s,i,R}^{n-1}}{4\pi}\frac{h_i}{2}\phi\iR^{n-1}
-%   +\sixth\frac{\sigma_{s,i,R}^{n}}{4\pi}  \frac{h_i}{2}\phi\iR^{n}
-%   +\frac{2}{3}\frac{\sigma_{s,i,R}^k}{4\pi}\frac{h_i}{2}\phi\iR^{k+1}\\
-%  &+\sixth\frac{1}{4\pi}\frac{h_i}{2}Q_{i,R}^{\pm,n-1}
-%   +\sixth\frac{1}{4\pi}\frac{h_i}{2}Q_{i,R}^{\pm,n}
-%   +\frac{2}{3}\frac{1}{4\pi}\frac{h_i}{2}Q_{i,R}^{\pm,k} \pep
-%\end{split}\end{equation}
 \begin{equation}\lequ{S2BDF2fullR}\begin{split}
   \frac{1}{c}\frac{\Psi\iR^{\pm,k+1}-\Psi\iR^{\pm,n}}{\dt} = &
    -\sixth     \frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,n-1}_{i+\half} - \Psi^{\pm,n-1}_i}
@@ -235,24 +132,6 @@ the following definitions:
 \begin{equation}
   \alpha = \frac{1}{c\dt} \pec \quad \beta = \frac{2}{3} \pec
 \end{equation}
-%\begin{equation}\begin{split}
-%\tilde{Q}_{i,L}^{\pm,k} = &
-%    \fourth Q_{i,L}^{\pm,n-1} + \fourth Q_{i,L}^{\pm,n} + Q_{i,L}^{\pm,k}\\
-%& + \fourth\sigma_{s,i,L}^{n-1}\phi_{i,L}^{n-1} + \fourth\sigma_{s,i,L}^n\phi_{i,L}^n \\
-%& - \pi\sigma_{t,i,L}^{n-1}\psi_{i,L}^{\pm,n-1} - \pi\sigma_{t,i,L}^{n}\psi_{i,L}^{\pm,n} \\
-%& - \frac{2\pi}{h_i}\mu^\pm\fn{\psi^{\pm,n-1}_i - \psi^{\pm,n-1}_{i-\half}}
-%  - \frac{2\pi}{h_i}\mu^\pm\fn{\psi^{\pm,n}_i - \psi^{\pm,n}_{i-\half}} \\
-%& + \frac{4\pi}{c\dt h_i}\psi_{i,L}^{\pm,n-1} + \frac{4\pi}{c\dt h_i}\psi_{i,L}^{\pm,n} \pec
-%\end{split}\end{equation}
-%\begin{equation}\begin{split}
-%\tilde{Q}_{i,R}^{\pm,k} = &
-%    \fourth Q_{i,R}^{\pm,n-1} + \fourth Q_{i,R}^{\pm,n} + Q_{i,R}^{\pm,k}\\
-%& + \fourth\sigma_{s,i,R}^{n-1}\phi_{i,R}^{n-1} + \fourth\sigma_{s,i,R}^n\phi_{i,R}^n \\
-%& - \pi\sigma_{t,i,R}^{n-1}\psi_{i,R}^{\pm,n-1} - \pi\sigma_{t,i,R}^{n}\psi_{i,R}^{\pm,n} \\
-%& - \frac{2\pi}{h_i}\mu^\pm\fn{\psi^{\pm,n-1}_{i+\half} - \psi^{\pm,n-1}_{i}}
-%  - \frac{2\pi}{h_i}\mu^\pm\fn{\psi^{\pm,n}_{i+\half} - \psi^{\pm,n}_{i}} \\
-%& + \frac{4\pi}{c\dt h_i}\psi_{i,R}^{\pm,n-1} + \frac{4\pi}{c\dt h_i}\psi_{i,R}^{\pm,n} \pep
-%\end{split}\end{equation}
 \begin{multline}
   \tilde{\Q}_{i,L}^{\pm,k}
   = \frac{\Psi\iL^{\pm,n}}{c\dt}

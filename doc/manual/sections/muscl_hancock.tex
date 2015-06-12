@@ -4,13 +4,13 @@
 
 The homogeneous Euler equations may be expressed in conservative form as
 \begin{equation}
-  \dydt{\U} + \nabla\cdot\Flux(\U) = \mathbf{0} \pec
+  \dydt{\H} + \nabla\cdot\Flux(\H) = \mathbf{0} \pec
 \end{equation}
-where $\U$ is a vector of the conservative unknowns
-and $\Flux(\U)$ is the flux associated with each:
+where $\H$ is a vector of the conservative unknowns
+and $\Flux(\H)$ is the flux associated with each:
 \begin{equation}
-  \U=\left[\begin{array}{c}\rho\\\rho u\\E\end{array}\right] \pec\qquad
-  \Flux(\U)=\left[\begin{array}{c}\rho u\\
+  \H=\left[\begin{array}{c}\rho\\\rho u\\E\end{array}\right] \pec\qquad
+  \Flux(\H)=\left[\begin{array}{c}\rho u\\
   \rho u^2 + p\\
   (E+p)u\end{array}\right] \pep
 \end{equation}
@@ -19,26 +19,20 @@ consists of constructing a linear representation of the solution
 using slopes $\Delta_i^n$:
 \begin{subequations}\label{eq:hydro_edge}
 \begin{equation}
-  \U\iL^n = \U_i^n - \frac{\Delta_i^n}{2} \pec
+  \H\iL^n = \H_i^n - \frac{\Delta_i^n}{2} \pec
   \quad
-  \U\iR^n = \U_i^n + \frac{\Delta_i^n}{2} \pec
+  \H\iR^n = \H_i^n + \frac{\Delta_i^n}{2} \pec
 \end{equation}
 \begin{equation}\label{eq:slopes}
-  \Delta_i^n = \half\Delta\U_{i-\half}^n + \half\Delta\U_{i+\half}^n \pec
+  \Delta_i^n = \half\Delta\H_{i-\half}^n + \half\Delta\H_{i+\half}^n \pec
 \end{equation}
 \begin{equation}
-  \Delta\U_{i-\half}^n = \U_i^n - \U_{i-1}^n \pec\quad
-  \Delta\U_{i+\half}^n = \U_{i+1}^n - \U_i^n \pec
+  \Delta\H_{i-\half}^n = \H_i^n - \H_{i-1}^n \pec\quad
+  \Delta\H_{i+\half}^n = \H_{i+1}^n - \H_i^n \pec
 \end{equation}
 \end{subequations}
 and then evolving that representation by half a time step:
-\begin{equation}
-  \U_i^{n+\half} = \U_i^n - \frac{\half\dt}{\dx}
-  \left(\Flux(\U\iR^n) - \Flux(\U\iL^n)\right) \pep
-\end{equation}
+\hydroPredictor{n}{n+\half}{\half}
 The second half of a MUSCL-Hancock step employs a Riemann solver
 to compute the fluxes at time $n+\half$:
-\begin{equation}
-  \U_i^{n+1} = \U_i^n - \frac{\dt}{\dx}
-  \left(\Flux_{i+\half}^{n+\half} - \Flux_{i-\half}^{n+\half}\right) \pep
-\end{equation}
+\hydroCorrector{n}{n+\half}{n+1}{}

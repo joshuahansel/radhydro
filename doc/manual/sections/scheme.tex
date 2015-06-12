@@ -1,0 +1,119 @@
+\section{Scheme Description}
+
+First, some notation is defined for the scheme that follows:
+\[
+   \R^n \equiv \{\Psi^\pm\iL,\Psi^\pm\iR\} \quad\forall i
+\]
+\[
+   \H^n \equiv \{\rho_i^n, (\rho u)_i^n, E_i^n\} \quad\forall i
+\]
+\[
+   \delta e^n \equiv \{\delta e_i^n\} \quad\forall i
+\]
+\[
+   \Delta^n \equiv \{\Delta\rho_i^n, \Delta(\rho u)_i^n, \Delta E_i^n\} \quad\forall i
+\]
+\[
+   \sigma^n \equiv \{\sigma_{s,i,L}^n, \sigma_{s,i,R}^n,
+   \sigma_{a,i,L}^n, \sigma_{a,i,R}^n, \sigma_{t,i,L}^n, \sigma_{t,i,R}^n\}
+   \quad\forall i
+\]
+These are the quantities that are stored throughout the
+calculation. Other quantities are computed when needed.
+
+\begin{enumerate}
+
+\item \textbf{Compute initial conditions.} The following initial conditions
+are provided: $\R^0$, $\H^0$, $\sigma^0$, and $\delta e^0$.
+
+\item \textbf{Begin transient.} For each time step $n$, a new time step
+size must be computed in accordance with the CFL condition.
+
+% Cycle 1 predictor
+
+\item \textbf{Perform Cycle 1 Predictor.} This step goes from
+$t^n$ to $t^{n+\fourth}$.
+
+\begin{enumerate}
+\item \textbf{Perform Cycle 1 MUSCL-Hancock Predictor.} First, slopes $\Delta^n$ are
+computed.
+Then a linear representation of the solution is created, and the
+the MUSCL-Hancock predictor is performed to obtain $\H^*$, the
+homogeneous hydrodyamics solution at $t^{n+\fourth}$.
+
+\item \textbf{Initialize nonlinear iteration.} Iteration of the
+$t^{n+\fourth}$ solution is required since the system of equations
+is nonlinear. The iterates $\R^k$ and $\H^k$ may be initialized
+to the previous time
+values, $\R^n$ and $\H^n$, respectively.
+
+\item\label{item:vel_update}
+\textbf{Update velocities.} The Crank-Nicolson discretization
+of the velocity update equation, Equation \requ{hydromCNfull},
+is solved to obtain new
+velocities at cell centers, $\{u_i^{k+1}\}$. Evaluation of
+the cross sections and radiation quantities $\E$ and $\F$
+is achieved by averaging the left and right values.
+
+\item \textbf{Update radiation.} The Crank-Nicolson discretization of the S-2
+equations, Equations \requ{S2CNfullL} and \requ{S2CNfullR} are solved, using
+the linearization given in Section \ref{sec:linearization}. Evaluation
+of the densities and velocities is achieved using using the cell-centered values
+in conjunction with the slopes $\Delta^n$. Evaluation of internal
+energies and temperatures is achieved using the internal energy slopes
+$\delta e^n$.
+
+\item \textbf{Update internal energies.} The internal energies are
+updated in accordance with the linearization procedure given is Section
+\ref{sec:linearization}. The update equations produce edge values
+$\{e^{k+1}\iL,e^{k+1}\iR\}$. These left and right values are
+averaged to produce cell average values for internal energy $\{e^{k+1}_i\}$
+which are used in the subsequent iteration.
+This is also the time when cross sections should be updated
+if they are functions of the hydrodynamic state of the fluid.
+
+\item \textbf{Check convergence.} The new solutions $\R^{k+1}$ and
+$\H^{k+1}$ are compared with the previous iteration solutions
+$\R^k$ and $\H^k$ to determine if convergence has been achieved.
+If the solutions have not converged, then the computation
+returns to Step \ref{item:vel_update}.
+\end{enumerate}
+
+% Cycle 1 corrector
+
+\item \textbf{Perform Cycle 1 Corrector.} This step proceeds
+just as the predictor step, except that the MUSCL-Hancock
+corrector step is used instead of the MUSCL-Hancock predictor
+step, and the step goes from $t^n$ to $t^{n+\half}$ instead
+of $t^n$ to $t^{n+\fourth}$. No new slopes are computed;
+evaluation of edge densities and velocities again use
+$\Delta^n$, and evaluation of edge internal energies
+and temperatures again use $\delta e^n$.
+
+% Cycle 2 predictor
+
+\item \textbf{Perform Cycle 2 Predictor.} This step proceeds
+just as the Cycle 1 predictor step, except that the
+step goes from $t^{n+\half}$ to $t^{n+\frac{3}{4}}$ instead
+of $t^n$ to $t^{n+\fourth}$. As in Cycle 1, new slopes
+are computed in the MUSCL-Hancock predictor step;
+the slopes $\Delta^{n+\half}$ are then used for
+evaluation of edge densities and velocities in the remainder
+of the cycle. Evaluation of edge internal energies
+and temperatures again use $\delta e^n$.
+
+% Cycle 2 corrector
+
+\item \textbf{Perform Cycle 2 Corrector.} This step goes
+from $t^{n+\half}$ to $t^{n+1}$, but uses a form of
+TR/BDF-2 instead of Crank-Nicolson, so values at $t^n$
+are used in the temporal discretization.
+
+% End
+
+\item \textbf{Store values for next time step.}
+At this point, the old solutions, hydrodynamics slopes,
+internal energy slopes, and cross sections
+are saved for the next time step.
+
+\end{enumerate}

@@ -145,3 +145,127 @@
 \newcommand{\dxi}{\Delta x_i}
 \newcommand{\dyj}{\Delta y_j}
 \newcommand{\ts}[1]{\textstyle #1}
+%
+% Equations
+%
+\newcommand{\momentumSource}{
+   \left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]
+}
+
+% #1: old   time index
+% #2: coefficient for time step size
+% #3: spatial differencing subscript command
+% #4: optional label command
+\newcommand{\momentumUpdateCN}[4]{
+\begin{equation}
+  \frac{\rho^*#3\left(u^{k+1}#3-u^*#3\right)}{#2\dt} = 
+   \half\momentumSource^{#1}#3
+  +\half\momentumSource^k#3
+  \pep
+#4
+\end{equation}
+}
+
+% #1: older time index
+% #2: old   time index
+% #3: coefficient for time step size
+% #4: spatial differencing subscript command
+% #5: optional label command
+\newcommand{\momentumUpdateBDFTwo}[5]{
+\begin{equation}\begin{split}
+  \frac{\rho^*#4\left(u^{k+1}#4-u^*#4\right)}{#3\dt} =  
+  & \sixth\momentumSource^{#1}#4
+   +\sixth\momentumSource^{#2}#4\\
+  &+\frac{2}{3}\momentumSource^{k+1}#4
+  \pep
+#5
+\end{split}\end{equation}
+}
+
+\newcommand{\energyEmissionSource}{
+   \left[\sigma_a c\left(aT^4 - \E\right)\right]
+}
+
+\newcommand{\energyEmissionSourceNew}{
+   \sigma_a^k c\left[aT^4 - \E\right]^{k+1}
+}
+
+\newcommand{\energyDriftSource}{
+   \left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]
+}
+
+% #1: old   time index
+% #2: coefficient for time step size
+% #3: spatial differencing subscript command
+% #4: optional label command
+\newcommand{\energyUpdateCN}[4]{
+\begin{equation}\begin{split}
+  \frac{E^{k+1}#3-E^*#3}{#2\dt} = &
+  -\half\energyEmissionSource^{#1}#3
+  -\half\energyEmissionSourceNew#3\\
+  &+\half\energyDriftSource^{#1}#3
+   +\half\energyDriftSource^k#3
+  \pep
+#4
+\end{split}\end{equation}
+}
+
+% #1: older time index
+% #2: old   time index
+% #3: coefficient for time step size
+% #4: spatial differencing subscript command
+% #5: optional label command
+\newcommand{\energyUpdateBDFTwo}[5]{
+\begin{equation}\begin{split}
+  \frac{E^{k+1}#4-E^*#4}{#3\dt} = &
+  -\sixth\energyEmissionSource^{#1}#4
+  -\sixth\energyEmissionSource^{#2}#4\\
+  &-\frac{2}{3}\energyEmissionSourceNew#4
+   +\sixth\energyDriftSource^{#1}#4\\
+  &+\sixth\energyDriftSource^{#2}#4
+   +\frac{2}{3}\energyDriftSource^k#4
+  \pep
+#5
+\end{split}\end{equation}
+}
+
+% #1: old time index
+% #2: new time index
+% #3: coefficient for time step size
+\newcommand{\hydroPredictor}[3]{
+\begin{equation}
+  \H_i^{#2} = \H_i^{#1} - \frac{#3\dt}{\dx}
+  \left(\Flux(\H\iR^{#1}) - \Flux(\H\iL^{#1})\right) \pep
+\end{equation}
+}
+
+% #1: older time index
+% #2: old time index
+% #3: new time index
+% #4: coefficient for time step size
+\newcommand{\hydroCorrector}[4]{
+\begin{equation}
+  \H_i^{#3} = \H_i^{#1} - \frac{#4\dt}{\dx}
+  \left(\Flux_{i+\half}^{#2} - \Flux_{i-\half}^{#2}\right) \pep
+\end{equation}
+}
+
+% #1: time index
+\newcommand{\slopeEquations}[1]{
+\begin{equation}
+  \Delta_i^{#1} = \half\Delta\H_{i-\half}^{#1} + \half\Delta\H_{i+\half}^{#1} \pec
+\end{equation}
+\begin{equation}
+  \Delta\H_{i-\half}^{#1} = \H_i^{#1} - \H_{i-1}^{#1} \pec\quad
+  \Delta\H_{i+\half}^{#1} = \H_{i+1}^{#1} - \H_i^{#1} \pep
+\end{equation}
+}
+
+% #1: time index
+\newcommand{\hydroLinearRepresentation}[1]{
+\begin{equation}
+  \H\iL^{#1} = \H_i^{#1} - \frac{\Delta_i^{#1}}{2} \pec
+  \quad
+  \H\iR^{#1} = \H_i^{#1} + \frac{\Delta_i^{#1}}{2} \pep
+\end{equation}
+}

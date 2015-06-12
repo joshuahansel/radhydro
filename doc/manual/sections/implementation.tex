@@ -18,17 +18,6 @@ state $m$, e.g., for an arbitrary hydrodynamics quantity $H$,
 $H\iR^n = H_i^n + \half\Delta_i^m$.
 
 The pseudocode is listed below:
-%   $\H^* =$ MUSCLHancockRiemann($\H^n,\H^{n+\fourth},\half\dt$)
-%   ts = 'CN'
-%   $\U^k = \U^n$
-%   for each iteration $k$
-%      $u^{k+1} =$ hydroMomentumSourceUpdate($\U^{n+\fourth},\H^*,\U^k,\fourth\dt$,ts)
-%      $\Psi^{k+1} =$ radiationSolve($\U^{n+\fourth},\U^k,\fourth\dt$,ts)
-%      $E^{k+1} =$ hydroEnergySourceUpdate($\U^{n+\fourth},\H^*,\U^k,\fourth\dt$,ts)
-%      converged = checkConvergence($\U^k,\U^{k+1}$)
-%      if converged, then exit
-%   end iteration loop
-%   $\U^{n+\half} = \U^{k+1}$
 
 \begin{lstlisting}[mathescape,columns=fullflexible,
    basicstyle=\fontfamily{lmvtt}\selectfont]

@@ -5,53 +5,21 @@
 %-------------------------------------------------------------------------------
 \subsubsection{Crank-Nicolson}
 %-------------------------------------------------------------------------------
-For a step $t^n\rightarrow t^{n+1}$,
-\begin{equation}
-  \frac{\rho^{n+1}\left(u^{k+1}-u^*\right)}{\dt} = 
-   \half\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n
-  +\half\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
-  \pep
-\end{equation}
+\momentumUpdateCN{n}{}{}
 
 \subsubsection{TR/BDF-2}
 %-------------------------------------------------------------------------------
-For a step $t^{n+\half}\rightarrow t^{n+1}$,
-\begin{equation}\begin{split}
-  \frac{\rho^{n+1}\left(u^{k+1}-u^*\right)}{\half\dt} =  
-  & \sixth\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n
-   +\sixth\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{n+\half}\\
-  &+\frac{2}{3}\left[\frac{\sigma_{t}}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{k+1}
-  \pep
-\end{split}\end{equation}
+\momentumUpdateBDFTwo{n-1}{n}{}{}
 
 \subsection{Fluid Energy Source Update Equation}
 %-------------------------------------------------------------------------------
 \subsubsection{Crank-Nicolson}
 %-------------------------------------------------------------------------------
-For a step $t^n\rightarrow t^{n+1}$,
-\begin{equation}\begin{split}
-  \frac{E^{k+1}-E^*}{\dt} = &
-  -\half\left[\sigma_{a} c\left(aT^4 - \E\right)\right]^n
-  -\half\sigma_{a}^k c\left[aT^4 - \E\right]^{k+1}\\
-  &+\half\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n
-   +\half\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
-  \pep
-\end{split}\end{equation}
+\energyUpdateCN{n}{}{}
 
 \subsubsection{TR/BDF-2}
 %-------------------------------------------------------------------------------
-For a step $t^{n+\half}\rightarrow t^{n+1}$,
-\begin{equation}\begin{split}
-  \frac{E^{k+1}-E^*}{\half\dt} = &
-  -\sixth\left[\sigma_a c\left(aT^4 - \E\right)\right]^n
-  -\sixth\left[\sigma_a c\left(aT^4 - \E\right)\right]^{n+\half}\\
-  &-\frac{2}{3}\sigma_a^k c\left[aT^4 - \E\right]^{k+1}
-   +\sixth\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^n\\
-  &+\sixth\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^{n+\half}
-   +\frac{2}{3}\left[\sigma_t\frac{u}{c}\left(\F-\frac{4}{3}\E u\right)\right]^k
-  \pep
-\end{split}\end{equation}
-
+\energyUpdateBDFTwo{n-1}{n}{}{}
 
 \subsection{\texorpdfstring{S$_2$}{S-2} Equations}
 %-------------------------------------------------------------------------------
@@ -59,13 +27,6 @@ For a step $t^{n+\half}\rightarrow t^{n+1}$,
 %-------------------------------------------------------------------------------
 Applying the Crank-Nicolson scheme to Equation \requ{S2Q} for a step
 $t^n\rightarrow t^{n+1}$, the S-2 equations become
-%\begin{equation}\lequ{S2CN}\begin{split}
-%  \frac{1}{c}\frac{\psi^{\pm,k+1}-\psi^{\pm,n}}{\dt} = &
-%  -\half\mu^\pm\dydx{\psi^{\pm,n}} -\half\mu^\pm\dydx{\psi^{\pm,k+1}}\\
-%  &-\half\sigma_t^n\psi^{\pm,n} -\half\sigma_t^k\psi^{\pm,k+1}\\
-%  &+\half\frac{\sigma_s^n}{4\pi}\phi^n +\half\frac{\sigma_s^k}{4\pi}\phi^{k+1}\\
-%  &+\half\frac{1}{4\pi}Q^{\pm,n} +\half\frac{1}{4\pi}Q^{\pm,k} \pec
-%\end{split}\end{equation}
 \begin{equation}\lequ{S2CN}\begin{split}
   \frac{1}{c}\frac{\Psi^{\pm,k+1}-\Psi^{\pm,n}}{\dt} = &
   -\half\mu^\pm\dydx{\Psi^{\pm,n}} -\half\mu^\pm\dydx{\Psi^{\pm,k+1}}\\
@@ -79,21 +40,6 @@ where $k$ represents the $k$th iteration of a quantity at time $t^{n+1}$.
 %-------------------------------------------------------------------------------
 Applying the BDF-2 scheme to Equation \requ{S2Q} for a step
 $t^{n}\rightarrow t^{n+1}$, the S-2 equations become
-%\begin{equation}\lequ{S2BDF2}\begin{split}
-%  \frac{1}{c}\frac{\psi^{\pm,k+1}-\psi^{\pm,n}}{\dt} = &
-%  -\sixth\mu^\pm\dydx{\psi^{\pm,n-1}}
-%  -\sixth\mu^\pm\dydx{\psi^{\pm,n}}
-%  -\frac{2}{3}\mu^\pm\dydx{\psi^{\pm,k+1}}\\
-%  &-\sixth\sigma_t^{n-1}\psi^{\pm,n-1}
-%   -\sixth\sigma_t^{n}  \psi^{\pm,n}
-%   -\frac{2}{3}\sigma_t^k\psi^{\pm,k+1}\\
-%  &+\sixth\frac{\sigma_s^{n-1}}{4\pi}\phi^{n-1}
-%   +\sixth\frac{\sigma_s^{n}}{4\pi}  \phi^{n}
-%   +\frac{2}{3}\frac{\sigma_s^k}{4\pi}\phi^{k+1}\\
-%  &+\sixth\frac{1}{4\pi}Q^{\pm,n-1}
-%   +\sixth\frac{1}{4\pi}Q^{\pm,n}
-%   +\frac{2}{3}\frac{1}{4\pi}Q^{\pm,k} \pec
-%\end{split}\end{equation}
 \begin{equation}\lequ{S2BDF2}\begin{split}
   \frac{1}{c}\frac{\Psi^{\pm,k+1}-\Psi^{\pm,n}}{\dt} = &
   -\sixth\mu^\pm\dydx{\Psi^{\pm,n-1}}
@@ -110,3 +56,4 @@ $t^{n}\rightarrow t^{n+1}$, the S-2 equations become
    +\frac{2}{3}\Q^{\pm,k} \pec
 \end{split}\end{equation}
 where $k$ represents the $k$th iteration of a quantity at time $t^{n+1}$.
+
