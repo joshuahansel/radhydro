@@ -276,6 +276,6 @@ def evalMomentumExchangeAverage(i, rad, hydro, cx):
     E = 0.5*rad.E[i][0] + 0.5*rad.E[i][1]
     F = 0.5*rad.F[i][0] + 0.5*rad.F[i][1]
 
-    return sig_t_avg/GC.SPD_OF_LGT*(F - 4.0/3.0*E*hydro[i].u)
+    return sig_t/GC.SPD_OF_LGT*(F - 4.0/3.0*E*hydro[i].u)
 
 

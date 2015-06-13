@@ -7,7 +7,7 @@ from copy import deepcopy
 from takeRadiationStep import takeRadiationStep
 from utilityFunctions import computeL2RelDiff, computeEffectiveOpacities,\
    updateCrossSections
-from hydroSource import updateInternalEnergy, QEHandler
+from hydroSource import updateVelocity, updateInternalEnergy, QEHandler
 
 ## Performs nonlinear solve
 #
@@ -106,6 +106,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
            cx_prev       = cx_prev,
            cx_old        = cx_old,
            cx_older      = cx_older,
+           rad_prev      = rad_prev,
            rad_old       = rad_old,
            rad_older     = rad_older,
            hydro_prev    = hydro_prev,

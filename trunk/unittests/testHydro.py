@@ -13,6 +13,7 @@ from hydroState import HydroState
 from plotUtilities import plotTemperatures
 from radiation import Radiation
 from transient import runNonlinearTransient
+from musclHancock import plotHydroSolutions
 
 ## Unit test class
 #
@@ -24,14 +25,15 @@ class TestHydro(unittest.TestCase):
    def test_Hydro(self):
 
       # create mesh
-      n_elems = 50
-      mesh = Mesh(n_elems,1.0)
+      n_elems = 100
+      width = 1.0
+      mesh = Mesh(n_elems,width)
       x_diaphragm = 0.3
 
       # time step size and transient start and end times
       CFL     = 0.5
       t_start = 0.0
-      t_end   = 0.1
+      t_end   = 0.05
 
       # constant properties
       sig_s = 1.0 # arbitrary
@@ -65,23 +67,18 @@ class TestHydro(unittest.TestCase):
       
          # IC for left half of domain
          if mesh.getElement(i).x_cent < x_diaphragm:
-            hydro_IC.append( (
-               HydroState(u=uL,rho=rhoL,int_energy=eL,gamma=gam,spec_heat=c_v),
-               HydroState(u=uL,rho=rhoL,int_energy=eL,gamma=gam,spec_heat=c_v)) )
+            hydro_IC.append(
+               HydroState(u=uL,rho=rhoL,int_energy=eL,gamma=gam,spec_heat=c_v) )
 
          # IC for right half of domain
          else:
-            hydro_IC.append( (
-               HydroState(u=uR,rho=rhoR,int_energy=eR,gamma=gam,spec_heat=c_v),
-               HydroState(u=uR,rho=rhoR,int_energy=eR,gamma=gam,spec_heat=c_v)) )
+            hydro_IC.append(
+               HydroState(u=uR,rho=rhoR,int_energy=eR,gamma=gam,spec_heat=c_v) )
   
       # initialize radiation to zero solution to give pure hydrodynamics
       psi_left  = 0.0
       psi_right = 0.0
-      rad_IC    = Radiation([psi_right for i in range(n_elems*4)])
-
-      # time-stepper
-      time_stepper = "BE"
+      rad_IC    = Radiation([0.0 for i in range(n_elems*4)])
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -90,9 +87,10 @@ class TestHydro(unittest.TestCase):
       # run transient
       rad_new, hydro_new = runNonlinearTransient(
          mesh         = mesh,
-         time_stepper = time_stepper,
+         time_stepper = 'BE',
          problem_type = 'rad_hydro',
          dt_option    = 'CFL',
+         CFL          = 0.5,
          t_start      = t_start,
          t_end        = t_end,
          psi_left     = psi_left,
@@ -104,7 +102,7 @@ class TestHydro(unittest.TestCase):
 
       # plot solutions if run standalone
       if __name__ == "__main__":
-          plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=True)
+         plotHydroSolutions(mesh.getCellCenters(), hydro_new)
 
   
 # run main function from unittest module

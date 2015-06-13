@@ -24,7 +24,7 @@ def solveHydroProblem():
 
     t = 0.0
     cfl = 0.5
-    n = 500
+    n = 100
 
     #Left and right BC and initial values
     gamma = 1.4 #gas constant
@@ -50,7 +50,8 @@ def solveHydroProblem():
     i_right = int(0.7*n)
 
     #Create cell centered variables
-    states_a = [HydroState(u=u_left,p=p_left,gamma=gamma,rho=rho_left,spec_heat=spec_heat) for i in range(i_left)]
+    states_a = [HydroState(u=u_left,p=p_left,gamma=gamma,rho=rho_left,spec_heat=spec_heat)
+       for i in range(i_left)]
     states_a = states_a + [HydroState(u=u_right,p=p_right,gamma=gamma,spec_heat=spec_heat,rho=rho_right) for i in
             range(i_right)]
 
@@ -59,7 +60,11 @@ def solveHydroProblem():
     #----------------------------------------------------------------
 
     #loop over time steps
+    time_index = 0
     while (t < t_end):
+
+        # increment time index
+        time_index += 1
 
         #Compute a new time step size based on CFL
         c = [sqrt(i.p*i.gamma/i.rho)+abs(i.u) for i in states_a]
@@ -73,7 +78,7 @@ def solveHydroProblem():
             dt = t_end - t + 0.000000001
             t += dt
 
-        print("t = %f -> %f" % (t-dt,t))
+        print("Time step %d: t = %f -> %f" % (time_index,t-dt,t))
 
         # compute slopes
         slopes = HydroSlopes(states_a)
@@ -86,8 +91,8 @@ def solveHydroProblem():
 
 
     # plot solution
-    spat_coors = [i.x_cent for i in mesh.elements]
-    plotHydroSolutions(spat_coors,states=states_a)
+    x_centers = mesh.getCellCenters()
+    plotHydroSolutions(x_centers,states=states_a)
 
     # print solution
     if print_solution:

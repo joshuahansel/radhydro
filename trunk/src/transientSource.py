@@ -105,9 +105,9 @@ def computeRadiationSource(mesh, time_stepper, problem_type, add_ext_source=Fals
 
    elif problem_type == 'rad_hydro':
 
-       terms.append(PlanckianTerm(mesh, time_stepper),
-                    DriftTerm(mesh, time_stepper),
-                    AnisotropicTerm(mesh, time_stepper))
+       terms.extend([PlanckianTerm(mesh, time_stepper),
+                     DriftTerm(mesh, time_stepper),
+                     AnisotropicTerm(mesh, time_stepper)])
 
        # add extraneous source term if specified
        if add_ext_source:
@@ -666,7 +666,7 @@ class DriftTerm(TransientSourceTerm):
 ## Derived class for computing anisotropic source term,
 #  \f$2\mu^\pm\sigma_t\mathcal{E}u\f$
 #
-class AnisotropicSourceTerm(TransientSourceTerm):
+class AnisotropicTerm(TransientSourceTerm):
 
     #-------------------------------------------------------------------------------
     ## Constructor
@@ -686,6 +686,12 @@ class AnisotropicSourceTerm(TransientSourceTerm):
     #  @param[in] rad_prev    previous radiation
     #
     def evalImplicit(self, i, cx_prev, hydro_prev, rad_prev, slopes_old, **kwargs):
+
+        # get local indices
+        Lm = getLocalIndex("L","-") # dof L,-
+        Lp = getLocalIndex("L","+") # dof L,+
+        Rm = getLocalIndex("R","-") # dof R,-
+        Rp = getLocalIndex("R","+") # dof R,+
 
         # get left and right total cross sections
         cxtL = cx_prev[i][0].sig_t
