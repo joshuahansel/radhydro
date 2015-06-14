@@ -7,8 +7,8 @@ from mesh import        Mesh
 from math import        sqrt
 from hydroState import HydroState
 from hydroSlopes import HydroSlopes
-from musclHancock import hydroPredictor, \
-                        plotHydroSolutions, hydroCorrector
+from musclHancock import hydroPredictor, hydroCorrector
+from plotUtilities import plotHydroSolutions
 
 ## Main executioner for Hydro solve. Currently in a testing state.
 def solveHydroProblem():

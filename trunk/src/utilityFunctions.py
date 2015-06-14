@@ -368,3 +368,54 @@ def updateCrossSections(cx,hydro,slopes,e_slopes):
          cx[i][edge].updateCrossX(state)
 
 
+## Computes a vector in the ordering of radiation dofs, provided functions
+#  of (x,t) for both directions.
+#
+#  The input function handles are functions of (x,t), and the output source
+#  is given in the ordering of radiation dofs.
+#
+#  @param[in] f_minus  function handle for the minus direction
+#  @param[in] f_plus   function handle for the plus direction
+#  @param[in] mesh     mesh
+#  @param[in] t        time at which to evaluate the functions
+#
+#  @return vector in the ordering of radiation dofs
+#
+def computeRadiationVector(f_minus, f_plus, mesh, t):
+
+   # initialize vector
+   y = np.zeros(mesh.n_elems*4)
+
+   # loop over elements
+   for i in range(mesh.n_elems):
+
+      # get left and right x points on element
+      xL = mesh.getElement(i).xl
+      xR = mesh.getElement(i).xr
+
+      # get global indices
+      iLm = getIndex(i,"L","-") # dof i,L,-
+      iLp = getIndex(i,"L","+") # dof i,L,+
+      iRm = getIndex(i,"R","-") # dof i,R,-
+      iRp = getIndex(i,"R","+") # dof i,R,+
+
+      # compute source
+      y[iLm] = f_minus(xL, t)
+      y[iLp] = f_plus(xL, t)
+      y[iRm] = f_minus(xR, t)
+      y[iRp] = f_plus(xR, t)
+
+   return y
+
+
+## Prints a tuple list.
+#
+def printTupleList(tuple_list):
+
+    for tuple_i in tuple_list:
+
+        for j in tuple_i:
+
+            print j
+
+

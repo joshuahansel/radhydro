@@ -78,6 +78,7 @@ def plotAngularFlux(mesh, psi_minus, psi_plus, save=False,
    else:
       plt.show()
 
+
 ## Function to plot scalar flux.
 #
 #  @param[in] mesh      mesh data
@@ -150,11 +151,8 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
 
    # create x-points
    x = mesh.getCellCenters()
-   #x            = makeXPoints(mesh)           # discontinuous x-points
-   #x_continuous = makeContinuousXPoints(mesh) # continuous    x-points
 
    # transform array of tuples into array
-   #rad_T_array  = makeYPoints(Er)
    Er = computeAverageValues(Er_edge)
    a = GC.RAD_CONSTANT
    Tr = [pow(i/a, 0.25) for i in Er]
@@ -168,7 +166,6 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
    if hydro_states != None:
 
        T = [state.getTemperature() for state in hydro_states]
-       #T = makeYPoints(T)
        plt.plot(x,T,'b-', label='$T_m$')
     
    # annotations
@@ -191,10 +188,10 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
       plt.show()
 
    
-
 ## Function to transform mesh into discontinuous x-points for plotting.
 #
 #  @param[in] mesh  mesh data
+#
 #  @return    array of the discontinuous x-points
 #
 def makeXPoints(mesh):
@@ -211,9 +208,11 @@ def makeXPoints(mesh):
    # return
    return x
 
+
 ## Function to transform mesh into continuous x-points for plotting.
 #
 #  @param[in] mesh  mesh data
+#
 #  @return    array of the continuous x-points
 #
 def makeContinuousXPoints(mesh):
@@ -230,9 +229,11 @@ def makeContinuousXPoints(mesh):
    # return
    return x
 
+
 ## Function to transform array of tuples into array for plotting.
 #
 #  @param[in] tuples_sarray  array of tuples
+#
 #  @return    array of the discontinuous data
 #
 def makeYPoints(tuples_array):
@@ -251,17 +252,63 @@ def makeYPoints(tuples_array):
    # return
    return y
 
+
 ## Computes the average values for a list of 2-tuples
 #
 def computeAverageValues(tuple_list):
    return [0.5*i[0] + 0.5*i[1] for i in tuple_list]
 
-## Useful debugging function that just prints any tuple list
+
+## Plots hydro solution
 #
-def printTupled(tuple_list):
+def plotHydroSolutions(x,states,save_plot=False,filename='hydro_solution.pdf'):
 
-    for i in tuple_list:
+    plt.figure(figsize=(11,8.5))
 
-        for j in i:
+    u = []
+    p = []
+    rho = []
+    e = []
+    for i in states:
+        u.append(i.u)
+        p.append(i.p)
+        rho.append(i.rho)
+        e.append(i.e)
 
-            print j
+    if u != None:
+        plotSingle(x,u,"$u$")
+    
+    if rho != None:
+        plotSingle(x,rho,r"$\rho$") 
+
+    if p != None:
+        plotSingle(x,p,r"$p$")
+
+    if e != None:
+        plotSingle(x,e,r"$e$")
+
+    # save figure
+    if save_plot:
+       plt.savefig(filename)
+
+    # show figure
+    plt.show(block=False) #show all plots generated to this point
+    raw_input("Press anything to continue...")
+    plotSingle.fig_num=0
+
+
+## Plots a single plot in a 4x4 subplot array
+#
+def plotSingle(x,y,ylabl):
+
+    #static variable counter
+    plotSingle.fig_num += 1
+
+    plt.subplot(2,2,plotSingle.fig_num)
+    plt.xlabel('$x$ (cm)')
+    plt.ylabel(ylabl)
+    plt.plot(x,y,"b+-",label="My Stuff")
+    
+plotSingle.fig_num=0
+
+

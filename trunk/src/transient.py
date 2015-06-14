@@ -98,7 +98,7 @@ def runLinearTransient(mesh, time_stepper,
 def runNonlinearTransient(mesh, problem_type,
    psi_left, psi_right, cross_sects, rad_IC, hydro_IC, time_stepper='BE',
    dt_option='constant', dt_constant=None, CFL=0.5, t_start=0.0, t_end=1.0,
-   verbose=False):
+   use_2_cycles=False, verbose=False):
 
    # check input arguments
    if dt_option == 'constant':
@@ -149,7 +149,7 @@ def runNonlinearTransient(mesh, problem_type,
 
        # print each time step
        if verbose:
-          print("Time step %d: t = %f -> %f:" % (time_index,t-dt,t))
+          print("\nTime step %d: t = %f -> %f:" % (time_index,t-dt,t))
   
        # take time step
        if problem_type == 'rad_mat':
@@ -174,30 +174,71 @@ def runNonlinearTransient(mesh, problem_type,
 
        else:
 
-          # take time step with MUSCL-Hancock
-          hydro_new, rad_new, cx_new, slopes_old, e_slopes_new =\
-             takeTimeStepMUSCLHancock(
-             mesh           = mesh,
-             dt             = dt, 
-             psi_left       = psi_left,
-             psi_right      = psi_right,
-             cx_old         = cx_old,
-             cx_older       = cx_older,
-             hydro_old      = hydro_old,
-             hydro_older    = hydro_older,
-             rad_old        = rad_old,
-             rad_older      = rad_older,
-             slopes_older   = slopes_older,
-             e_slopes_old   = e_slopes_old,
-             e_slopes_older = e_slopes_older,
-             time_stepper_predictor='CN',
-             time_stepper_corrector='BDF2')
+          # if user chose to use the 2-cycle scheme
+          if use_2_cycles:
+
+             print("  Cycle 1:")
+
+             # take time step with MUSCL-Hancock
+             hydro_half, rad_half, cx_half, slopes_old, e_slopes_half =\
+                takeTimeStepMUSCLHancock(
+                mesh           = mesh,
+                dt             = 0.5*dt, 
+                psi_left       = psi_left,
+                psi_right      = psi_right,
+                cx_old         = cx_old,
+                cx_older       = cx_older,
+                hydro_old      = hydro_old,
+                hydro_older    = hydro_older,
+                rad_old        = rad_old,
+                rad_older      = rad_older,
+                slopes_older   = slopes_older,
+                e_slopes_old   = e_slopes_old,
+                e_slopes_older = e_slopes_older,
+                time_stepper_predictor='CN',
+                time_stepper_corrector='CN')
+
+             print("  Cycle 2:")
+
+             # take time step with MUSCL-Hancock
+             hydro_new, rad_new, cx_new, slopes_half, e_slopes_new =\
+                takeTimeStepMUSCLHancock(
+                mesh           = mesh,
+                dt             = 0.5*dt, 
+                psi_left       = psi_left,
+                psi_right      = psi_right,
+                cx_old         = cx_half,
+                cx_older       = cx_old,
+                hydro_old      = hydro_half,
+                hydro_older    = hydro_old,
+                rad_old        = rad_half,
+                rad_older      = rad_old,
+                slopes_older   = slopes_old,
+                e_slopes_old   = e_slopes_half,
+                e_slopes_older = e_slopes_old,
+                time_stepper_predictor='CN',
+                time_stepper_corrector='BDF2')
+
+          else:
             
-       # print the difference between old and new solutions
-       if verbose:
-          internal_energy_diff = computeL2RelDiff(hydro_old, hydro_new,
-             aux_func=lambda x: x.e)
-          print "Difference with old solution: ", internal_energy_diff, "\n"
+             # take time step with MUSCL-Hancock
+             hydro_new, rad_new, cx_new, slopes_old, e_slopes_new =\
+                takeTimeStepMUSCLHancock(
+                mesh           = mesh,
+                dt             = dt, 
+                psi_left       = psi_left,
+                psi_right      = psi_right,
+                cx_old         = cx_old,
+                cx_older       = cx_older,
+                hydro_old      = hydro_old,
+                hydro_older    = hydro_older,
+                rad_old        = rad_old,
+                rad_older      = rad_older,
+                slopes_older   = slopes_older,
+                e_slopes_old   = e_slopes_old,
+                e_slopes_older = e_slopes_older,
+                time_stepper_predictor='CN',
+                time_stepper_corrector='BDF2')
 
        # save older solutions
        cx_older  = deepcopy(cx_old)
@@ -283,6 +324,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        # perform predictor step of MUSCL-Hancock
        hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
 
+       print "    Predictor step:"
+
        # perform nonlinear solve
        hydro_half, rad_half, cx_half, e_slopes_half = nonlinearSolve(
           mesh         = mesh,
@@ -297,6 +340,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           rad_old      = rad_old,
           slopes_old   = slopes_old,
           e_slopes_old = e_slopes_old)
+
+       print "    Corrector step:"
 
        # perform corrector step of MUSCL-Hancock
        hydro_star = hydroCorrector(mesh, hydro_half, dt)

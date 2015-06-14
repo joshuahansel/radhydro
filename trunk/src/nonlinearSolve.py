@@ -136,9 +136,9 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
        # check nonlinear convergence
        # TODO: compute diff of rad solution as well to add to convergence criteria
        rel_diff = computeL2RelDiff(hydro_new, hydro_prev, aux_func=lambda x: x.e)
-       print("  Iteration %d: Difference = %7.3e" % (k,rel_diff))
+       print("      Iteration %d: Difference = %7.3e" % (k,rel_diff))
        if rel_diff < tol:
-          print("  Nonlinear iteration converged")
+          print("      Nonlinear iteration converged")
           break
 
        # reset previous iteration quantities if needed

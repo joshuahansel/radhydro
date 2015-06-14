@@ -50,7 +50,7 @@ from math import sqrt
 from mesh import Mesh
 import globalConstants as GC
 from radUtilities import mu
-from utilityFunctions import getIndex, getLocalIndex
+from utilityFunctions import getIndex, getLocalIndex, computeRadiationVector
 from utilityFunctions import getNu, computeEdgeVelocities, computeEdgeTemperatures,\
    computeEdgeDensities, computeEdgeInternalEnergies
 
@@ -909,27 +909,29 @@ def evalPlanckianOld(i, hydro_old, cx_old, e_slopes_old):
 #
 def computeRadiationExtraneousSource(psim_src, psip_src, mesh, t):
 
-   # initialize source vector
-   Q = np.zeros(mesh.n_elems*4)
-
-   # loop over elements
-   for i in range(mesh.n_elems):
-
-      # get left and right x points on element
-      xL = mesh.getElement(i).xl
-      xR = mesh.getElement(i).xr
-
-      # get global indices
-      iLm = getIndex(i,"L","-") # dof i,L,-
-      iLp = getIndex(i,"L","+") # dof i,L,+
-      iRm = getIndex(i,"R","-") # dof i,R,-
-      iRp = getIndex(i,"R","+") # dof i,R,+
-
-      # compute source
-      Q[iLm] = psim_src(xL, t)
-      Q[iLp] = psip_src(xL, t)
-      Q[iRm] = psim_src(xR, t)
-      Q[iRp] = psip_src(xR, t)
-
-   return Q
+   # call radiation vector evaluation function
+   return computeRadiationVector(psim_src, psip_src, mesh, t)
+#   # initialize source vector
+#   Q = np.zeros(mesh.n_elems*4)
+#
+#   # loop over elements
+#   for i in range(mesh.n_elems):
+#
+#      # get left and right x points on element
+#      xL = mesh.getElement(i).xl
+#      xR = mesh.getElement(i).xr
+#
+#      # get global indices
+#      iLm = getIndex(i,"L","-") # dof i,L,-
+#      iLp = getIndex(i,"L","+") # dof i,L,+
+#      iRm = getIndex(i,"R","-") # dof i,R,-
+#      iRp = getIndex(i,"R","+") # dof i,R,+
+#
+#      # compute source
+#      Q[iLm] = psim_src(xL, t)
+#      Q[iLp] = psip_src(xL, t)
+#      Q[iRm] = psim_src(xR, t)
+#      Q[iRp] = psip_src(xR, t)
+#
+#   return Q
 

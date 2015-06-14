@@ -10,10 +10,9 @@ import unittest
 from mesh import Mesh
 from crossXInterface import ConstantCrossSection
 from hydroState import HydroState
-from plotUtilities import plotTemperatures
+from plotUtilities import plotHydroSolutions
 from radiation import Radiation
 from transient import runNonlinearTransient
-from musclHancock import plotHydroSolutions
 
 ## Unit test class
 #
@@ -91,6 +90,7 @@ class TestHydro(unittest.TestCase):
          problem_type = 'rad_hydro',
          dt_option    = 'CFL',
          CFL          = 0.5,
+         use_2_cycles = True,
          t_start      = t_start,
          t_end        = t_end,
          psi_left     = psi_left,
