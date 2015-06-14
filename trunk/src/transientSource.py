@@ -80,38 +80,31 @@ from utilityFunctions import getNu, computeEdgeVelocities, computeEdgeTemperatur
 #                           'rad_only', 'rad_mat', or 'rad_hydro'.
 #                           Descriptions are above.
 #
-def computeRadiationSource(mesh, time_stepper, problem_type, add_ext_source=False,
+def computeRadiationSource(mesh, time_stepper, problem_type,
    **kwargs):
 
    # create list of transient source terms
    terms = [OldIntensityTerm(mesh, time_stepper), 
             StreamingTerm   (mesh, time_stepper),
             ReactionTerm    (mesh, time_stepper),
-            ScatteringTerm  (mesh, time_stepper)]
+            ScatteringTerm  (mesh, time_stepper),
+            SourceTerm      (mesh, time_stepper)]
 
    # create list of source terms according to problem type
    if problem_type == 'rad_only':
 
-       # add extraneous source term
-       terms.append(SourceTerm(mesh, time_stepper))
+       # no terms need to be added
+       pass
 
    elif problem_type == 'rad_mat':
 
        terms.append(PlanckianTerm(mesh, time_stepper))
-
-       # add extraneous source term if specified
-       if add_ext_source:
-          terms.append(SourceTerm(mesh, time_stepper))
 
    elif problem_type == 'rad_hydro':
 
        terms.extend([PlanckianTerm(mesh, time_stepper),
                      DriftTerm(mesh, time_stepper),
                      AnisotropicTerm(mesh, time_stepper)])
-
-       # add extraneous source term if specified
-       if add_ext_source:
-          terms.append(SourceTerm(mesh, time_stepper))
 
    else:
 
@@ -521,61 +514,42 @@ class SourceTerm(TransientSourceTerm):
     #--------------------------------------------------------------------------------
     ## Computes implicit source term, \f$\mathcal{Q}^{\pm,k}\f$
     #
-    #  @param[in] i      element id
-    #  @param[in] Q_new  implicit source term, \f$\mathcal{Q}^{\pm,k}\f$,
-    #                    provided if source is not solution-dependent
+    #  @param[in] i         element id
+    #  @param[in] Qpsi_new  implicit source term, \f$\mathcal{Q}^{\pm,k}\f$,
+    #                       provided if source is not solution-dependent
     #
-    def evalImplicit(self, i, Q_new, **kwargs):
+    def evalImplicit(self, i, Qpsi_new, **kwargs):
 
         # Use old function but with new arguments
-        return self.evalOld(i, Q_old=Q_new)
+        return self.evalOld(i, Qpsi_old=Qpsi_new)
 
     #--------------------------------------------------------------------------------
     ## Computes old source term, \f$\mathcal{Q}^{\pm,n}\f$
     #
-    #  @param[in] i      element id
-    #  @param[in] Q_old  old source term, \f$\mathcal{Q}^{\pm,n}\f$, provided if
-    #                    source is not solution-dependent
+    #  @param[in] i         element id
+    #  @param[in] Qpsi_old  old source term, \f$\mathcal{Q}^{\pm,n}\f$, provided if
+    #                       source is not solution-dependent
     #
-    def evalOld(self, i, Q_old, **kwargs):
+    def evalOld(self, i, Qpsi_old, **kwargs):
 
         # for now, sources cannot be solution-dependent, so raise an error if
         # no source is provided
-        if Q_old is None:
+        if Qpsi_old is None:
            raise NotImplementedError("Solution-dependent sources not yet implemented")
-        else:
-           # get global indices
-           iLm = getIndex(i,"L","-") # dof i,L,-
-           iLp = getIndex(i,"L","+") # dof i,L,+
-           iRm = getIndex(i,"R","-") # dof i,R,-
-           iRp = getIndex(i,"R","+") # dof i,R,+
 
-           # get local indices
-           Lm = getLocalIndex("L","-") # dof L,-
-           Lp = getLocalIndex("L","+") # dof L,+
-           Rm = getLocalIndex("R","-") # dof R,-
-           Rp = getLocalIndex("R","+") # dof R,+
-
-           # return local Q values
-           Q_local = np.zeros(4)
-           Q_local[Lm] = Q_old[iLm]
-           Q_local[Lp] = Q_old[iLp]
-           Q_local[Rm] = Q_old[iRm]
-           Q_local[Rp] = Q_old[iRp]
-
-        return Q_local
+        return Qpsi_old[4*i:4*i+4]
 
     #--------------------------------------------------------------------------------
     ## Computes older source term, \f$\mathcal{Q}^{\pm,n-1}\f$
     #
-    #  @param[in] i        element id
-    #  @param[in] Q_older  older source term, \f$\mathcal{Q}^{\pm,n-1}\f$,
-    #                      provided if source is not solution-dependent
+    #  @param[in] i           element id
+    #  @param[in] Qpsi_older  older source term, \f$\mathcal{Q}^{\pm,n-1}\f$,
+    #                         provided if source is not solution-dependent
     #
-    def evalOlder(self, i, Q_older, **kwargs):
+    def evalOlder(self, i, Qpsi_older, **kwargs):
 
         # Use old function but with older arguments
-        return self.evalOld(i, Q_old=Q_older)
+        return self.evalOld(i, Qpsi_old=Qpsi_older)
 
 
 #====================================================================================
@@ -911,27 +885,5 @@ def computeRadiationExtraneousSource(psim_src, psip_src, mesh, t):
 
    # call radiation vector evaluation function
    return computeRadiationVector(psim_src, psip_src, mesh, t)
-#   # initialize source vector
-#   Q = np.zeros(mesh.n_elems*4)
-#
-#   # loop over elements
-#   for i in range(mesh.n_elems):
-#
-#      # get left and right x points on element
-#      xL = mesh.getElement(i).xl
-#      xR = mesh.getElement(i).xr
-#
-#      # get global indices
-#      iLm = getIndex(i,"L","-") # dof i,L,-
-#      iLp = getIndex(i,"L","+") # dof i,L,+
-#      iRm = getIndex(i,"R","-") # dof i,R,-
-#      iRp = getIndex(i,"R","+") # dof i,R,+
-#
-#      # compute source
-#      Q[iLm] = psim_src(xL, t)
-#      Q[iLp] = psip_src(xL, t)
-#      Q[iRm] = psim_src(xR, t)
-#      Q[iRp] = psip_src(xR, t)
-#
-#   return Q
+
 

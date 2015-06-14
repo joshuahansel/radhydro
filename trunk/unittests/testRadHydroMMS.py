@@ -22,7 +22,9 @@ from mesh import Mesh
 from hydroState import HydroState
 from radiation import Radiation
 from plotUtilities import plotHydroSolutions
-from utilityFunctions import computeRadiationVector
+from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolution
+from crossXInterface import ConstantCrossSection
+from transient import runNonlinearTransient
 
 ## Derived unittest class to test the MMS source creator functions
 #
@@ -37,8 +39,8 @@ class TestRadHydroMMS(unittest.TestCase):
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-      rho = exp(-1*alpha*t)*sin(pi*x) + 2
-      u   = exp(-2*alpha*t)*sin(pi*x)
+      rho = exp(x+t)
+      u   = exp(-x)*sin(t) - 1
       E   = exp(-3*alpha*t)*sin(pi*x) + 3
       
       # create solution for radiation field
@@ -49,8 +51,8 @@ class TestRadHydroMMS(unittest.TestCase):
       alpha_value = 0.01
       cv_value    = 1.0
       gamma_value = 1.4
-      sigma_s_value = 1.0
-      sigma_a_value = 1.0
+      sig_s = 1.0
+      sig_a = 1.0
       
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
@@ -59,8 +61,8 @@ class TestRadHydroMMS(unittest.TestCase):
          E             = E,
          psim          = psim,
          psip          = psip,
-         sigma_s_value = sigma_s_value,
-         sigma_a_value = sigma_a_value,
+         sigma_s_value = sig_s,
+         sigma_a_value = sig_a,
          gamma_value   = gamma_value,
          cv_value      = cv_value,
          alpha_value   = alpha_value,
@@ -92,55 +94,53 @@ class TestRadHydroMMS(unittest.TestCase):
       psi_right = psim_f(x=width, t=0.0)
 
       # compute hydro IC
-      hydro_IC = list()
-      for i in xrange(n_elems):
+      hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
+         rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
-         # get cell center
-         x_i = mesh.getElement(i).x_cent
+      # create cross sections
+      cross_sects = [(ConstantCrossSection(sig_s, sig_s+sig_a),
+                      ConstantCrossSection(sig_s, sig_s+sig_a))
+                      for i in xrange(mesh.n_elems)]
 
-         # evaluate functions at cell center
-         rho_i = rho_f(x=x_i, t=0.0)
-         u_i   =   u_f(x=x_i, t=0.0)
-         E_i   =   E_f(x=x_i, t=0.0)
-         e_i = E_i / rho_i - 0.5*u_i**2
-
-         # add hydro state for cell
-         hydro_IC.append(HydroState(rho=rho_i, u=u_i, int_energy=e_i,
-            spec_heat=cv_value, gamma=gamma_value))
+      # transient options
+      t_start  = 0.0
+      t_end = 0.1
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
          verbose = True
       
       # run the rad-hydro transient
-#      rad_new, hydro_new = runNonlinearTransient(
-#         mesh         = mesh,
-#         time_stepper = 'BE',
-#         problem_type = 'rad_hydro',
-#         dt_option    = 'CFL',
-#         CFL          = 0.5,
-#         use_2_cycles = True,
-#         t_start      = t_start,
-#         t_end        = t_end,
-#         psi_left     = psi_left,
-#         psi_right    = psi_right,
-#         cross_sects  = cross_sects,
-#         rad_IC       = rad_IC,
-#         hydro_IC     = hydro_IC,
-#         rho_src      = rho_src,
-#         mom_src      = mom_src,
-#         E_src        = E_src,
-#         psim_src     = psim_src,
-#         psip_src     = psip_src,
-#         verbose      = verbose)
+      rad_new, hydro_new = runNonlinearTransient(
+         mesh         = mesh,
+         problem_type = 'rad_hydro',
+         dt_option    = 'CFL',
+         CFL          = 0.5,
+         use_2_cycles = False,
+         t_start      = t_start,
+         t_end        = t_end,
+         psi_left     = psi_left,
+         psi_right    = psi_right,
+         cross_sects  = cross_sects,
+         rad_IC       = rad_IC,
+         hydro_IC     = hydro_IC,
+         mom_src      = mom_src,
+         E_src        = E_src,
+         psim_src     = psim_src,
+         psip_src     = psip_src,
+         verbose      = verbose)
 
       # plot
       if __name__ == '__main__':
 
          # plot radiation solution
 
+         # compute exact hydro solution
+         hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,
+            rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
+
          # plot hydro solution
-         plotHydroSolutions(mesh.getCellCenters(), hydro_IC)
+         plotHydroSolutions(mesh, hydro_new, exact=hydro_exact)
 
 
 # run main function from unittest module

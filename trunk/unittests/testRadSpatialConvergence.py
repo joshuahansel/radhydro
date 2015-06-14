@@ -16,7 +16,6 @@ from mesh import Mesh
 from crossXInterface import ConstantCrossSection
 from radiationSolveSS import radiationSolveSS
 from utilityFunctions import computeDiscreteL1Norm, getIndex
-from radiationTimeStepper import takeRadiationStep
 from radUtilities import mu, computeScalarFlux, extractAngularFluxes
 import globalConstants as GC
 from integrationUtilities import computeL1ErrorLD
@@ -24,6 +23,7 @@ from utilityFunctions import computeConvergenceRates, printConvergenceTable
 from radiation import Radiation
 from createMMSSourceFunctions import createMMSSourceFunctionsRadOnly
 from transient import runLinearTransient
+from takeRadiationStep import takeRadiationStep
 
 ## Derived unittest class to run a transient radiation MMS problem
 #

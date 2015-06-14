@@ -24,7 +24,7 @@ def solveHydroProblem():
 
     t = 0.0
     cfl = 0.5
-    n = 100
+    n = 500
 
     #Left and right BC and initial values
     gamma = 1.4 #gas constant
@@ -91,8 +91,7 @@ def solveHydroProblem():
 
 
     # plot solution
-    x_centers = mesh.getCellCenters()
-    plotHydroSolutions(x_centers,states=states_a)
+    plotHydroSolutions(mesh,states=states_a)
 
     # print solution
     if print_solution:

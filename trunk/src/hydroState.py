@@ -6,32 +6,58 @@ class HydroState:
 
     ## Constructor
     #
-    def __init__(self, u=None ,rho=None, p=None, gamma=None, 
-            spec_heat=None, int_energy=None, temp=None):
+    def __init__(self, rho, u, gamma, spec_heat, p=None,
+            e=None, T=None, E=None):
 
         self.u = u
         self.rho = rho
         self.gamma = gamma
         self.spec_heat = spec_heat
 
-        # ensure p, T, and e are all consistent and not duplicate
+        second_intensive_property_specified = False
+
+        # ensure that only 2 intensive properties have been supplied
+        # (one is density)
         if p != None:
+
+            assert not second_intensive_property_specified, 'Only 2\
+               independent, intensive properties may be specified'
+            second_intensive_property_specified = True
                 
             self.p = p
             self.e = getIntErg(gamma,rho,p)
 
-        elif int_energy != None or temp != None: #check if T or e specificied
+        if e != None:
 
-            if temp != None:
-                self.e = computeIntEnergy(temp) #update int erg to be consistent with temp
-            else:
-                self.e = int_energy
-             
+            assert not second_intensive_property_specified, 'Only 2\
+               independent, intensive properties may be specified'
+            second_intensive_property_specified = True
+
+            self.e = e
             self.p = getPressure(gamma,rho,self.e)
 
-        else:
-            raise IOError("You must specify pressure, energy, or temperature in"
-                " HydroState constructor")
+        if T != None:
+
+            assert not second_intensive_property_specified, 'Only 2\
+               independent, intensive properties may be specified'
+            second_intensive_property_specified = True
+
+            self.e = self.computeIntEnergy(T)
+            self.p = getPressure(gamma,rho,self.e)
+
+        if E != None:
+
+            assert not second_intensive_property_specified, 'Only 2\
+               independent, intensive properties may be specified'
+            second_intensive_property_specified = True
+
+            self.e = self.computeInternalEnergyFromTotalEnergy(E)
+            self.p = getPressure(gamma,rho,self.e)
+
+        if not second_intensive_property_specified:
+            raise IOError("You must specify pressure, internal energy,\
+               temperature, or total energy in HydroState constructor")
+
 
     #solve for new values based on a consState variables
     def updateState(self, rho, mom, erg):
@@ -80,11 +106,17 @@ class HydroState:
 
         return self.e/(self.spec_heat)
 
-    #-------------------------------------------------------------------------------
-    # Update internal energy based on temperature
+    ## Computes specific internal energy from temperature
+    #
     def computeIntEnergy(self,temp):
 
-        return temp*(self.rho*self.spec_heat)
+        return temp*self.spec_heat
+
+    ## Computes specific internal energy \f$e\f$ from total energy density \f$E\f$
+    #
+    def computeInternalEnergyFromTotalEnergy(self,E):
+
+        return E/self.rho - 0.5*self.u**2
 
     ## Compare function
     #

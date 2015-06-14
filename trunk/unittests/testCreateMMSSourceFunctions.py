@@ -31,8 +31,8 @@ class TestCreateMMSSourceFunctions(unittest.TestCase):
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-      rho = exp(-1*alpha*t)*sin(pi*x) + 2
-      u   = exp(-2*alpha*t)*sin(pi*x)
+      rho = exp(x+t)
+      u   = exp(-x)*sin(t) - 1
       E   = exp(-3*alpha*t)*sin(pi*x) + 3
       
       # create solution for radiation field
@@ -59,11 +59,6 @@ class TestCreateMMSSourceFunctions(unittest.TestCase):
          cv_value      = cv_value,
          alpha_value   = alpha_value,
          display_equations = False)
-      
-      # assert that the correct value is produced
-      test_value = E_f(0.1,0.6)
-      actual_value = 29.089765925284084
-      self.assertAlmostEqual(test_value, actual_value, 12)
 
       # if run standalone, then plot the MMS functions
       if __name__ == '__main__':
@@ -78,6 +73,11 @@ class TestCreateMMSSourceFunctions(unittest.TestCase):
          plotFunction(E_f,    xpoints, t_value, '$Q_E$',     'MMS Source, $E$')
          plotFunction(psim_f, xpoints, t_value, '$Q_-$',     'MMS Source, $\Psi^-$')
          plotFunction(psip_f, xpoints, t_value, '$Q_+$',     'MMS Source, $\Psi^+$')
+
+      # assert that the correct value is produced
+      test_value = E_f(0.1,0.6)
+      actual_value = 17.262777986691507
+      self.assertAlmostEqual(test_value, actual_value, 12)
 
 # run main function from unittest module
 if __name__ == '__main__':

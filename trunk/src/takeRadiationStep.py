@@ -19,18 +19,15 @@ beta = {"CN":0.5, "BDF2":2./3., "BE":1.}
 #                           e.g., 'CN'
 #
 def takeRadiationStep(mesh, time_stepper, problem_type, dt,
-   cx_new, psi_left, psi_right, add_ext_source=False,
-   Q_older=None, Q_old=None, Q_new=None, **kwargs):
+   cx_new, psi_left, psi_right,
+   Qpsi_older, Qpsi_old, Qpsi_new, **kwargs):
 
-   # compute new extraneous source
-   if add_ext_source or problem_type == 'rad_only':
-
-      # assert that the appropriate sources were provided
-      assert Q_new is not None, 'New source must be provided'
-      if time_stepper != 'BE':
-         assert Q_old is not None, 'Old source must be provided for CN or BDF2'
-      if time_stepper == 'BDF2':
-         assert Q_older is not None, 'Older source must be provided for BDF2'
+   # assert that the appropriate sources were provided
+   assert Qpsi_new != None, 'New source must be provided'
+   if time_stepper != 'BE':
+      assert Qpsi_old != None, 'Old source must be provided for CN or BDF2'
+   if time_stepper == 'BDF2':
+      assert Qpsi_older != None, 'Older source must be provided for BDF2'
 
    # evaluate transient source
    Q_tr = computeRadiationSource(
@@ -40,10 +37,9 @@ def takeRadiationStep(mesh, time_stepper, problem_type, dt,
       dt             = dt,
       psi_left       = psi_left,
       psi_right      = psi_right,
-      add_ext_source = add_ext_source,
-      Q_older        = Q_older,
-      Q_old          = Q_old,
-      Q_new          = Q_new,
+      Qpsi_older     = Qpsi_older,
+      Qpsi_old       = Qpsi_old,
+      Qpsi_new       = Qpsi_new,
       **kwargs)
 
    # compute diagonal modifier

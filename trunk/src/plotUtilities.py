@@ -261,10 +261,16 @@ def computeAverageValues(tuple_list):
 
 ## Plots hydro solution
 #
-def plotHydroSolutions(x,states,save_plot=False,filename='hydro_solution.pdf'):
+def plotHydroSolutions(mesh, states, exact=None,
+    save_plot=False, filename='hydro_solution.pdf'):
 
+    # create 11" x 8.5" figure
     plt.figure(figsize=(11,8.5))
 
+    # get cell centers
+    x = mesh.getCellCenters()
+
+    # create lists for each quantity to be plotted
     u = []
     p = []
     rho = []
@@ -275,17 +281,28 @@ def plotHydroSolutions(x,states,save_plot=False,filename='hydro_solution.pdf'):
         rho.append(i.rho)
         e.append(i.e)
 
-    if u != None:
-        plotSingle(x,u,"$u$")
-    
-    if rho != None:
-        plotSingle(x,rho,r"$\rho$") 
+    # create lists for each exact quantity to be plotted
+    if exact == None:
+       u_exact = None
+       p_exact = None
+       rho_exact = None
+       e_exact = None
+    else:
+       u_exact   = list()
+       p_exact   = list()
+       rho_exact = list() 
+       e_exact   = list()
+       for i in exact:
+           u_exact.append(i.u)
+           p_exact.append(i.p)
+           rho_exact.append(i.rho)
+           e_exact.append(i.e)
 
-    if p != None:
-        plotSingle(x,p,r"$p$")
-
-    if e != None:
-        plotSingle(x,e,r"$e$")
+    # plot each quantity
+    plotSingle(x, u,   y_label=r"$u$",    exact=u_exact)
+    plotSingle(x, rho, y_label=r"$\rho$", exact=rho_exact) 
+    plotSingle(x, p,   y_label=r"$p$",    exact=p_exact)
+    plotSingle(x, e,   y_label=r"$e$",    exact=e_exact)
 
     # save figure
     if save_plot:
@@ -299,15 +316,18 @@ def plotHydroSolutions(x,states,save_plot=False,filename='hydro_solution.pdf'):
 
 ## Plots a single plot in a 4x4 subplot array
 #
-def plotSingle(x,y,ylabl):
+def plotSingle(x,y,y_label,exact=None):
 
     #static variable counter
     plotSingle.fig_num += 1
 
     plt.subplot(2,2,plotSingle.fig_num)
-    plt.xlabel('$x$ (cm)')
-    plt.ylabel(ylabl)
-    plt.plot(x,y,"b+-",label="My Stuff")
+    plt.xlabel('$x$')
+    plt.ylabel(y_label)
+    plt.plot(x,y,"b+-",label="Numeric")
+    if exact != None:
+       plt.plot(x,exact,"r-x", label="Analytic")
+    plt.legend(loc='best')
     
 plotSingle.fig_num=0
 

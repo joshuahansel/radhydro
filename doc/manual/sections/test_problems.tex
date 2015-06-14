@@ -80,3 +80,24 @@ system as follows:
   = \frac{\sigma_s}{2}\phi + \Q^\pm + Q^{ext,\pm} \pep
 \end{equation}
 \end{subequations}
+If one chooses functions for the velocity field $u(x,t)$
+and any two independent, intensive thermodynamic properties, for example,
+density $\rho(x,t)$ and total energy density $E(x,t)$, then one fully
+defines the state of the fluid. Since the assumption that the homogeneous
+solution for density $\rho^*(x,t^{n+1})$ is equal to the general solution
+$\rho(x,t^{n+1})$ is used in implementation, it simplifies the execution
+of the MMS problem to choose $\rho(x,t)$ and $u(x,t)$ such that the
+MMS source $Q^{ext,\rho}(x,t)$ is zero, as this keeps the continuity
+equation homogeneous and thus the assumption that $\rho^*=\rho$ remains valid.
+This was achieved with the definitions
+\begin{equation}
+   \rho(x,t) = e^{x+t} \pec
+\end{equation}
+\begin{equation}
+   u(x,t) = e^{-x}\sin t - 1 \pep
+\end{equation}
+To complete the definition of the fluid state, an arbitrary function of $(x,t)$
+was chosen for total energy density:
+\begin{equation}
+   E = something
+\end{equation}

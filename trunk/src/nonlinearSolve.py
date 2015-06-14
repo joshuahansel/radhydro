@@ -15,10 +15,10 @@ from hydroSource import updateVelocity, updateInternalEnergy, QEHandler
 #
 def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
    cx_old, hydro_old, hydro_star, rad_old, slopes_old, e_slopes_old,
+   Qpsi_new, Qmom_new, Qerg_new, Qpsi_old, Qmom_old, Qerg_old, Qpsi_older,
+   Qmom_older, Qerg_older,
    rad_older=None, cx_older=None, hydro_older=None, slopes_older=None,
-   e_slopes_older=None, tol=1.0e-9,
-   add_ext_src=False, rho_src_func=None, u_src_func=None, E_src_func=None,
-   psim_src_func=None, psip_src_func=None):
+   e_slopes_older=None, tol=1.0e-9):
 
    # assert that that older arguments were passed if using BDF2
    if time_stepper == 'BDF2':
@@ -27,14 +27,6 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
       assert(cx_older       != None)
       assert(slopes_older   != None)
       assert(e_slopes_older != None)
-
-   # assert source functions provided if extraneous sources indicated
-   if add_ext_src:
-      assert rho_src_func  is not None, 'Source functions must be provided' 
-      assert u_src_func    is not None, 'Source functions must be provided'
-      assert E_src_func    is not None, 'Source functions must be provided'
-      assert psim_src_func is not None, 'Source functions must be provided'
-      assert psip_src_func is not None, 'Source functions must be provided'
 
    # initialize iterates to the old quantities
    hydro_new  = deepcopy(hydro_old)
@@ -54,36 +46,44 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
 
        # update velocity
        if problem_type == 'rad_hydro':
-          updateVelocity(mesh         = mesh,
-                         time_stepper = time_stepper,
-                         dt           = dt, 
-                         cx_older     = cx_older,
-                         cx_old       = cx_old,
-                         cx_prev      = cx_prev,
-                         rad_older    = rad_older,
-                         rad_old      = rad_old,
-                         rad_prev     = rad_prev,
-                         hydro_older  = hydro_older,
-                         hydro_old    = hydro_old,
-                         hydro_star   = hydro_star,
-                         hydro_prev   = hydro_prev,
-                         hydro_new    = hydro_new)
+          updateVelocity(
+             mesh         = mesh,
+             time_stepper = time_stepper,
+             dt           = dt, 
+             cx_older     = cx_older,
+             cx_old       = cx_old,
+             cx_prev      = cx_prev,
+             rad_older    = rad_older,
+             rad_old      = rad_old,
+             rad_prev     = rad_prev,
+             hydro_older  = hydro_older,
+             hydro_old    = hydro_old,
+             hydro_star   = hydro_star,
+             hydro_prev   = hydro_prev,
+             hydro_new    = hydro_new,
+             Qmom_new     = Qmom_new,
+             Qmom_old     = Qmom_old,
+             Qmom_older   = Qmom_older)
 
        # compute QE
        src_handler = QEHandler(mesh, time_stepper)
-       QE = src_handler.computeTerm(cx_prev     = cx_prev,
-                                    cx_old      = cx_old,
-                                    cx_older    = cx_older,
-                                    rad_prev    = rad_prev,
-                                    rad_old     = rad_old,
-                                    rad_older   = rad_older,
-                                    hydro_prev  = hydro_prev,
-                                    hydro_old   = hydro_old,
-                                    hydro_older = hydro_older,
-                                    slopes_old  = slopes_old,
-                                    slopes_older = slopes_older,
-                                    e_slopes_old = e_slopes_old,
-                                    e_slopes_older = e_slopes_older)
+       QE = src_handler.computeTerm(
+          cx_prev     = cx_prev,
+          cx_old      = cx_old,
+          cx_older    = cx_older,
+          rad_prev    = rad_prev,
+          rad_old     = rad_old,
+          rad_older   = rad_older,
+          hydro_prev  = hydro_prev,
+          hydro_old   = hydro_old,
+          hydro_older = hydro_older,
+          slopes_old  = slopes_old,
+          slopes_older = slopes_older,
+          e_slopes_old = e_slopes_old,
+          e_slopes_older = e_slopes_older,
+          Qerg_new     = Qerg_new,
+          Qerg_old     = Qerg_old,
+          Qerg_older   = Qerg_older)
 
        # get the modified scattering cross sections
        cx_mod_prev = computeEffectiveOpacities(
@@ -114,11 +114,13 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
            hydro_old     = hydro_old,
            hydro_older   = hydro_older,
            QE            = QE,
-           add_ext_source = add_ext_src,
            slopes_old    = slopes_old,
            slopes_older  = slopes_older,
            e_slopes_old  = e_slopes_old,
-           e_slopes_older = e_slopes_older)
+           e_slopes_older = e_slopes_older,
+           Qpsi_new      = Qpsi_new,
+           Qpsi_old      = Qpsi_old,
+           Qpsi_older    = Qpsi_older)
 
        # update internal energy
        e_slopes_new = updateInternalEnergy(
@@ -148,4 +150,5 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
 
    # return new hydro and radiation
    return hydro_new, rad_new, cx_prev, e_slopes_new
+
 

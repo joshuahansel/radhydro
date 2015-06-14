@@ -145,6 +145,7 @@ def evalEnergyAbsorption(i, rad, cx):
 
     return [rad.phi[i][x]*cx[i][x].sig_a for x in xrange(2)]
 
+
 #=====================================================================================
 ## Class to simplify evaluating the Q_E^k term in linearization. It is similar to 
 #  other terms but with the implicit Planckian removed and angularly integrated
@@ -186,32 +187,37 @@ class QEHandler(TransientSourceTerm):
     ## Computes implicit terms in QE^k. Only an energy exchange term, there is 
     #  no planckian 
     #
-    def evalImplicit(self, i, rad_prev, hydro_prev, cx_prev, slopes_old, **kwargs):
+    def evalImplicit(self, i, rad_prev, hydro_prev, cx_prev, slopes_old,
+       Qerg_new, **kwargs):
 
         Q_local = np.array(evalEnergyExchange(i, rad=rad_prev, hydro=hydro_prev,
-           cx=cx_prev, slopes=slopes_old))
+                           cx=cx_prev, slopes=slopes_old))\
+           + np.array(Qerg_new[i])
         return Q_local
 
     #--------------------------------------------------------------------------------
     ## Evaluate old term. This includes Planckian, as well as energy exchange term
     # 
-    def evalOld(self, i, rad_old, hydro_old, cx_old, slopes_old, e_slopes_old, **kwargs):
+    def evalOld(self, i, rad_old, hydro_old, cx_old, slopes_old, e_slopes_old,
+       Qerg_old, **kwargs):
 
         Q_local = np.array(evalEnergyAbsorption(i, rad=rad_old, cx=cx_old))\
            - np.array(evalPlanckianOld(i, hydro_old=hydro_old, cx_old=cx_old,
                       e_slopes_old=e_slopes_old))\
            + np.array(evalEnergyExchange(i, rad=rad_old, hydro=hydro_old, cx=cx_old,
-                      slopes=slopes_old))
+                      slopes=slopes_old))\
+           + np.array(Qerg_old[i])
         return Q_local
 
     #--------------------------------------------------------------------------------
     ## Evaluate older term. Just call the evalOld function as in other source terms
     #
     def evalOlder(self, i, rad_older, hydro_older, cx_older, slopes_older,
-       e_slopes_older, **kwargs):
+       e_slopes_older, Qerg_older, **kwargs):
 
         return self.evalOld(i, rad_old=rad_older, hydro_old=hydro_older,
-           cx_old=cx_older, slopes_old=slopes_older, e_slopes_old=e_slopes_older)
+           cx_old=cx_older, slopes_old=slopes_older, e_slopes_old=e_slopes_older,
+           Qerg_old=Qerg_older)
 
 
 ## Handles velocity update source term.
@@ -241,23 +247,23 @@ class VelocityUpdateSourceHandler(TransientSourceTerm):
         return Q
 
     #--------------------------------------------------------------------------------
-    def evalImplicit(self, i, rad_prev, hydro_prev, cx_prev, **kwargs):
+    def evalImplicit(self, i, rad_prev, hydro_prev, cx_prev, Qmom_new, **kwargs):
 
         Q_local = evalMomentumExchangeAverage(i, rad=rad_prev, hydro=hydro_prev,
-           cx=cx_prev)
+           cx=cx_prev) + Qmom_new[i]
         return Q_local
 
     #--------------------------------------------------------------------------------
-    def evalOld(self, i, rad_old, hydro_old, cx_old, **kwargs):
+    def evalOld(self, i, rad_old, hydro_old, cx_old, Qmom_old, **kwargs):
 
         return self.evalImplicit(i, rad_prev=rad_old, hydro_prev=hydro_old,
-           cx_prev=cx_old)
+           cx_prev=cx_old, Qmom_new=Qmom_old)
 
     #--------------------------------------------------------------------------------
-    def evalOlder(self, i, rad_older, hydro_older, cx_older, **kwargs):
+    def evalOlder(self, i, rad_older, hydro_older, cx_older, Qmom_older, **kwargs):
 
         return self.evalImplicit(i, rad_prev=rad_older, hydro_prev=hydro_older,
-           cx_prev=cx_older)
+           cx_prev=cx_older, Qmom_new=Qmom_older)
 
 
 #------------------------------------------------------------------------------------
@@ -277,5 +283,36 @@ def evalMomentumExchangeAverage(i, rad, hydro, cx):
     F = 0.5*rad.F[i][0] + 0.5*rad.F[i][1]
 
     return sig_t/GC.SPD_OF_LGT*(F - 4.0/3.0*E*hydro[i].u)
+
+
+## Computes an extraneous source vector for the momentum equation
+#
+#  @param[in] mom_src  function handle for the momentum extraneous source
+#  @param[in] mesh     mesh
+#  @param[in] t        time at which to evaluate the function
+#
+#  @return list of the momentum extraneous source function evaluated
+#          at each cell center
+#
+def computeMomentumExtraneousSource(mom_src, mesh, t):
+
+   # evaluate momentum source function at each cell center
+   return [mom_src(mesh.getElement(i).x_cent,t) for i in xrange(mesh.n_elems)]
+
+
+## Computes an extraneous source vector for the energy equation
+#
+#  @param[in] erg_src  function handle for the energy extraneous source
+#  @param[in] mesh     mesh
+#  @param[in] t        time at which to evaluate the function
+#
+#  @return list of tuples of the energy extraneous source function evaluated
+#          at each edge on each cell
+#
+def computeEnergyExtraneousSource(erg_src, mesh, t):
+
+   # evaluate energy source function at each edge of each cell
+   return [(erg_src(mesh.getElement(i).xl,t), erg_src(mesh.getElement(i).xr,t))
+      for i in xrange(mesh.n_elems)]
 
 

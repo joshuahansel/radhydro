@@ -361,7 +361,7 @@ def updateCrossSections(cx,hydro,slopes,e_slopes):
       for edge in [0,1]:
 
          # create edge state
-         state = HydroState(rho=rho[edge],u=u[edge],int_energy=e[edge],
+         state = HydroState(rho=rho[edge],u=u[edge],e=e[edge],
             spec_heat=spec_heat, gamma=gamma)
  
          # update edge cross section
@@ -417,5 +417,37 @@ def printTupleList(tuple_list):
         for j in tuple_i:
 
             print j
+
+
+## Computes hydro states from analytic functions of (x,t)
+#
+#  @param[in] mesh  mesh
+#  @param[in] t     time value
+#  @param[in] rho   analytic function for density, \f$\rho(x,t)\f$
+#  @param[in] u     analytic function for velocity, \f$u(x,t)\f$
+#  @param[in] E     analytic function for total energy, \f$E(x,t)\f$
+#  @param[in] cv    value for specific heat, \f$c_v\f$
+#  @param[in] gamma value for gamma constant, \f$\gamma\f$
+#
+#  @return list of hydro states analytically evaluated at each cell center
+#
+def computeAnalyticHydroSolution(mesh,t,rho,u,E,cv,gamma):
+
+   hydro = list()
+   for i in xrange(mesh.n_elems):
+
+      # get cell center
+      x_i = mesh.getElement(i).x_cent
+
+      # evaluate functions at cell center
+      rho_i = rho(x=x_i, t=t)
+      u_i   =   u(x=x_i, t=t)
+      E_i   =   E(x=x_i, t=t)
+
+      # add hydro state for cell
+      hydro.append(HydroState(rho=rho_i, u=u_i, E=E_i,
+         spec_heat=cv, gamma=gamma))
+
+   return hydro
 
 

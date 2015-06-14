@@ -84,8 +84,8 @@ class TestTransientSource(unittest.TestCase):
          psi_right     = psi_right,
          cx_old        = cross_sects,
          rad_old       = rad_ss,
-         Q_old         = Q,
-         Q_new         = Q)
+         Qpsi_old      = Q,
+         Qpsi_new      = Q)
 
       # loop over elements and test that sources are what they should be
       for i in xrange(mesh.n_elems):

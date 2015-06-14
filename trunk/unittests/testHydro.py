@@ -67,12 +67,12 @@ class TestHydro(unittest.TestCase):
          # IC for left half of domain
          if mesh.getElement(i).x_cent < x_diaphragm:
             hydro_IC.append(
-               HydroState(u=uL,rho=rhoL,int_energy=eL,gamma=gam,spec_heat=c_v) )
+               HydroState(u=uL,rho=rhoL,e=eL,gamma=gam,spec_heat=c_v) )
 
          # IC for right half of domain
          else:
             hydro_IC.append(
-               HydroState(u=uR,rho=rhoR,int_energy=eR,gamma=gam,spec_heat=c_v) )
+               HydroState(u=uR,rho=rhoR,e=eR,gamma=gam,spec_heat=c_v) )
   
       # initialize radiation to zero solution to give pure hydrodynamics
       psi_left  = 0.0
@@ -102,7 +102,7 @@ class TestHydro(unittest.TestCase):
 
       # plot solutions if run standalone
       if __name__ == "__main__":
-         plotHydroSolutions(mesh.getCellCenters(), hydro_new)
+         plotHydroSolutions(mesh, hydro_new)
 
   
 # run main function from unittest module

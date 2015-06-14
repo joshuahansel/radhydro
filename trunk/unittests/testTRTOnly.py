@@ -66,12 +66,12 @@ class TestTRTOnly(unittest.TestCase):
             cross_sects.append( (ConstantCrossSection(sig_s1, sig_s1+sig_a1),
                                  ConstantCrossSection(sig_s1, sig_s1+sig_a1)) )
             hydro_IC.append(
-               HydroState(u=0,rho=rho1,int_energy=e1,spec_heat=c_v1,gamma=gam))
+               HydroState(u=0,rho=rho1,e=e1,spec_heat=c_v1,gamma=gam))
          else: # material 2
             cross_sects.append((ConstantCrossSection(sig_s2, sig_a2+sig_s2),
                                 ConstantCrossSection(sig_s2, sig_a2+sig_s2)))
             hydro_IC.append(
-               HydroState(u=0,rho=rho2,int_energy=e2,spec_heat=c_v2,gamma=gam))
+               HydroState(u=0,rho=rho2,e=e2,spec_heat=c_v2,gamma=gam))
   
       # initialize radiation to equilibrium solution
       psi_left  = computeEquivIntensity(T_l)
@@ -103,7 +103,7 @@ class TestTRTOnly(unittest.TestCase):
 
       # plot solutions if run standalone
       if __name__ == "__main__":
-          plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=True)
+          plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=False)
 
   
 # run main function from unittest module
