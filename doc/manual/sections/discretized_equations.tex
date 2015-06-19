@@ -38,7 +38,7 @@ The energy source update equations are evaluated at the edges and thus hydrodyna
 quantities need to be evaluated at the edges. The stored solution values
 consist of the cell average unknowns for the conservative variables $[\rho,\rho u,E]$
 and their slopes $\Delta$, which come from the predictor step of MUSCL-Hancock,
-as given by Equation \requ{slopes}. Evaluation of edge densities is achieved
+as given by Equation \eqref{eq:muscl_slopes}. Evaluation of edge densities is achieved
 by applying the slopes as given by Equation \eqref{eq:edge_hydro}:
 \begin{equation}
    \rho\iL^k = \rho_i^k - \frac{\Delta\rho_i^n}{2} \pep

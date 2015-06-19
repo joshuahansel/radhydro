@@ -17,22 +17,20 @@ and $\Flux(\H)$ is the flux associated with each:
 The first half of a MUSCL-Hancock step $t^n\rightarrow t^n+\dt$
 consists of constructing a linear representation of the solution
 using slopes $\Delta_i^n$:
-\begin{subequations}\label{eq:hydro_edge}
 \begin{equation}\label{eq:edge_hydro}
   \H\iL^n = \H_i^n - \frac{\Delta_i^n}{2} \pec
   \quad
   \H\iR^n = \H_i^n + \frac{\Delta_i^n}{2} \pec
 \end{equation}
-\begin{equation}\label{eq:slopes}
+\begin{equation}\label{eq:muscl_slopes}
   \Delta_i^n = \half\Delta\H_{i-\half}^n + \half\Delta\H_{i+\half}^n \pec
 \end{equation}
-\begin{equation}
+\begin{equation}\label{eq:muscl_differences}
   \Delta\H_{i-\half}^n = \H_i^n - \H_{i-1}^n \pec\quad
   \Delta\H_{i+\half}^n = \H_{i+1}^n - \H_i^n \pec
 \end{equation}
-\end{subequations}
 and then evolving that representation by half a time step:
-\hydroPredictor{n}{n+\half}{\half}
+\hydroPredictor{n}{n+\half}{\half}{\label{eq:muscl_predictor}}
 The second half of a MUSCL-Hancock step employs a Riemann solver
 to compute the fluxes at time $n+\half$:
-\hydroCorrector{n}{n+\half}{n+1}{}
+\hydroCorrector{n}{n+\half}{n+1}{}{\label{eq:muscl_corrector}}

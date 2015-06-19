@@ -232,8 +232,9 @@
 % #1: old time index
 % #2: new time index
 % #3: coefficient for time step size
-\newcommand{\hydroPredictor}[3]{
-\begin{equation}
+% #4: optional label command
+\newcommand{\hydroPredictor}[4]{
+\begin{equation}#4
   \H_i^{#2} = \H_i^{#1} - \frac{#3\dt}{\dx}
   \left(\Flux(\H\iR^{#1}) - \Flux(\H\iL^{#1})\right) \pep
 \end{equation}
@@ -243,8 +244,9 @@
 % #2: old time index
 % #3: new time index
 % #4: coefficient for time step size
-\newcommand{\hydroCorrector}[4]{
-\begin{equation}
+% #5: optional label command
+\newcommand{\hydroCorrector}[5]{
+\begin{equation}#5
   \H_i^{#3} = \H_i^{#1} - \frac{#4\dt}{\dx}
   \left(\Flux_{i+\half}^{#2} - \Flux_{i-\half}^{#2}\right) \pep
 \end{equation}
