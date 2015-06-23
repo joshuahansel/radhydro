@@ -191,35 +191,92 @@ def runNonlinearTransient(mesh, problem_type,
        # take time step
        if problem_type == 'rad_mat':
 
-          # take time step without MUSCL-Hancock
-          hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
-          Qpsi_new, Qmom_new, Qerg_new =\
-             takeTimeStepRadiationMaterial(
-             mesh         = mesh,
-             time_stepper = time_stepper_this_step,
-             dt           = dt,
-             psi_left     = psi_left,
-             psi_right    = psi_right,
-             cx_old       = cx_old,
-             cx_older     = cx_older,
-             hydro_old    = hydro_old,
-             hydro_older  = hydro_older,
-             rad_old      = rad_old,
-             rad_older    = rad_older,
-             slopes_older = slopes_older,
-             e_slopes_old = e_slopes_old,
-             e_slopes_older = e_slopes_older,
-             psim_src     = psim_src,
-             psip_src     = psip_src,
-             mom_src      = mom_src,
-             E_src        = E_src,
-             t_old        = t_old,
-             Qpsi_old     = Qpsi_old,
-             Qmom_old     = Qmom_old,
-             Qerg_old     = Qerg_old,
-             Qpsi_older   = Qpsi_older,
-             Qmom_older   = Qmom_older,
-             Qerg_older   = Qerg_older)
+          if time_stepper == 'TRBDF2':
+
+              # take a half time step with CN
+              hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
+              Qpsi_new, Qmom_new, Qerg_new =\
+                 takeTimeStepRadiationMaterial(
+                 mesh         = mesh,
+                 time_stepper = 'CN',
+                 dt           = 0.5*dt,
+                 psi_left     = psi_left,
+                 psi_right    = psi_right,
+                 cx_old       = cx_old,
+                 hydro_old    = hydro_old,
+                 rad_old      = rad_old,
+                 e_slopes_old = e_slopes_old,
+                 psim_src     = psim_src,
+                 psip_src     = psip_src,
+                 mom_src      = mom_src,
+                 E_src        = E_src,
+                 t_old        = t_old,
+                 Qpsi_old     = Qpsi_old,
+                 Qmom_old     = Qmom_old,
+                 Qerg_old     = Qerg_old)
+
+              hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
+              Qpsi_new, Qmom_new, Qerg_new =\
+                 takeTimeStepRadiationMaterial(
+                 mesh         = mesh,
+                 time_stepper = 'BDF2',
+                 dt           = dt,
+                 psi_left     = psi_left,
+                 psi_right    = psi_right,
+                 cx_old       = cx_new,
+                 cx_older     = deepcopy(cx_old),
+                 hydro_old    = hydro_new,
+                 hydro_older  = deepcopy(hydro_old),
+                 rad_old      = rad_new,
+                 rad_older    = deepcopy(rad_old),
+                 slopes_older = deepcopy(slopes_old),
+                 e_slopes_old = e_slopes_old,
+                 e_slopes_older = deepcopy(e_slopes_old),
+                 psim_src     = psim_src,
+                 psip_src     = psip_src,
+                 mom_src      = mom_src,
+                 E_src        = E_src,
+                 t_old        = t_old,
+                 Qpsi_old     = Qpsi_old,
+                 Qmom_old     = Qmom_old,
+                 Qerg_old     = Qerg_old,
+                 Qpsi_older   = deepcopy(Qpsi_old),
+                 Qmom_older   = deepcopy(Qmom_old),
+                 Qerg_older   = deepcopy(Qerg_old))
+             
+
+
+          else: #assume its a single step method
+
+              # take time step without MUSCL-Hancock
+              hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
+              Qpsi_new, Qmom_new, Qerg_new =\
+                 takeTimeStepRadiationMaterial(
+                 mesh         = mesh,
+                 time_stepper = time_stepper_this_step,
+                 dt           = dt,
+                 psi_left     = psi_left,
+                 psi_right    = psi_right,
+                 cx_old       = cx_old,
+                 cx_older     = cx_older,
+                 hydro_old    = hydro_old,
+                 hydro_older  = hydro_older,
+                 rad_old      = rad_old,
+                 rad_older    = rad_older,
+                 slopes_older = slopes_older,
+                 e_slopes_old = e_slopes_old,
+                 e_slopes_older = e_slopes_older,
+                 psim_src     = psim_src,
+                 psip_src     = psip_src,
+                 mom_src      = mom_src,
+                 E_src        = E_src,
+                 t_old        = t_old,
+                 Qpsi_old     = Qpsi_old,
+                 Qmom_old     = Qmom_old,
+                 Qerg_old     = Qerg_old,
+                 Qpsi_older   = Qpsi_older,
+                 Qmom_older   = Qmom_older,
+                 Qerg_older   = Qerg_older)
 
        else:
 
@@ -360,10 +417,10 @@ def runNonlinearTransient(mesh, problem_type,
 #  This should only be called if the problem type is 'rad_mat'.
 #
 def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
-   cx_old, cx_older, hydro_old, hydro_older, rad_old, rad_older,
-   slopes_older, e_slopes_old, e_slopes_older,
-   psim_src, psip_src, mom_src, E_src, t_old, Qpsi_old, Qmom_old, Qerg_old,
-   Qpsi_older, Qmom_older, Qerg_older):
+   cx_old=None, cx_older=None, hydro_old=None, hydro_older=None, rad_old=None, rad_older=None,
+   slopes_older=None, e_slopes_old=None, e_slopes_older=None,
+   psim_src=None, psip_src=None, mom_src=None, E_src=None, t_old=None, Qpsi_old=None, Qmom_old=None, Qerg_old=None,
+   Qpsi_older=None, Qmom_older=None, Qerg_older=None):
 
        # compute new extraneous sources
        Qpsi_new, Qmom_new, Qerg_new = computeExtraneousSources(

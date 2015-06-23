@@ -117,7 +117,7 @@ class InvCubedCrossX(CrossXInterface):
         self.coeff = scale_coeff    
 
         # compute scattering cross section
-        sig_s = sigma_s_micro*rho
+        sig_s = sigma_s_micro*hydro.rho
 
         # call base class constructor by hand, no default call
         CrossXInterface.__init__(self,sig_s,0.0)
