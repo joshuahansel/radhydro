@@ -116,7 +116,7 @@ def runLinearTransient(mesh, time_stepper,
 #                       of total energy equation
 #
 def runNonlinearTransient(mesh, problem_type,
-   psi_left, psi_right, cross_sects, rad_IC, hydro_IC,
+   psi_left, psi_right, cross_sects, rad_IC, hydro_IC, hydro_BC,
    psim_src=None, psip_src=None, mom_src=None, E_src=None,
    time_stepper='BE', dt_option='constant', dt_constant=None, CFL=0.5, t_start=0.0,
    t_end=1.0, use_2_cycles=False, verbose=False):
@@ -202,6 +202,7 @@ def runNonlinearTransient(mesh, problem_type,
                  dt           = 0.5*dt,
                  psi_left     = psi_left,
                  psi_right    = psi_right,
+                 hydro_BC     = hydro_BC,
                  cx_old       = cx_old,
                  hydro_old    = hydro_old,
                  rad_old      = rad_old,
@@ -215,6 +216,7 @@ def runNonlinearTransient(mesh, problem_type,
                  Qmom_old     = Qmom_old,
                  Qerg_old     = Qerg_old)
 
+              # take a half time step with BDF2
               hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
               Qpsi_new, Qmom_new, Qerg_new =\
                  takeTimeStepRadiationMaterial(
@@ -223,6 +225,7 @@ def runNonlinearTransient(mesh, problem_type,
                  dt           = dt,
                  psi_left     = psi_left,
                  psi_right    = psi_right,
+                 hydro_BC     = hydro_BC,
                  cx_old       = cx_new,
                  cx_older     = deepcopy(cx_old),
                  hydro_old    = hydro_new,
@@ -257,6 +260,7 @@ def runNonlinearTransient(mesh, problem_type,
                  dt           = dt,
                  psi_left     = psi_left,
                  psi_right    = psi_right,
+                 hydro_BC     = hydro_BC,
                  cx_old       = cx_old,
                  cx_older     = cx_older,
                  hydro_old    = hydro_old,
@@ -293,6 +297,7 @@ def runNonlinearTransient(mesh, problem_type,
                 dt             = 0.5*dt, 
                 psi_left       = psi_left,
                 psi_right      = psi_right,
+                hydro_BC       = hydro_BC,
                 cx_old         = cx_old,
                 cx_older       = cx_older,
                 hydro_old      = hydro_old,
@@ -326,6 +331,7 @@ def runNonlinearTransient(mesh, problem_type,
                 dt             = 0.5*dt, 
                 psi_left       = psi_left,
                 psi_right      = psi_right,
+                hydro_BC       = hydro_BC,
                 cx_old         = cx_half,
                 cx_older       = cx_old,
                 hydro_old      = hydro_half,
@@ -365,6 +371,7 @@ def runNonlinearTransient(mesh, problem_type,
                 dt             = dt, 
                 psi_left       = psi_left,
                 psi_right      = psi_right,
+                hydro_BC       = hydro_BC,
                 cx_old         = cx_old,
                 cx_older       = cx_older,
                 hydro_old      = hydro_old,
@@ -418,7 +425,7 @@ def runNonlinearTransient(mesh, problem_type,
 #
 def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
    cx_old=None, cx_older=None, hydro_old=None, hydro_older=None, rad_old=None, rad_older=None,
-   slopes_older=None, e_slopes_old=None, e_slopes_older=None,
+   hydro_BC=None, slopes_older=None, e_slopes_old=None, e_slopes_older=None,
    psim_src=None, psip_src=None, mom_src=None, E_src=None, t_old=None, Qpsi_old=None, Qmom_old=None, Qerg_old=None,
    Qpsi_older=None, Qmom_older=None, Qerg_older=None):
 
@@ -426,10 +433,11 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
        Qpsi_new, Qmom_new, Qerg_new = computeExtraneousSources(
           psim_src, psip_src, mom_src, E_src, mesh, t_old+dt)
 
+       # update hydro BC
+       hydro_BC.update(states=hydro_old, t=t_old)
+
        # compute slopes
-       # NOTE: do we need to prevent limiters from being applied to slopes
-       # in this case?
-       slopes_old = HydroSlopes(hydro_old)
+       slopes_old = HydroSlopes(hydro_old, bc=hydro_BC)
 
        # if there is no material motion, then the homogeneous hydro solution
        # should be equal to the old hydro solution
@@ -474,7 +482,7 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
 #
 def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
    cx_old, cx_older, hydro_old, hydro_older, rad_old, rad_older,
-   slopes_older, e_slopes_old, e_slopes_older,
+   hydro_BC, slopes_older, e_slopes_old, e_slopes_older,
    psim_src, psip_src, mom_src, E_src, t_old,
    Qpsi_old, Qmom_old, Qerg_old, Qpsi_older, Qmom_older, Qerg_older,
    time_stepper_predictor='CN', time_stepper_corrector='BDF2'):
@@ -487,8 +495,11 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        Qpsi_half, Qmom_half, Qerg_half = computeExtraneousSources(
           psim_src, psip_src, mom_src, E_src, mesh, t_old+0.5*dt)
 
+       # update hydro BC
+       hydro_BC.update(states=hydro_old, t=t_old)
+
        # compute slopes
-       slopes_old = HydroSlopes(hydro_old)
+       slopes_old = HydroSlopes(hydro_old, bc=hydro_BC)
 
        # perform predictor step of MUSCL-Hancock
        hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
@@ -525,8 +536,11 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        Qpsi_new, Qmom_new, Qerg_new = computeExtraneousSources(
           psim_src, psip_src, mom_src, E_src, mesh, t_old+dt)
 
+       # update hydro BC
+       hydro_BC.update(states=hydro_half, t=t_old+0.5*dt)
+
        # perform corrector step of MUSCL-Hancock
-       hydro_star = hydroCorrector(mesh, hydro_half, dt)
+       hydro_star = hydroCorrector(mesh, hydro_half, dt, bc=hydro_BC)
 
        # perform nonlinear solve
        hydro_new, rad_new, cx_new, e_slopes_new = nonlinearSolve(

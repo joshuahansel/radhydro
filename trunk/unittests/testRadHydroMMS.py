@@ -25,6 +25,7 @@ from plotUtilities import plotHydroSolutions
 from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolution
 from crossXInterface import ConstantCrossSection
 from transient import runNonlinearTransient
+from hydroBC import HydroBC
 
 ## Derived unittest class to test the MMS source creator functions
 #
@@ -73,9 +74,11 @@ class TestRadHydroMMS(unittest.TestCase):
       substitutions['alpha'] = alpha_value
       rho = rho.subs(substitutions)
       u   = u.subs(substitutions)
+      mom = rho*u
       E   = E.subs(substitutions)
       rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy")
       u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy")
+      mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy")
       E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy")
       psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy")
       psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
@@ -97,6 +100,10 @@ class TestRadHydroMMS(unittest.TestCase):
       hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
          rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
+      # create hydro BC
+      hydro_BC = HydroBC(bc_type='dirichlet', mesh=mesh, rho_BC=rho_f,
+         mom_BC=mom_f, erg_BC=E_f)
+  
       # create cross sections
       cross_sects = [(ConstantCrossSection(sig_s, sig_s+sig_a),
                       ConstantCrossSection(sig_s, sig_s+sig_a))
@@ -124,6 +131,7 @@ class TestRadHydroMMS(unittest.TestCase):
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,
+         hydro_BC     = hydro_BC,
          mom_src      = mom_src,
          E_src        = E_src,
          psim_src     = psim_src,

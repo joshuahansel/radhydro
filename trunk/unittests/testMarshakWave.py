@@ -16,6 +16,7 @@ from TRTUtilities import convSpecHeatErgsEvToJksKev, \
 from plotUtilities import plotTemperatures
 from radiation import Radiation
 from transient import runNonlinearTransient
+from hydroBC import HydroBC
 
 ## Unit test class for a 2-material TRT problem, using BE time discretization.
 #
@@ -61,6 +62,9 @@ class TestTRTOnly(unittest.TestCase):
                 hydro_IC[-1],scale_coeff=0.001),InvCubedCrossX(sig_s1,
                 hydro_IC[-1],scale_coeff=0.001)) )
   
+      # create hydro BC
+      hydro_BC = HydroBC(bc_type='reflective', mesh=mesh)
+  
       # initialize radiation to equilibrium solution
       psi_left  = computeEquivIntensity(T_l)
       psi_right = computeEquivIntensity(T_r)
@@ -87,6 +91,7 @@ class TestTRTOnly(unittest.TestCase):
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,
+         hydro_BC     = hydro_BC,
          verbose      = verbose)
 
       # plot solutions if run standalone

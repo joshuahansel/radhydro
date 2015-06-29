@@ -7,6 +7,7 @@ from mesh import        Mesh
 from math import        sqrt
 from hydroState import HydroState
 from hydroSlopes import HydroSlopes
+from hydroBC import HydroBC
 from musclHancock import hydroPredictor, hydroCorrector
 from plotUtilities import plotHydroSolutions
 
@@ -50,10 +51,13 @@ def solveHydroProblem():
     i_right = int(0.7*n)
 
     #Create cell centered variables
-    states_a = [HydroState(u=u_left,p=p_left,gamma=gamma,rho=rho_left,spec_heat=spec_heat)
-       for i in range(i_left)]
-    states_a = states_a + [HydroState(u=u_right,p=p_right,gamma=gamma,spec_heat=spec_heat,rho=rho_right) for i in
-            range(i_right)]
+    states_a = [HydroState(u=u_left,p=p_left,gamma=gamma,rho=rho_left,
+       spec_heat=spec_heat) for i in range(i_left)]
+    states_a = states_a + [HydroState(u=u_right,p=p_right,gamma=gamma,
+       spec_heat=spec_heat,rho=rho_right) for i in range(i_right)]
+
+    # initialize BC object
+    bc = HydroBC(bc_type='reflective', mesh=mesh)
 
     #-----------------------------------------------------------------
     # Solve Problem
@@ -80,14 +84,20 @@ def solveHydroProblem():
 
         print("Time step %d: t = %f -> %f" % (time_index,t-dt,t))
 
+        # update boundary values
+        bc.update(states=states_a, t=t-dt)
+
         # compute slopes
-        slopes = HydroSlopes(states_a)
+        slopes = HydroSlopes(states_a, bc=bc)
 
         #Solve predictor step
         states_a = hydroPredictor(mesh, states_a, slopes, dt)
 
+        # update boundary values
+        bc.update(states=states_a, t=t-0.5*dt)
+
         #Solve corrector step
-        states_a = hydroCorrector(mesh, states_a, dt)
+        states_a = hydroCorrector(mesh, states_a, dt, bc=bc)
 
 
     # plot solution

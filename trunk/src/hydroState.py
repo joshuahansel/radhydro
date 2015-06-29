@@ -133,6 +133,29 @@ class HydroState:
 
         return "u: %.4f rho: %.4f e: %.4f p: %.4f" % (self.u, self.rho, self.e, self.p)
 
+    ## Prints conservative variables
+    #
+    def printConservativeVariables(self):
+
+       rho, mom, erg = self.getConservativeVariables()
+       print "%f %f %f" % (rho, mom, erg)
+
+    ## Returns conservative variables
+    #
+    #  @return conservative variables:
+    #     -# \f$\rho\f$
+    #     -# \f$\rho u\f$
+    #     -# \f$E\f$
+    #
+    def getConservativeVariables(self):
+    
+       rho = self.rho
+       u   = self.u
+       mom = rho * u
+       erg = rho * (0.5*u*u + self.e)
+    
+       return rho, mom, erg
+
 
 ## Computes volume
 #

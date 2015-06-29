@@ -13,6 +13,7 @@ from hydroState import HydroState
 from plotUtilities import plotHydroSolutions
 from radiation import Radiation
 from transient import runNonlinearTransient
+from hydroBC import HydroBC
 
 ## Unit test class
 #
@@ -73,6 +74,9 @@ class TestHydro(unittest.TestCase):
          else:
             hydro_IC.append(
                HydroState(u=uR,rho=rhoR,e=eR,gamma=gam,spec_heat=c_v) )
+
+      # create hydro BC
+      hydro_BC = HydroBC(bc_type='reflective', mesh=mesh)
   
       # initialize radiation to zero solution to give pure hydrodynamics
       psi_left  = 0.0
@@ -98,6 +102,7 @@ class TestHydro(unittest.TestCase):
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,
+         hydro_BC     = hydro_BC,
          verbose      = verbose)
 
       # plot solutions if run standalone

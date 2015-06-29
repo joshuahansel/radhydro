@@ -45,7 +45,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
        k += 1
 
        # update velocity
-       if problem_type == 'rad_hydro':
+       if problem_type != 'rad_mat':
           updateVelocity(
              mesh         = mesh,
              time_stepper = time_stepper,

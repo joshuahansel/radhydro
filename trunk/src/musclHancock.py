@@ -28,16 +28,8 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
 
     dx = mesh.getElement(0).dx #currently a fixed width
 
-    if mesh.n_elems % 2 != 0: #simple error raise, % has lots of diff meanings in python
+    if mesh.n_elems % 2 != 0:
         raise ValueError("Must be even number of cells")
-
-    #Can create lists of things in multiple ways
-    spat_coors = []
-    for i in mesh.elements:
-        spat_coors += [i.xl]
-    spat_coors += [mesh.elements[-1].xr]
-    x = np.array(spat_coors)
-    x_cent = mesh.getCellCenters()
 
     #Initialize cell centered variables as passed in
     states = states_old_a
@@ -117,8 +109,11 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
 # @return
 #       -#  predicted states averages
 #
-def hydroCorrector(mesh, states_old_a, dt):
+def hydroCorrector(mesh, states_old_a, dt, bc):
 
+        #for state in states_a:
+        #   state.printConservativeVariables()
+        #break
     #Choose riemann solver
     riem_solver = HLLCSolver #HLLSolver, HLLCSolver
 
@@ -133,24 +128,72 @@ def hydroCorrector(mesh, states_old_a, dt):
     mom_p = [s.rho*s.u                 for s in states_old_a]
     erg_p = [s.rho*(0.5*s.u*s.u + s.e) for s in states_old_a]
 
-    #Solve Rieman problem at each face, for each quantity
-    #For boundaries it is easily defined
-    rho_F[0] = rhoFlux(states_old_a[0])
-    mom_F[0] = momFlux(states_old_a[0])
-    erg_F[0] = ergFlux(states_old_a[0])
+    # get boundary values and states
+    rho_BC_L, rho_BC_R, mom_BC_L, mom_BC_R, erg_BC_L, erg_BC_R =\
+       bc.getBoundaryValues()
+    state_BC_L, state_BC_R = bc.getBoundaryStates()
 
-    rho_F[-1] = rhoFlux(states_old_a[-1])
-    mom_F[-1] = momFlux(states_old_a[-1])
-    erg_F[-1] = ergFlux(states_old_a[-1])
+    # solve Riemann problem at each interface
+    for i in range(0,n+1):
 
-    for i in range(0,n-1):
+        # get left and right states for Riemann problem at interface
+        if i == 0: # left boundary edge
+            rho_L = rho_BC_L
+            rho_R = rho_p[i]
+            mom_L = mom_BC_L
+            mom_R = mom_p[i]
+            erg_L = erg_BC_L
+            erg_R = erg_p[i]
+            state_L = state_BC_L
+            state_R = states_old_a[i]
+            #print "%f %f %f %f %f %f" % (rho_L, rho_R, mom_L, mom_R, erg_L, erg_R)
+            #print state_L
+            #print state_R
+            #print riem_solver(rho_L, rho_R, state_L, state_R, rhoFlux)
+            #print riem_solver(mom_L, mom_R, state_L, state_R, momFlux)
+            #print riem_solver(erg_L, erg_R, state_L, state_R, ergFlux)
+        elif i == n: # right boundary edge
+            rho_L = rho_p[i-1]
+            rho_R = rho_BC_R
+            mom_L = mom_p[i-1]
+            mom_R = mom_BC_R
+            erg_L = erg_p[i-1]
+            erg_R = erg_BC_R
+            state_L = states_old_a[i-1]
+            state_R = state_BC_R
+            #print "%f %f %f %f %f %f" % (rho_L, rho_R, mom_L, mom_R, erg_L, erg_R)
+            #print state_L
+            #print state_R
+            #print "R: ", rho_L, rho_R, mom_L, mom_R, erg_L, erg_R
+            #print riem_solver(rho_L, rho_R, state_L, state_R, rhoFlux)
+            #print riem_solver(mom_L, mom_R, state_L, state_R, momFlux)
+            #print riem_solver(erg_L, erg_R, state_L, state_R, ergFlux)
+        else: # interior edge
+            rho_L = rho_p[i-1]
+            rho_R = rho_p[i]
+            mom_L = mom_p[i-1]
+            mom_R = mom_p[i]
+            erg_L = erg_p[i-1]
+            erg_R = erg_p[i]
+            state_L = states_old_a[i-1]
+            state_R = states_old_a[i]
+            #print "%f %f %f %f %f %f" % (rho_L, rho_R, mom_L, mom_R, erg_L, erg_R)
+            #print state_L
+            #print state_R
 
-        rho_F[i+1] = riem_solver(rho_p[i], rho_p[i+1], states_old_a[i],
-                states_old_a[i+1], rhoFlux)
-        mom_F[i+1] = riem_solver(mom_p[i], mom_p[i+1], states_old_a[i],
-                states_old_a[i+1], momFlux)
-        erg_F[i+1] = riem_solver(erg_p[i], erg_p[i+1], states_old_a[i],
-                states_old_a[i+1], ergFlux)
+        # solve Riemann problem at interface
+        rho_F[i] = riem_solver(rho_L, rho_R, state_L, state_R, rhoFlux)
+        mom_F[i] = riem_solver(mom_L, mom_R, state_L, state_R, momFlux)
+        erg_F[i] = riem_solver(erg_L, erg_R, state_L, state_R, ergFlux)
+
+    #for i in xrange(0,n+1):
+    #   print "%f %f %f" % (rho_F[i],mom_F[i],erg_F[i])
+    #rho_F[0]  = rhoFlux(states_old_a[0])
+    #rho_F[-1] = rhoFlux(states_old_a[-1])
+    #mom_F[0]  = momFlux(states_old_a[0])
+    #mom_F[-1] = momFlux(states_old_a[-1])
+    #erg_F[0]  = ergFlux(states_old_a[0])
+    #erg_F[-1] = ergFlux(states_old_a[-1])
 
     #Intialize cell average quantity arrays at t_old
     rho = [s.rho for s in states_old_a]

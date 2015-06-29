@@ -16,14 +16,15 @@ import numpy as np
 import unittest
 
 # local packages
-from createMMSSourceFunctions import createMMSSourceFunctionsRadHydro
+from createMMSSourceFunctions import createMMSSourceFunctionsHydroOnly
 from mesh import Mesh
 from hydroState import HydroState
 from radiation import Radiation
-from plotUtilities import plotHydroSolutions
+from plotUtilities import plotHydroSolutions, plotAngularFlux
 from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolution
 from crossXInterface import ConstantCrossSection
 from transient import runNonlinearTransient
+from hydroBC import HydroBC
 
 ## Derived unittest class
 #
@@ -54,14 +55,10 @@ class TestHydroMMS(unittest.TestCase):
       sig_a = 0.0
       
       # create MMS source functions
-      rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
+      rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsHydroOnly(
          rho           = rho,
          u             = u,
          E             = E,
-         psim          = psim,
-         psip          = psip,
-         sigma_s_value = sig_s,
-         sigma_a_value = sig_a,
          gamma_value   = gamma_value,
          cv_value      = cv_value,
          alpha_value   = alpha_value,
@@ -72,9 +69,11 @@ class TestHydroMMS(unittest.TestCase):
       substitutions['alpha'] = alpha_value
       rho = rho.subs(substitutions)
       u   = u.subs(substitutions)
+      mom = rho*u
       E   = E.subs(substitutions)
       rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy")
       u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy")
+      mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy")
       E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy")
       psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy")
       psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
@@ -96,6 +95,10 @@ class TestHydroMMS(unittest.TestCase):
       hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
          rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
+      # create hydro BC
+      hydro_BC = HydroBC(bc_type='dirichlet', mesh=mesh, rho_BC=rho_f,
+         mom_BC=mom_f, erg_BC=E_f)
+  
       # create cross sections
       cross_sects = [(ConstantCrossSection(sig_s, sig_s+sig_a),
                       ConstantCrossSection(sig_s, sig_s+sig_a))
@@ -120,6 +123,7 @@ class TestHydroMMS(unittest.TestCase):
          t_end        = t_end,
          psi_left     = psi_left,
          psi_right    = psi_right,
+         hydro_BC     = hydro_BC,
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,
@@ -131,8 +135,6 @@ class TestHydroMMS(unittest.TestCase):
 
       # plot
       if __name__ == '__main__':
-
-         # plot radiation solution
 
          # compute exact hydro solution
          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,

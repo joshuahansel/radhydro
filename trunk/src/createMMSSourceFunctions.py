@@ -83,6 +83,92 @@ def createMMSSourceFunctionsRadOnly(psim, psip,
 
 
 ## Creates MMS source functions of (x,t) for each of the governing equations
+#  in the hydro-only system.
+#
+#  Currently, the provided expressions are assumed to contain only one
+#  parameter, called 'alpha'. An ideal gas EOS is assumed.
+#
+#  @return (rho_f, u_f, E_f, psim_f, psip_f), where 'quantity_f' denotes
+#     a function handle for the source function of (x,t) to the equation
+#     corresponding to 'quantity'
+#
+def createMMSSourceFunctionsHydroOnly(rho, u, E,
+   gamma_value, cv_value, alpha_value, display_equations=False):
+   
+   # declare symbolic variables
+   x, t, alpha, Qpsim, Qpsip = symbols('x t alpha Qpsim Qpsip')
+   gamma, cv, a = symbols('gamma c_v a')
+   
+   # compute other thermodynamic quantities based on ideal gas EOS
+   e = E/rho - u*u/2
+   p = rho*e*(gamma - 1)
+   rhou = rho*u
+   
+   # temporal derivatives
+   drhodt   = diff(rho,t)
+   drhoudt  = diff(rhou,t)
+   dEdt     = diff(E,t)
+   
+   # spatial derivatives
+   drhoudx  = diff(rhou,x)
+   drhouudx = diff(rhou*u,x)
+   dpdx     = diff(p,x)
+   dEfluxdx = diff((E+p)*u,x)
+   
+   # compute sources
+   Qrho = drhodt + drhoudx
+   Qu = drhoudt + drhouudx + dpdx
+   QE = dEdt + dEfluxdx
+   Qpsim = 0
+   Qpsip = 0
+   
+   # display equations
+   if display_equations:
+
+      # initialize printing to use prettiest format available (e.g., LaTeX, Unicode)
+      init_printing()
+
+      # create an equation and then display it
+      eq = Eq(symbols('rho'),rho)
+      display(eq)
+      eq = Eq(symbols('u'),u)
+      display(eq)
+      eq = Eq(symbols('E'),E)
+      display(eq)
+      eq = Eq(symbols('e'),e)
+      display(eq)
+      eq = Eq(symbols('p'),p)
+      display(eq)
+      eq = Eq(symbols('Q_rho'),Qrho)
+      display(eq)
+      eq = Eq(symbols('Q_u'),Qu)
+      display(eq)
+      eq = Eq(symbols('Q_E'),QE)
+      display(eq)
+   
+   # substitute for all symbols except x and t
+   substitutions = dict()
+   substitutions['alpha'] = alpha_value
+   substitutions['a']     = GC.RAD_CONSTANT
+   substitutions['c_v']   = cv_value
+   substitutions['gamma'] = gamma_value
+
+   # make substitutions
+   Qrho_sub  = Qrho.subs(substitutions)
+   Qu_sub    = Qu.subs(substitutions)
+   QE_sub    = QE.subs(substitutions)
+   
+   # create MMS source functions
+   rho_f  = lambdify((symbols('x'),symbols('t')), Qrho_sub, "numpy")
+   u_f    = lambdify((symbols('x'),symbols('t')), Qu_sub,   "numpy")
+   E_f    = lambdify((symbols('x'),symbols('t')), QE_sub,   "numpy")
+   psim_f = lambdify((symbols('x'),symbols('t')), Qpsim,    "numpy")
+   psip_f = lambdify((symbols('x'),symbols('t')), Qpsip,    "numpy")
+
+   return (rho_f, u_f, E_f, psim_f, psip_f)
+
+
+## Creates MMS source functions of (x,t) for each of the governing equations
 #  in the full RH system.
 #
 #  Currently, the provided expressions are assumed to contain only one

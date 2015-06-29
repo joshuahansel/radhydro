@@ -10,17 +10,23 @@ class HydroSlopes:
 
     ## Constructor
     #
-    def __init__(self, states):
+    #  @param[in] states  hydro state for each cell
+    #  @param[in] bc      hydro BC object
+    #
+    def __init__(self, states, bc):
 
        # extract vectors of conservative variables
        rho = [s.rho                     for s in states]
        mom = [s.rho*s.u                 for s in states]
        erg = [s.rho*(0.5*s.u*s.u + s.e) for s in states]
 
+       # get boundary values
+       rho_L, rho_R, mom_L, mom_R, erg_L, erg_R = bc.getBoundaryValues()
+
        # compute slopes
-       self.rho_slopes = self.slopeReconstruction(rho)
-       self.mom_slopes = self.slopeReconstruction(mom)
-       self.erg_slopes = self.slopeReconstruction(erg)
+       self.rho_slopes = self.slopeReconstruction(rho, rho_L, rho_R)
+       self.mom_slopes = self.slopeReconstruction(mom, mom_L, mom_R)
+       self.erg_slopes = self.slopeReconstruction(erg, erg_L, erg_R)
 
     ## Extracts slopes for each conservative variable
     #
@@ -30,59 +36,77 @@ class HydroSlopes:
 
     ## Reconstructs slopes for a single conservative variable
     #
-    def slopeReconstruction(self,u):
+    #  @param[in] u     cell average values for each cell
+    #  @param[in] bc_L  value for left boundary ghost cell
+    #  @param[in] bc_R  value for right boundary ghost cell
+    #
+    #  @return limited slopes for each cell
+    #
+    def slopeReconstruction(self, u, bc_L, bc_R):
     
+        # slope limiter option
         limiter = "vanleer"
     
+        # omega of 0 gives centered approximation
         omega = 0.
     
         # compute slopes
         u_slopes = np.zeros(len(u))
         for i in range(len(u)):
-            
-            if i==0:
-                del_i = u[i+1]-u[i]
-            elif i==len(u)-1:
-                del_i = u[i]-u[i-1]
+
+            # get neighboring cell values
+            if i == 0: # left boundary
+               u_L = bc_L
+               u_R = u[i+1]
+            elif i == len(u)-1: # right boundary
+               u_L = u[i-1]
+               u_R = bc_R
             else:
-                del_rt = u[i+1]-u[i]
-                del_lt = u[i] - u[i-1]
-                del_i = 0.5*(1.+omega)*del_lt + 0.5*(1.-omega)*del_rt
-    
-                #Simple slope limiters
-                if limiter == "minmod":
-    
-                    del_i = minMod(del_rt,del_lt)
-    
-                elif limiter == "vanleer":
-    
-                    beta = 1.
-    
-                    #Catch if divide by zero
-                    if abs(u[i+1] - u[i]) < 0.000000001*(u[i]+0.00001):
-                        if abs(u[i]-u[i-1]) < 0.000000001*(u[i]+0.00001):
-                            r = 1.0
-                        else:
-                            r = -1.
+               u_L = u[i-1]
+               u_R = u[i+1]
+            
+            # compute differences over left and right edges of cell
+            del_L = u[i] - u_L
+            del_R = u_R  - u[i]
+
+            # compute tentative slope
+            del_i = 0.5*(1.+omega)*del_L + 0.5*(1.-omega)*del_R
+
+            # compute limited slope
+            if limiter == "minmod":
+
+                del_i = minMod(del_R,del_L)
+
+            elif limiter == "vanleer":
+
+                beta = 1.
+
+                #Catch if divide by zero
+                if abs(del_R) < 1.0e-15: #0.000000001*(u[i]+0.00001):
+                    if abs(del_L) < 1.0e-15: #0.000000001*(u[i]+0.00001):
+                        r = 1.0
                     else:
-                        r = del_lt/del_rt
-                            
-                    if r < 0.0 or isinf(r):
-                        del_i = 0.0
-                    else:
-    
-                        zeta =  min(2.*r/(1.+r),2.*beta/(1.-omega+(1.+omega)*r))
-                        del_i = zeta*del_i
-    
-                elif limiter == "none":
-                    del_i = del_i
-    
-                elif limiter == "step":
-                    del_i = 0.0
-    
+                        r = -1.
                 else:
-                    raise ValueError("Invalid slope limiter\n")
-    
+                    r = del_L/del_R
+                        
+                if r < 0.0 or isinf(r):
+                    del_i = 0.0
+                else:
+
+                    zeta_R = 2.*beta/(1.-omega+(1.+omega)*r)
+                    zeta =  min(2.*r/(1.+r), zeta_R)
+                    del_i = zeta*del_i
+
+            elif limiter == "none":
+                del_i = del_i
+
+            elif limiter == "step":
+                del_i = 0.0
+
+            else:
+                raise ValueError("Invalid slope limiter\n")
+
             # save slope
             u_slopes[i] = del_i
                 
