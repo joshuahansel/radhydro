@@ -1,17 +1,9 @@
-## @package testRadHydroMMS
-#  Contains unittest class to test an MMS problem with the full
-#  radiation-hydrodynamics scheme
+## @package testRadHydroShock
+#  Contains unittest class to test a radiation-hydrodyamics shock problem.
 
 # add source directory to module search path
 import sys
 sys.path.append('../src')
-
-# symbolic math packages
-from sympy import symbols, exp, sin, pi
-from sympy.utilities.lambdify import lambdify
-
-# numpy
-import numpy as np
 
 # unit test package
 import unittest
@@ -27,7 +19,7 @@ from transient import runNonlinearTransient
 from hydroBC import HydroBC
 import globalConstants as GC
 
-## Derived unittest class to test the MMS source creator functions
+## Derived unittest class to test the radiation-hydrodynamics shock problem
 #
 class TestRadHydroShock(unittest.TestCase):
    def setUp(self):
@@ -36,27 +28,25 @@ class TestRadHydroShock(unittest.TestCase):
       pass
    def test_RadHydroShock(self):
       
-      
-      # numeric values
-      cv_value    = 1.0
-      gamma_value = 1.4
-      
       # create uniform mesh
       n_elems = 100
       width = 0.02
-      mesh = Mesh(n_elems, width)
+      x_start = -0.01
+      mesh_center = x_start + 0.5*width
+      mesh = Mesh(n_elems, width, x_start=x_start)
 
-      # compute radiation BC; assumes BC is independent of timea
+      # compute radiation BC; assumes BC is independent of time
       Erad_left = 1.372E-06
       Erad_right = 2.7955320762182542e-06
       c = GC.SPD_OF_LGT
-      psi_left  = 0.5*c*Erad_left
+      # NOTE: What is the justification for this? Does Jarrod assume Fr = 0?
+      psi_left  = 0.5*c*Erad_left  
       psi_right = 0.5*c*Erad_right
       
       # gamma constant
-      gam = 1.4
+      gam = 5.0/3.0
  
-      # material 1 properties and IC
+      # material 1 properties and IC, Table 6.1 and 6.2
       sig_a1 = 390.71164263502122
       sig_s1 = 8.5314410158161809E+2-sig_a1
       c_v1   = 1.2348000000000001e-01
@@ -66,7 +56,7 @@ class TestRadHydroShock(unittest.TestCase):
       e1     = E1/rho1 - 0.5*u1*u1
       T1     = 0.1
 
-      # material 2 properties and IC
+      # material 2 properties and IC, Table 6.1 and 6.2
       sig_a2 = sig_a1
       sig_s2 = sig_s1
       rho2   = 1.2973213452231311
@@ -83,7 +73,7 @@ class TestRadHydroShock(unittest.TestCase):
 
       for i in range(mesh.n_elems):  
       
-         if mesh.getElement(i).x_cent < 0.5*width: # material 1
+         if mesh.getElement(i).x_cent < mesh_center: # material 1
             cross_sects.append( (ConstantCrossSection(sig_s1, sig_s1+sig_a1),
                                  ConstantCrossSection(sig_s1, sig_s1+sig_a1)) )
             hydro_IC.append(
@@ -98,9 +88,6 @@ class TestRadHydroShock(unittest.TestCase):
                HydroState(u=u2,rho=rho2,e=e2,spec_heat=c_v2,gamma=gam))
 
             psi_IC += [psi_right for dof in range(4)]
-
-         print hydro_IC[-1]
-         print hydro_IC[-1].getTemperature(), T2
 
       rad_IC = Radiation(psi_IC)
 
@@ -136,11 +123,7 @@ class TestRadHydroShock(unittest.TestCase):
       # plot
       if __name__ == '__main__':
 
-         # plot radiation solution
-
          # compute exact hydro solution
-     #    hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,
-     #       rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
          hydro_exact = None
 
          # plot hydro solution

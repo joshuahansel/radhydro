@@ -23,7 +23,8 @@ class Mesh:
         dx = width/float(n_elements)
         
         # build elements
-        self.elements = [Element(i,(i+0.5)*dx,dx) for i in xrange(n_elements)]
+        self.elements = [Element(i,x_start + (i+0.5)*dx,dx)
+           for i in xrange(n_elements)]
 
         # compute max dx in mesh
         self.max_dx = dx
