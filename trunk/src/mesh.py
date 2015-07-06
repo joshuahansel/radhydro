@@ -1,6 +1,8 @@
 ## @package src.mesh
 #  Contains mesh-related classes.
 
+import numpy as np
+
 #================================================================================
 ## Mesh class.
 #
@@ -56,6 +58,19 @@ class Mesh:
     #
     def getCellCenters(self):
        return [el.x_cent for el in self.elements]
+
+    ## Returns list of cell edges for plotting discontinuous data
+    #
+    def getCellEdgesDiscontinuous(self):
+       x_edges = np.zeros(self.n_elems*2)
+       for i in xrange(self.n_elems):
+          el = self.getElement(i)
+          xL = el.xl
+          xR = el.xr
+          x_edges[2*i]   = xL
+          x_edges[2*i+1] = xR
+
+       return x_edges
 
 #================================================================================
 ## Element class.

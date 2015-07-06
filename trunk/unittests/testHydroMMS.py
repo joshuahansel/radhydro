@@ -39,9 +39,15 @@ class TestHydroMMS(unittest.TestCase):
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-      rho = exp(x+t)
-      u   = exp(-x)*sin(t) - 1
-      E   = exp(-3*alpha*t)*sin(pi*x) + 3
+      test_case = 1
+      if test_case == 1:
+         rho = exp(x+t)
+         u   = exp(-x)*sin(t) - 1
+         E   = exp(-3*alpha*t)*sin(pi*x) + 3
+      elif test_case == 2:
+         rho = symbols('1')
+         u   = symbols('1')
+         E   = symbols('10')
       
       # create solution for radiation field
       psim = 0
@@ -80,6 +86,7 @@ class TestHydroMMS(unittest.TestCase):
       
       # create uniform mesh
       n_elems = 50
+      #n_elems = 20
       width = 1.0
       mesh = Mesh(n_elems, width)
 
@@ -92,7 +99,7 @@ class TestHydroMMS(unittest.TestCase):
       psi_right = psim_f(x=width, t=0.0)
 
       # compute hydro IC
-      hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
+      hydro_IC = computeAnalyticHydroSolution(mesh, t=0.0,
          rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
       # create hydro BC
@@ -106,7 +113,12 @@ class TestHydroMMS(unittest.TestCase):
 
       # transient options
       t_start  = 0.0
-      t_end = 0.1
+      #t_end = 0.1
+      dt_constant = 0.001
+      t_end = dt_constant
+
+      # slope limiter option
+      slope_limiter = "vanleer"
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -116,8 +128,11 @@ class TestHydroMMS(unittest.TestCase):
       rad_new, hydro_new = runNonlinearTransient(
          mesh         = mesh,
          problem_type = 'rad_hydro',
-         dt_option    = 'CFL',
-         CFL          = 0.5,
+         #dt_option    = 'CFL',
+         dt_option    = 'constant',
+         #CFL          = 0.5,
+         dt_constant  = dt_constant,
+         slope_limiter = slope_limiter,
          use_2_cycles = False,
          t_start      = t_start,
          t_end        = t_end,

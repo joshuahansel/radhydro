@@ -29,8 +29,8 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
       assert(e_slopes_older != None)
 
    # initialize iterates to the old quantities
-   hydro_new  = deepcopy(hydro_old)
-   hydro_prev = deepcopy(hydro_old)
+   hydro_new  = deepcopy(hydro_star)
+   hydro_prev = deepcopy(hydro_star)
    rad_prev   = deepcopy(rad_old)
    cx_prev    = deepcopy(cx_old)
 
@@ -64,7 +64,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
              Qmom_new     = Qmom_new,
              Qmom_old     = Qmom_old,
              Qmom_older   = Qmom_older)
-
+        
        # compute QE
        src_handler = QEHandler(mesh, time_stepper)
        QE = src_handler.computeTerm(

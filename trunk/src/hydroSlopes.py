@@ -13,7 +13,10 @@ class HydroSlopes:
     #  @param[in] states  hydro state for each cell
     #  @param[in] bc      hydro BC object
     #
-    def __init__(self, states, bc):
+    def __init__(self, states, bc, limiter):
+
+       # save slope limiter
+       self.limiter = limiter
 
        # extract vectors of conservative variables
        rho = [s.rho                     for s in states]
@@ -28,11 +31,29 @@ class HydroSlopes:
        self.mom_slopes = self.slopeReconstruction(mom, mom_L, mom_R)
        self.erg_slopes = self.slopeReconstruction(erg, erg_L, erg_R)
 
-    ## Extracts slopes for each conservative variable
-    #
-    def extractSlopes(self):
 
-       return self.rho_slopes, self.mom_slopes, self.erg_slopes
+    ## Creates linear representation for solution using slopes
+    #
+    def createLinearRepresentation(self, states):
+
+       n = len(states)
+       rho_l = np.zeros(n)
+       rho_r = np.zeros(n)
+       mom_l = np.zeros(n)
+       mom_r = np.zeros(n)
+       erg_l = np.zeros(n)
+       erg_r = np.zeros(n)
+       for i in xrange(n):
+          rho, mom, erg = states[i].getConservativeVariables()
+          rho_l[i] = rho - 0.5*self.rho_slopes[i]
+          rho_r[i] = rho + 0.5*self.rho_slopes[i]
+          mom_l[i] = mom - 0.5*self.mom_slopes[i]
+          mom_r[i] = mom + 0.5*self.mom_slopes[i]
+          erg_l[i] = erg - 0.5*self.erg_slopes[i]
+          erg_r[i] = erg + 0.5*self.erg_slopes[i]
+
+       return rho_l, rho_r, mom_l, mom_r, erg_l, erg_r
+
 
     ## Reconstructs slopes for a single conservative variable
     #
@@ -43,9 +64,6 @@ class HydroSlopes:
     #  @return limited slopes for each cell
     #
     def slopeReconstruction(self, u, bc_L, bc_R):
-    
-        # slope limiter option
-        limiter = "vanleer"
     
         # omega of 0 gives centered approximation
         omega = 0.
@@ -73,11 +91,11 @@ class HydroSlopes:
             del_i = 0.5*(1.+omega)*del_L + 0.5*(1.-omega)*del_R
 
             # compute limited slope
-            if limiter == "minmod":
+            if self.limiter == "minmod":
 
                 del_i = minMod(del_R,del_L)
 
-            elif limiter == "vanleer":
+            elif self.limiter == "vanleer":
 
                 beta = 1.
 
@@ -98,10 +116,10 @@ class HydroSlopes:
                     zeta =  min(2.*r/(1.+r), zeta_R)
                     del_i = zeta*del_i
 
-            elif limiter == "none":
+            elif self.limiter == "none":
                 del_i = del_i
 
-            elif limiter == "step":
+            elif self.limiter == "step":
                 del_i = 0.0
 
             else:

@@ -28,43 +28,41 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
 
     dx = mesh.getElement(0).dx #currently a fixed width
 
-    if mesh.n_elems % 2 != 0:
-        raise ValueError("Must be even number of cells")
+    # number of elements
+    n = mesh.n_elems
 
     #Initialize cell centered variables as passed in
-    states = states_old_a
+    states = deepcopy(states_old_a)
 
     #-----------------------------------------------------------------
     # Solve Problem
     #----------------------------------------------------------------
 
     #Create vectors of conserved quantities
-    rho = [s.rho                     for s in states]
-    mom = [s.rho*s.u                 for s in states]
-    erg = [s.rho*(0.5*s.u*s.u + s.e) for s in states]
-
-    # extract slopes
-    rho_slopes, mom_slopes, erg_slopes = slopes.extractSlopes()
+    rho = np.zeros(n)
+    mom = np.zeros(n)
+    erg = np.zeros(n)
+    for i in xrange(n):
+       rho[i], mom[i], erg[i] = states[i].getConservativeVariables()
 
     # compute linear representations
-    rho_l, rho_r = createLinearRepresentation(rho,rho_slopes)
-    mom_l, mom_r = createLinearRepresentation(mom,mom_slopes)
-    erg_l, erg_r = createLinearRepresentation(erg,erg_slopes)
+    rho_l, rho_r, mom_l, mom_r, erg_l, erg_r =\
+       slopes.createLinearRepresentation(states)
 
     #Compute left and right states
     states_l = [deepcopy(i) for i in states] #initialize 
     states_r = [deepcopy(i) for i in states]
-    for i in range(len(rho_l)):
+    for i in xrange(n):
         states_l[i].updateState(rho_l[i], mom_l[i], erg_l[i])
         states_r[i].updateState(rho_r[i], mom_r[i], erg_r[i])
 
     #Initialize predicited conserved quantities
-    rho_p = [0.0 for i in range(len(rho))]
-    mom_p = [0.0 for i in range(len(rho))]
-    erg_p = [0.0 for i in range(len(rho))]
+    rho_p = np.zeros(n)
+    mom_p = np.zeros(n)
+    erg_p = np.zeros(n)
 
     #Advance in time each edge variable
-    for i in range(len(rho)):
+    for i in xrange(n):
 
         #rho
         rho_p[i] = advCons(rho[i],dx,0.5*dt,rhoFlux(states_l[i]),rhoFlux(states_r[i])) 
@@ -76,7 +74,7 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
         erg_p[i] = advCons(erg[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
         
     #Advance the primitive variables
-    for i in range(len(rho)):
+    for i in xrange(n):
         states[i].updateState(rho_p[i], mom_p[i], erg_p[i])
 
     #Return states at left and right values
@@ -111,9 +109,6 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
 #
 def hydroCorrector(mesh, states_old_a, dt, bc):
 
-        #for state in states_a:
-        #   state.printConservativeVariables()
-        #break
     #Choose riemann solver
     riem_solver = HLLCSolver #HLLSolver, HLLCSolver
 
@@ -146,12 +141,6 @@ def hydroCorrector(mesh, states_old_a, dt, bc):
             erg_R = erg_p[i]
             state_L = state_BC_L
             state_R = states_old_a[i]
-            #print "%f %f %f %f %f %f" % (rho_L, rho_R, mom_L, mom_R, erg_L, erg_R)
-            #print state_L
-            #print state_R
-            #print riem_solver(rho_L, rho_R, state_L, state_R, rhoFlux)
-            #print riem_solver(mom_L, mom_R, state_L, state_R, momFlux)
-            #print riem_solver(erg_L, erg_R, state_L, state_R, ergFlux)
         elif i == n: # right boundary edge
             rho_L = rho_p[i-1]
             rho_R = rho_BC_R
@@ -161,13 +150,6 @@ def hydroCorrector(mesh, states_old_a, dt, bc):
             erg_R = erg_BC_R
             state_L = states_old_a[i-1]
             state_R = state_BC_R
-            #print "%f %f %f %f %f %f" % (rho_L, rho_R, mom_L, mom_R, erg_L, erg_R)
-            #print state_L
-            #print state_R
-            #print "R: ", rho_L, rho_R, mom_L, mom_R, erg_L, erg_R
-            #print riem_solver(rho_L, rho_R, state_L, state_R, rhoFlux)
-            #print riem_solver(mom_L, mom_R, state_L, state_R, momFlux)
-            #print riem_solver(erg_L, erg_R, state_L, state_R, ergFlux)
         else: # interior edge
             rho_L = rho_p[i-1]
             rho_R = rho_p[i]
@@ -177,23 +159,11 @@ def hydroCorrector(mesh, states_old_a, dt, bc):
             erg_R = erg_p[i]
             state_L = states_old_a[i-1]
             state_R = states_old_a[i]
-            #print "%f %f %f %f %f %f" % (rho_L, rho_R, mom_L, mom_R, erg_L, erg_R)
-            #print state_L
-            #print state_R
 
         # solve Riemann problem at interface
         rho_F[i] = riem_solver(rho_L, rho_R, state_L, state_R, rhoFlux)
         mom_F[i] = riem_solver(mom_L, mom_R, state_L, state_R, momFlux)
         erg_F[i] = riem_solver(erg_L, erg_R, state_L, state_R, ergFlux)
-
-    #for i in xrange(0,n+1):
-    #   print "%f %f %f" % (rho_F[i],mom_F[i],erg_F[i])
-    #rho_F[0]  = rhoFlux(states_old_a[0])
-    #rho_F[-1] = rhoFlux(states_old_a[-1])
-    #mom_F[0]  = momFlux(states_old_a[0])
-    #mom_F[-1] = momFlux(states_old_a[-1])
-    #erg_F[0]  = ergFlux(states_old_a[0])
-    #erg_F[-1] = ergFlux(states_old_a[-1])
 
     #Intialize cell average quantity arrays at t_old
     rho = [s.rho for s in states_old_a]
@@ -230,14 +200,6 @@ def momFlux(s):
 def ergFlux(s):
     return (s.rho*(0.5*s.u*s.u+s.e) + s.p) * s.u
 
-
-## Creates linear representation for solution using slopes
-#
-def createLinearRepresentation(u,slopes):
-
-   u_l = [u[i] - 0.5*slopes[i] for i in xrange(len(u))]
-   u_r = [u[i] + 0.5*slopes[i] for i in xrange(len(u))]
-   return u_l, u_r
 
 #------------------------------------------------------------------------------------
 # Create function for advancing conserved quantities in time
