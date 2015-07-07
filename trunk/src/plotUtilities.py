@@ -141,11 +141,55 @@ def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, filename='scalarFlux.p
    else:
       plt.show()
 
+## Plot arbitrary radiation density
+#
+def plotRadErg(mesh, Er_edge, save=False, filename='Radiation.pdf',
+        exact_Er=None, print_values=False):
+
+   # create new figure
+   plt.figure()
+
+   # create x-points
+   x = mesh.getCellCenters()
+
+   # transform array of tuples into array
+   Er = computeAverageValues(Er_edge)
+
+   # plot
+   plt.rc('text', usetex=True)         # use tex to generate text
+   plt.rc('font', family='sans-serif') # use sans-serif font family
+   plt.plot(x, Er, 'r-', label='Numerical')
+
+   # annotations
+   plt.xlabel('$x$')
+   plt.ylabel('$E_r$')
+
+   #plot the exact 
+   if exact_Er != None:
+
+       plt.plot(x, exact_Er, "*--b", label='Exact')
+
+   plt.legend(loc='best')
+   # if print requested
+ #  if print_values:
+ #     print "  x   E_r    E_r_exact  "
+ #     print "-------------------"
+ #     for i in range(len(x)):
+##
+ #         print "%.12f" % x[i], "%.12f" % Er[i], "%.12f" % T[i]
+
+   
+
+   # save if requested
+   if save:
+      plt.savefig(filename)
+   else:
+      plt.show()
 
 ## Plots hydrodynamic and radiation temperatures
 #
 def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
-        hydro_states=None, print_values=False):
+        hydro_states=None, exact_Er=None, print_values=False):
 
    # create new figure
    plt.figure()
@@ -173,6 +217,8 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
    plt.xlabel('$x$')
    plt.ylabel('$T$ (keV)')
    plt.legend(loc='best')
+
+   #plot the exact 
 
    # if print requested
    if print_values:
