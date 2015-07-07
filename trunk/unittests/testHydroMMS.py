@@ -40,8 +40,8 @@ class TestHydroMMS(unittest.TestCase):
       
       # create solution for thermodynamic state and flow field
       rho = exp(x+t)
-      u   = exp(-x)*sin(t) - 1
-      E   = exp(-3*alpha*t)*sin(pi*x) + 3
+      u   = exp(-x)*sin(t)-1
+      E   = exp(-3*alpha*t)*sin(pi*x)+5
       
       # create solution for radiation field
       psim = 0
@@ -51,7 +51,7 @@ class TestHydroMMS(unittest.TestCase):
       alpha_value = 0.01
       cv_value    = 1.0
       gamma_value = 1.4
-      sig_s = 1.0
+      sig_s = 0.0
       sig_a = 0.0
       
       # create MMS source functions
@@ -62,7 +62,7 @@ class TestHydroMMS(unittest.TestCase):
          gamma_value   = gamma_value,
          cv_value      = cv_value,
          alpha_value   = alpha_value,
-         display_equations = False)
+         display_equations = True)
 
       # create functions for exact solutions
       substitutions = dict()
@@ -118,7 +118,7 @@ class TestHydroMMS(unittest.TestCase):
          problem_type = 'rad_hydro',
          dt_option    = 'CFL',
          CFL          = 0.5,
-         use_2_cycles = False,
+         use_2_cycles = True,
          t_start      = t_start,
          t_end        = t_end,
          psi_left     = psi_left,

@@ -96,7 +96,7 @@ class TestRadHydroShock(unittest.TestCase):
   
       # transient options
       t_start  = 0.0
-      t_end = 0.5
+      t_end = 0.01
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -107,9 +107,8 @@ class TestRadHydroShock(unittest.TestCase):
          mesh         = mesh,
          problem_type = 'rad_hydro',
          dt_option    = 'CFL',
-         time_stepper = 'BE',
          CFL          = 0.3,
-         use_2_cycles = False,
+         use_2_cycles = True,
          t_start      = t_start,
          t_end        = t_end,
          psi_left     = psi_left,

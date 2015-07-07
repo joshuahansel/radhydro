@@ -131,7 +131,8 @@ class HydroState:
     #
     def __str__(self):
 
-        return "u: %.4f rho: %.4f e: %.4f p: %.4f" % (self.u, self.rho, self.e, self.p)
+        return "u: %.15f rho: %.15f e: %.15f p: %.15f E: %.15f" % (self.u, self.rho,
+                self.e, self.p, self.rho*(self.u**2.*0.5 + self.e))
 
     ## Prints conservative variables
     #
