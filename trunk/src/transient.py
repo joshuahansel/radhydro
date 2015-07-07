@@ -14,6 +14,8 @@ from takeRadiationStep import takeRadiationStep
 from hydroSlopes import HydroSlopes
 from musclHancock import hydroPredictor, hydroCorrector
 
+from plotUtilities import plotHydroSolutions
+
 ## Runs transient for a radiation-only problem.
 #
 #  @param[in] psim_src  extraneous source function for \f$\Psi^-\f$
@@ -118,8 +120,9 @@ def runLinearTransient(mesh, time_stepper,
 def runNonlinearTransient(mesh, problem_type,
    psi_left, psi_right, cross_sects, rad_IC, hydro_IC, hydro_BC,
    psim_src=None, psip_src=None, mom_src=None, E_src=None,
-   time_stepper='BE', dt_option='constant', dt_constant=None, CFL=0.5, t_start=0.0,
-   t_end=1.0, use_2_cycles=False, verbose=False):
+   time_stepper='BE', dt_option='constant', dt_constant=None, CFL=0.5,
+   slope_limiter="vanleer", t_start=0.0, t_end=1.0, use_2_cycles=False,
+   verbose=False):
 
    # check input arguments
    if dt_option == 'constant':
@@ -129,8 +132,8 @@ def runNonlinearTransient(mesh, problem_type,
    # initialize old quantities
    t_old = t_start
    cx_old = deepcopy(cross_sects)
-   rad_old = rad_IC
-   hydro_old = hydro_IC
+   rad_old = deepcopy(rad_IC)
+   hydro_old = deepcopy(hydro_IC)
    e_slopes_old = np.zeros(mesh.n_elems)
    Qpsi_old, Qmom_old, Qerg_old = computeExtraneousSources(
       psim_src, psip_src, mom_src, E_src, mesh, t_start)
@@ -298,6 +301,7 @@ def runNonlinearTransient(mesh, problem_type,
                 psi_left       = psi_left,
                 psi_right      = psi_right,
                 hydro_BC       = hydro_BC,
+                slope_limiter  = slope_limiter,
                 cx_old         = cx_old,
                 cx_older       = cx_older,
                 hydro_old      = hydro_old,
@@ -332,6 +336,7 @@ def runNonlinearTransient(mesh, problem_type,
                 psi_left       = psi_left,
                 psi_right      = psi_right,
                 hydro_BC       = hydro_BC,
+                slope_limiter  = slope_limiter,
                 cx_old         = cx_half,
                 cx_older       = cx_old,
                 hydro_old      = hydro_half,
@@ -372,6 +377,7 @@ def runNonlinearTransient(mesh, problem_type,
                 psi_left       = psi_left,
                 psi_right      = psi_right,
                 hydro_BC       = hydro_BC,
+                slope_limiter  = slope_limiter,
                 cx_old         = cx_old,
                 cx_older       = cx_older,
                 hydro_old      = hydro_old,
@@ -482,7 +488,7 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
 #
 def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
    cx_old, cx_older, hydro_old, hydro_older, rad_old, rad_older,
-   hydro_BC, slopes_older, e_slopes_old, e_slopes_older,
+   hydro_BC, slope_limiter, slopes_older, e_slopes_old, e_slopes_older,
    psim_src, psip_src, mom_src, E_src, t_old,
    Qpsi_old, Qmom_old, Qerg_old, Qpsi_older, Qmom_older, Qerg_older,
    time_stepper_predictor='CN', time_stepper_corrector='BDF2'):
@@ -499,10 +505,12 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        hydro_BC.update(states=hydro_old, t=t_old)
 
        # compute slopes
-       slopes_old = HydroSlopes(hydro_old, bc=hydro_BC)
+       slopes_old = HydroSlopes(hydro_old, bc=hydro_BC, limiter=slope_limiter)
+       #plotHydroSolutions(mesh, hydro_old, slopes=slopes_old)
 
        # perform predictor step of MUSCL-Hancock
        hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
+       #plotHydroSolutions(mesh, hydro_star)
 
 #       #The predicted hydro
 #       print "The predicted hydrso"

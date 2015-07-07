@@ -51,8 +51,17 @@ class TestHydroMMS(unittest.TestCase):
       alpha_value = 0.01
       cv_value    = 1.0
       gamma_value = 1.4
-      sig_s = 0.0
-      sig_a = 0.0
+      
+      # create solution for radiation field
+      psim = 0
+      psip = 0
+      
+      # numeric values
+      alpha_value = 0.01
+      cv_value    = 1.0
+      gamma_value = 1.4
+      sig_s = 1.0
+      sig_a = 1.0
       
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsHydroOnly(
@@ -80,6 +89,7 @@ class TestHydroMMS(unittest.TestCase):
       
       # create uniform mesh
       n_elems = 50
+      #n_elems = 20
       width = 1.0
       mesh = Mesh(n_elems, width)
 
@@ -92,7 +102,7 @@ class TestHydroMMS(unittest.TestCase):
       psi_right = psim_f(x=width, t=0.0)
 
       # compute hydro IC
-      hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
+      hydro_IC = computeAnalyticHydroSolution(mesh, t=0.0,
          rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
       # create hydro BC
@@ -106,7 +116,12 @@ class TestHydroMMS(unittest.TestCase):
 
       # transient options
       t_start  = 0.0
-      t_end = 0.1
+      #t_end = 0.1
+      dt_constant = 0.001
+      t_end = dt_constant
+
+      # slope limiter option
+      slope_limiter = "vanleer"
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -119,6 +134,13 @@ class TestHydroMMS(unittest.TestCase):
          dt_option    = 'CFL',
          CFL          = 0.5,
          use_2_cycles = True,
+         t_start      = t_start,
+         t_end        = t_end,
+         slope_limier = slope_limiter,
+         psi_left     = psi_left,
+         psi_right    = psi_right,
+         hydro_BC     = hydro_BC,
+         cross_sects  = cross_sects,
          t_start      = t_start,
          t_end        = t_end,
          psi_left     = psi_left,

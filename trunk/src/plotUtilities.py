@@ -7,6 +7,7 @@ from numpy import array
 import globalConstants as GC
 from matplotlib import rc # for rendering tex in plots
 from radUtilities import computeScalarFlux
+from hydroState import computeVelocity, computeIntEnergy, computePressure
 
 ## Plots a function of (x,t)
 #
@@ -307,26 +308,49 @@ def computeAverageValues(tuple_list):
 
 ## Plots hydro solution
 #
-def plotHydroSolutions(mesh, states, exact=None,
+def plotHydroSolutions(mesh, states, slopes=None, exact=None,
     save_plot=False, filename='hydro_solution.pdf'):
 
     # create 11" x 8.5" figure
     plt.figure(figsize=(11,8.5))
 
     # get cell centers
-    x = mesh.getCellCenters()
+    x_cent = mesh.getCellCenters()
+    if slopes == None:
+       x_num = x_cent
+    else:
+       x_num = mesh.getCellEdgesDiscontinuous()
 
     # create lists for each quantity to be plotted
-    u = []
-    p = []
-    rho = []
-    e = []
-    for i in states:
-        u.append(i.u)
-        p.append(i.p)
-        rho.append(i.rho)
-        e.append(i.e)
-
+    n = mesh.n_elems
+    if slopes == None:
+       u   = np.zeros(n)
+       p   = np.zeros(n)
+       rho = np.zeros(n)
+       e   = np.zeros(n)
+       for i in xrange(n):
+          u[i]   = states[i].u
+          p[i]   = states[i].p
+          rho[i] = states[i].rho
+          e[i]   = states[i].e
+    else:
+       u   = np.zeros(2*n)
+       p   = np.zeros(2*n)
+       rho = np.zeros(2*n)
+       e   = np.zeros(2*n)
+       rho_l, rho_r, mom_l, mom_r, erg_l, erg_r =\
+          slopes.createLinearRepresentation(states)
+       gam = states[0].gamma
+       for i in xrange(n):
+          rho[2*i]   = rho_l[i]
+          rho[2*i+1] = rho_r[i]
+          u[2*i]     = computeVelocity(rho=rho_l[i], mom=mom_l[i])
+          u[2*i+1]   = computeVelocity(rho=rho_r[i], mom=mom_r[i])
+          p[2*i]     = computePressure(rho=rho_l[i], mom=mom_l[i], erg=erg_l[i], gam=gam)
+          p[2*i+1]   = computePressure(rho=rho_r[i], mom=mom_r[i], erg=erg_r[i], gam=gam)
+          e[2*i]     = computeIntEnergy(rho=rho_l[i], mom=mom_l[i], erg=erg_l[i])
+          e[2*i+1]   = computeIntEnergy(rho=rho_r[i], mom=mom_r[i], erg=erg_r[i])
+ 
     # create lists for each exact quantity to be plotted
     if exact == None:
        u_exact = None
@@ -345,10 +369,10 @@ def plotHydroSolutions(mesh, states, exact=None,
            e_exact.append(i.e)
 
     # plot each quantity
-    plotSingle(x, u,   y_label=r"$u$",    exact=u_exact)
-    plotSingle(x, rho, y_label=r"$\rho$", exact=rho_exact) 
-    plotSingle(x, p,   y_label=r"$p$",    exact=p_exact)
-    plotSingle(x, e,   y_label=r"$e$",    exact=e_exact)
+    plotSingle(x_num=x_num, x_exact=x_cent, y=u,   y_label=r"$u$",    exact=u_exact)
+    plotSingle(x_num=x_num, x_exact=x_cent, y=rho, y_label=r"$\rho$", exact=rho_exact) 
+    plotSingle(x_num=x_num, x_exact=x_cent, y=p,   y_label=r"$p$",    exact=p_exact)
+    plotSingle(x_num=x_num, x_exact=x_cent, y=e,   y_label=r"$e$",    exact=e_exact)
 
     # save figure
     if save_plot:
@@ -362,7 +386,7 @@ def plotHydroSolutions(mesh, states, exact=None,
 
 ## Plots a single plot in a 4x4 subplot array
 #
-def plotSingle(x,y,y_label,exact=None):
+def plotSingle(x_num, x_exact, y, y_label, exact=None):
 
     #static variable counter
     plotSingle.fig_num += 1
@@ -370,9 +394,9 @@ def plotSingle(x,y,y_label,exact=None):
     plt.subplot(2,2,plotSingle.fig_num)
     plt.xlabel('$x$')
     plt.ylabel(y_label)
-    plt.plot(x,y,"b+-",label="Numeric")
+    plt.plot(x_num, y, "b+-", label="Numeric")
     if exact != None:
-       plt.plot(x,exact,"r-x", label="Analytic")
+       plt.plot(x_exact, exact, "r-x", label="Analytic")
     plt.legend(loc='best')
     
 plotSingle.fig_num=0

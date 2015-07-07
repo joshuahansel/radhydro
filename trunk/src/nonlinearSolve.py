@@ -64,7 +64,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
              Qmom_new     = Qmom_new,
              Qmom_old     = Qmom_old,
              Qmom_older   = Qmom_older)
-
+        
        # compute QE
        src_handler = QEHandler(mesh, time_stepper)
        QE = src_handler.computeTerm(

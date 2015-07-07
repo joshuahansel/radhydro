@@ -176,3 +176,23 @@ def getIntErg(gamma, rho, p):
 
     return p/((gamma-1.0)*rho)
 
+## Computes velocity
+#
+def computeVelocity(rho, mom):
+
+   return mom / rho
+
+## Computes internal energy
+#
+def computeIntEnergy(rho, mom, erg):
+
+   u = computeVelocity(rho=rho, mom=mom)
+   return erg / rho - 0.5*u*u
+
+## Computes pressure
+#
+def computePressure(rho, mom, erg, gam):
+
+   e = computeIntEnergy(rho=rho, mom=mom, erg=erg)
+   return rho*e*(gam - 1.0)
+
