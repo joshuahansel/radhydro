@@ -28,30 +28,27 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
 
     dx = mesh.getElement(0).dx #currently a fixed width
 
-    # number of elements
-    n = mesh.n_elems
-
-    #Initialize cell centered variables as passed in
-    states = deepcopy(states_old_a)
+    if mesh.n_elems % 2 != 0:
+        raise ValueError("Must be even number of cells")
 
     #-----------------------------------------------------------------
     # Solve Problem
     #----------------------------------------------------------------
 
     #Create vectors of conserved quantities
-    rho = np.zeros(n)
-    mom = np.zeros(n)
-    erg = np.zeros(n)
-    for i in xrange(n):
-       rho[i], mom[i], erg[i] = states[i].getConservativeVariables()
+    rho = [s.rho                     for s in states_old_a]
+    mom = [s.rho*s.u                 for s in states_old_a]
+    erg = [s.rho*(0.5*s.u*s.u + s.e) for s in states_old_a]
 
     # compute linear representations
     rho_l, rho_r, mom_l, mom_r, erg_l, erg_r =\
-       slopes.createLinearRepresentation(states)
+       slopes.createLinearRepresentation(states_old_a)
+
+    n = mesh.n_elems
 
     #Compute left and right states
-    states_l = [deepcopy(i) for i in states] #initialize 
-    states_r = [deepcopy(i) for i in states]
+    states_l = [deepcopy(i) for i in states_old_a] #initialize 
+    states_r = [deepcopy(i) for i in states_old_a]
     for i in xrange(n):
         states_l[i].updateState(rho_l[i], mom_l[i], erg_l[i])
         states_r[i].updateState(rho_r[i], mom_r[i], erg_r[i])
@@ -74,6 +71,7 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
         erg_p[i] = advCons(erg[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
         
     #Advance the primitive variables
+    states = deepcopy(states_old_a)
     for i in xrange(n):
         states[i].updateState(rho_p[i], mom_p[i], erg_p[i])
 
@@ -170,7 +168,7 @@ def hydroCorrector(mesh, states_half_a, states_old_a, dt, bc):
     rho = [s.rho for s in states_old_a]
     mom = [s.rho*s.u for s in states_old_a]
     erg = [s.rho*(0.5*s.u**2. + s.e) for s in states_old_a]
-    
+
     #Advance conserved values at centers based on edge fluxes
     for i in range(len(rho)):
 

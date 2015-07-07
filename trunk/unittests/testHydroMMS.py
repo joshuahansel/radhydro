@@ -51,8 +51,8 @@ class TestHydroMMS(unittest.TestCase):
       alpha_value = 0.01
       cv_value    = 1.0
       gamma_value = 1.4
-      sig_s = 0.0
-      sig_a = 0.0
+      sig_s = 1.0
+      sig_a = 1.0
       
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsHydroOnly(
