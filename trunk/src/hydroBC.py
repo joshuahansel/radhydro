@@ -47,7 +47,6 @@ class HydroBC(object):
       self.x_L = cell_L.x_cent - cell_L.dx
       self.x_R = cell_R.x_cent + cell_R.dx
 
-
    ## Updates the boundary values for each conservative variable.
    #
    #  @param[in] states  hydro states for each cell
@@ -67,6 +66,7 @@ class HydroBC(object):
 
       elif self.bc_type == 'dirichlet':
 
+
          # compute conservative variables on ghost boundary cells
          self.rho_L = self.rho_BC(self.x_L, t)
          self.rho_R = self.rho_BC(self.x_R, t)
@@ -74,6 +74,7 @@ class HydroBC(object):
          self.mom_R = self.mom_BC(self.x_R, t)
          self.erg_L = self.erg_BC(self.x_L, t)
          self.erg_R = self.erg_BC(self.x_R, t)
+
 
       else:
 
@@ -92,7 +93,7 @@ class HydroBC(object):
    #     -# \f$\rho_0\f$
    #     -# \f$\rho_{N+1}\f$
    #     -# \f$(\rho u)_0\f$
-   #     -# \f$(\rho u)_{N+1}\f$
+   #     -# \f$(\rho u)_{N+1}\f$i
    #     -# \f$E_0\f$
    #     -# \f$E_{N+1}\f$
    #

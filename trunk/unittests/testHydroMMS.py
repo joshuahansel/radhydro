@@ -39,15 +39,9 @@ class TestHydroMMS(unittest.TestCase):
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-      test_case = 1
-      if test_case == 1:
-         rho = exp(x+t)
-         u   = exp(-x)*sin(t) - 1
-         E   = exp(-3*alpha*t)*sin(pi*x) + 3
-      elif test_case == 2:
-         rho = symbols('1')
-         u   = symbols('1')
-         E   = symbols('10')
+      rho = exp(x+t)
+      u   = exp(-x)*sin(t)-1
+      E   = exp(-3*alpha*t)*sin(pi*x)+5
       
       # create solution for radiation field
       psim = 0
@@ -57,7 +51,7 @@ class TestHydroMMS(unittest.TestCase):
       alpha_value = 0.01
       cv_value    = 1.0
       gamma_value = 1.4
-      sig_s = 1.0
+      sig_s = 0.0
       sig_a = 0.0
       
       # create MMS source functions
@@ -68,7 +62,7 @@ class TestHydroMMS(unittest.TestCase):
          gamma_value   = gamma_value,
          cv_value      = cv_value,
          alpha_value   = alpha_value,
-         display_equations = False)
+         display_equations = True)
 
       # create functions for exact solutions
       substitutions = dict()
@@ -113,9 +107,9 @@ class TestHydroMMS(unittest.TestCase):
 
       # transient options
       t_start  = 0.0
-      #t_end = 0.1
-      dt_constant = 0.001
-      t_end = dt_constant
+      t_end = 0.1
+      #dt_constant = 0.001
+      #t_end = dt_constant
 
       # slope limiter option
       slope_limiter = "vanleer"
@@ -128,10 +122,10 @@ class TestHydroMMS(unittest.TestCase):
       rad_new, hydro_new = runNonlinearTransient(
          mesh         = mesh,
          problem_type = 'rad_hydro',
-         #dt_option    = 'CFL',
-         dt_option    = 'constant',
-         #CFL          = 0.5,
-         dt_constant  = dt_constant,
+         dt_option    = 'CFL',
+         #dt_option    = 'constant',
+         CFL          = 0.5,
+         #dt_constant  = dt_constant,
          slope_limiter = slope_limiter,
          use_2_cycles = False,
          t_start      = t_start,

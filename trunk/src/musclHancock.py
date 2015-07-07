@@ -97,6 +97,7 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
 # \f$U_x = \frac{U_R - U_L}{2}\f$
 #
 # @param[in] mesh           Basic spatial mesh object
+# @param[in] states_half_a  States evaluate at dt/2
 # @param[in] states_old_a   Averages at old state. 
 # @param[in] states_l       Predicted values at left nodes, at dt/2
 # @param[in] states_r       Predicted values at right nodes, at dt/2
@@ -107,7 +108,7 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
 # @return
 #       -#  predicted states averages
 #
-def hydroCorrector(mesh, states_old_a, dt, bc):
+def hydroCorrector(mesh, states_half_a, states_old_a, dt, bc):
 
     #Choose riemann solver
     riem_solver = HLLCSolver #HLLSolver, HLLCSolver
@@ -119,9 +120,9 @@ def hydroCorrector(mesh, states_old_a, dt, bc):
     erg_F = np.zeros(n+1)
 
     #Create vectors of predicted variables
-    rho_p = [s.rho                     for s in states_old_a]
-    mom_p = [s.rho*s.u                 for s in states_old_a]
-    erg_p = [s.rho*(0.5*s.u*s.u + s.e) for s in states_old_a]
+    rho_p = [s.rho                     for s in states_half_a]
+    mom_p = [s.rho*s.u                 for s in states_half_a]
+    erg_p = [s.rho*(0.5*s.u*s.u + s.e) for s in states_half_a]
 
     # get boundary values and states
     rho_BC_L, rho_BC_R, mom_BC_L, mom_BC_R, erg_BC_L, erg_BC_R =\
@@ -140,7 +141,7 @@ def hydroCorrector(mesh, states_old_a, dt, bc):
             erg_L = erg_BC_L
             erg_R = erg_p[i]
             state_L = state_BC_L
-            state_R = states_old_a[i]
+            state_R = states_half_a[i]
         elif i == n: # right boundary edge
             rho_L = rho_p[i-1]
             rho_R = rho_BC_R
@@ -148,7 +149,7 @@ def hydroCorrector(mesh, states_old_a, dt, bc):
             mom_R = mom_BC_R
             erg_L = erg_p[i-1]
             erg_R = erg_BC_R
-            state_L = states_old_a[i-1]
+            state_L = states_half_a[i-1]
             state_R = state_BC_R
         else: # interior edge
             rho_L = rho_p[i-1]
@@ -157,8 +158,8 @@ def hydroCorrector(mesh, states_old_a, dt, bc):
             mom_R = mom_p[i]
             erg_L = erg_p[i-1]
             erg_R = erg_p[i]
-            state_L = states_old_a[i-1]
-            state_R = states_old_a[i]
+            state_L = states_half_a[i-1]
+            state_R = states_half_a[i]
 
         # solve Riemann problem at interface
         rho_F[i] = riem_solver(rho_L, rho_R, state_L, state_R, rhoFlux)
@@ -169,7 +170,7 @@ def hydroCorrector(mesh, states_old_a, dt, bc):
     rho = [s.rho for s in states_old_a]
     mom = [s.rho*s.u for s in states_old_a]
     erg = [s.rho*(0.5*s.u**2. + s.e) for s in states_old_a]
-
+    
     #Advance conserved values at centers based on edge fluxes
     for i in range(len(rho)):
 
