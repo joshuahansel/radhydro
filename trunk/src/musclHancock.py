@@ -43,12 +43,11 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
     mom = [s.rho*s.u                 for s in states]
     erg = [s.rho*(0.5*s.u*s.u + s.e) for s in states]
 
-    # extract slopes
-    rho_slopes, mom_slopes, erg_slopes = slopes.extractSlopes()
-
     # compute linear representations
     rho_l, rho_r, mom_l, mom_r, erg_l, erg_r =\
        slopes.createLinearRepresentation(states)
+
+    n = mesh.n_elems
 
     #Compute left and right states
     states_l = [deepcopy(i) for i in states] #initialize 

@@ -120,9 +120,6 @@ class TestHydroMMS(unittest.TestCase):
       dt_constant = 0.001
       t_end = dt_constant
 
-      # slope limiter option
-      slope_limiter = "vanleer"
-
       # if run standalone, then be verbose
       if __name__ == '__main__':
          verbose = True
@@ -134,14 +131,6 @@ class TestHydroMMS(unittest.TestCase):
          dt_option    = 'CFL',
          CFL          = 0.5,
          use_2_cycles = True,
-         t_start      = t_start,
-         t_end        = t_end,
-         slope_limier = slope_limiter,
-         psi_left     = psi_left,
-         psi_right    = psi_right,
-         hydro_BC     = hydro_BC,
-         cross_sects  = cross_sects,
-         t_start      = t_start,
          t_end        = t_end,
          psi_left     = psi_left,
          psi_right    = psi_right,
