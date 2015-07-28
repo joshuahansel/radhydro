@@ -123,7 +123,7 @@ class TestHydroMMS(unittest.TestCase):
          problem_type = 'rad_hydro',
          dt_option    = 'CFL',
      #    dt_option    = 'constant',
-         CFL          = 0.5,
+         CFL          = 0.3,
     #     dt_constant  = dt_constant,
          slope_limiter = slope_limiter,
          use_2_cycles = False,

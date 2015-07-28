@@ -564,7 +564,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           psim_src, psip_src, mom_src, E_src, mesh, t_old+dt)
 
        # update hydro BC
-       hydro_BC.update(states=hydro_half, t=t_old+0.5*dt)
+       hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=True)
 
        # perform corrector step of MUSCL-Hancock
        hydro_star = hydroCorrector(mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)

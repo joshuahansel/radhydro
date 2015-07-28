@@ -44,15 +44,17 @@ class HydroBC(object):
       # boundary cells in case Dirichlet BC are used
       cell_L = mesh.getElement(0)
       cell_R = mesh.getElement(mesh.n_elems-1)
-      self.x_L = cell_L.x_cent - 0.5*cell_L.dx
-      self.x_R = cell_R.x_cent + 0.5*cell_R.dx
+      self.x_L = cell_L.x_cent - cell_L.dx
+      self.x_R = cell_R.x_cent + cell_R.dx
+      self.dx_L = cell_L.dx
+      self.dx_R = cell_R.dx
 
    ## Updates the boundary values for each conservative variable.
    #
    #  @param[in] states  hydro states for each cell
    #  @param[in] t       time at which to evaluate time-dependent BC
    #
-   def update(self, states, t):
+   def update(self, states, t, edge_value=False):
 
       if self.bc_type == 'reflective':
 
@@ -67,14 +69,27 @@ class HydroBC(object):
       elif self.bc_type == 'dirichlet':
 
 
-         # compute conservative variables on ghost boundary cells
-         self.rho_L = self.rho_BC(self.x_L, t)
-         self.rho_R = self.rho_BC(self.x_R, t)
-         self.mom_L = self.mom_BC(self.x_L, t)
-         self.mom_R = self.mom_BC(self.x_R, t)
-         self.erg_L = self.erg_BC(self.x_L, t)
-         self.erg_R = self.erg_BC(self.x_R, t)
+         # If updating for use in slopes different than if for use in Riemman solve
+         if edge_value:
 
+             # compute conservative variables on edge of boundary to pass to rieman
+             # solver
+             self.rho_L = self.rho_BC(self.x_L+0.5*self.dx_L, t)
+             self.rho_R = self.rho_BC(self.x_R-0.5*self.dx_R, t)
+             self.mom_L = self.mom_BC(self.x_L+0.5*self.dx_L, t)
+             self.mom_R = self.mom_BC(self.x_R-0.5*self.dx_R, t)
+             self.erg_L = self.erg_BC(self.x_L+0.5*self.dx_L, t)
+             self.erg_R = self.erg_BC(self.x_R-0.5*self.dx_R, t)
+
+         else: #cell center value
+
+             # compute conservative variables on ghost boundary cells
+             self.rho_L = self.rho_BC(self.x_L, t)
+             self.rho_R = self.rho_BC(self.x_R, t)
+             self.mom_L = self.mom_BC(self.x_L, t)
+             self.mom_R = self.mom_BC(self.x_R, t)
+             self.erg_L = self.erg_BC(self.x_L, t)
+             self.erg_R = self.erg_BC(self.x_R, t)
 
       else:
 
