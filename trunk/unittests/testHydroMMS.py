@@ -41,7 +41,7 @@ class TestHydroMMS(unittest.TestCase):
       # create solution for thermodynamic state and flow field
       rho = 0.0*exp(x+t)+10.
       u   = 0.0*exp(-x)*sin(t)+0.
-      E   = 0.0*exp(-3*alpha*t)*sin(pi*x)+5.+10.*x
+      E   = 0.0*exp(-3*alpha*t)*sin(pi*x)+5.+10.*x+50.*x*x
       
       # create solution for radiation field
       psim = 0
@@ -79,7 +79,7 @@ class TestHydroMMS(unittest.TestCase):
       psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
       
       # create uniform mesh
-      n_elems = 4
+      n_elems = 100
       #n_elems = 20
       width = 1.0
       mesh = Mesh(n_elems, width)
@@ -121,10 +121,10 @@ class TestHydroMMS(unittest.TestCase):
       rad_new, hydro_new = runNonlinearTransient(
          mesh         = mesh,
          problem_type = 'rad_hydro',
-     #    dt_option    = 'CFL',
-         dt_option    = 'constant',
-    #     CFL          = 0.5,
-         dt_constant  = dt_constant,
+         dt_option    = 'CFL',
+    #     dt_option    = 'constant',
+         CFL          = 0.5,
+     #    dt_constant  = dt_constant,
          slope_limiter = slope_limiter,
          use_2_cycles = False,
          t_start      = t_start,
