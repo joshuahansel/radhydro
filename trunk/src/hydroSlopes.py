@@ -130,3 +130,13 @@ class HydroSlopes:
                 
         return u_slopes
 
+# ----------------------------------------------------------------------------------
+def minMod(a,b):
+
+    if a > 0 and b > 0:
+        return min(a,b)
+    elif a<0 and b<0:
+        return max(a,b)
+    else:
+        return 0.
+

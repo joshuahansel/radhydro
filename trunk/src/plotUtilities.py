@@ -308,7 +308,7 @@ def computeAverageValues(tuple_list):
 
 ## Plots hydro solution
 #
-def plotHydroSolutions(mesh, states, slopes=None, exact=None,
+def plotHydroSolutions(mesh, states, slopes=None, x_exact=None, exact=None,
     save_plot=False, filename='hydro_solution.pdf'):
 
     # create 11" x 8.5" figure
@@ -369,10 +369,10 @@ def plotHydroSolutions(mesh, states, slopes=None, exact=None,
            e_exact.append(i.e)
 
     # plot each quantity
-    plotSingle(x_num=x_num, x_exact=x_cent, y=u,   y_label=r"$u$",    exact=u_exact)
-    plotSingle(x_num=x_num, x_exact=x_cent, y=rho, y_label=r"$\rho$", exact=rho_exact) 
-    plotSingle(x_num=x_num, x_exact=x_cent, y=p,   y_label=r"$p$",    exact=p_exact)
-    plotSingle(x_num=x_num, x_exact=x_cent, y=e,   y_label=r"$e$",    exact=e_exact)
+    plotSingle(x_num=x_num, x_exact=x_exact, y=u,   y_label=r"$u$",    exact=u_exact)
+    plotSingle(x_num=x_num, x_exact=x_exact, y=rho, y_label=r"$\rho$", exact=rho_exact) 
+    plotSingle(x_num=x_num, x_exact=x_exact, y=p,   y_label=r"$p$",    exact=p_exact)
+    plotSingle(x_num=x_num, x_exact=x_exact, y=e,   y_label=r"$e$",    exact=e_exact)
 
     # save figure
     if save_plot:

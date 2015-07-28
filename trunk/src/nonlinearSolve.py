@@ -46,10 +46,11 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
 
        # update velocity
        if problem_type != 'rad_mat':
-          updateVelocity(
-             mesh         = mesh,
-             time_stepper = time_stepper,
-             dt           = dt, 
+          updateVelocity(mesh,
+                 time_stepper,
+                           dt,
+                   hydro_star,
+                    hydro_new,
              cx_older     = cx_older,
              cx_old       = cx_old,
              cx_prev      = cx_prev,
@@ -58,9 +59,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
              rad_prev     = rad_prev,
              hydro_older  = hydro_older,
              hydro_old    = hydro_old,
-             hydro_star   = hydro_star,
              hydro_prev   = hydro_prev,
-             hydro_new    = hydro_new,
              Qmom_new     = Qmom_new,
              Qmom_old     = Qmom_old,
              Qmom_older   = Qmom_older)

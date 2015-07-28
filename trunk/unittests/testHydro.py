@@ -33,7 +33,7 @@ class TestHydro(unittest.TestCase):
       # time step size and transient start and end times
       CFL     = 0.5
       t_start = 0.0
-      t_end   = 0.05
+      t_end   = 0.2
 
       # constant properties
       sig_s = 1.0 # arbitrary
@@ -105,9 +105,36 @@ class TestHydro(unittest.TestCase):
          hydro_BC     = hydro_BC,
          verbose      = verbose)
 
+
+
       # plot solutions if run standalone
       if __name__ == "__main__":
-         plotHydroSolutions(mesh, hydro_new)
+
+         # get exact solutions
+         #get the exact values
+         f = open('exact_testHydro.txt', 'r')
+         x_e = []
+         u_e = []
+         p_e = []
+         rho_e = []
+         e_e = []
+         for line in f:
+             if len(line.split())==1:
+                 t = line.split()
+             else:
+                 data = line.split()
+                 x_e.append(float(data[0]))
+                 u_e.append(float(data[1]))
+                 p_e.append(float(data[2]))
+                 rho_e.append(float(data[4]))
+                 e_e.append(float(data[3]))
+
+         hydro_exact = []
+         for i in range(len(x_e)):
+            hydro_exact.append(HydroState(u=u_e[i],rho=rho_e[i],e=e_e[i],gamma=gam,spec_heat=c_v) )
+
+
+         plotHydroSolutions(mesh, hydro_new,x_exact=x_e,exact=hydro_exact)
 
   
 # run main function from unittest module

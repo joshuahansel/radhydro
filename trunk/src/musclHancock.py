@@ -60,8 +60,8 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
     rho_p = np.zeros(n)
     mom_p = np.zeros(n)
     erg_p = np.zeros(n)
-
-    #Advance in time each edge variable
+    
+    #Advance in time center variables based on edge fluxes
     for i in xrange(n):
 
         #rho
@@ -72,7 +72,7 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
 
         #erg
         erg_p[i] = advCons(erg[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
-        
+
     #Advance the primitive variables
     for i in xrange(n):
         states[i].updateState(rho_p[i], mom_p[i], erg_p[i])

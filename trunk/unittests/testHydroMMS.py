@@ -39,9 +39,9 @@ class TestHydroMMS(unittest.TestCase):
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-      rho = exp(x+t)
-      u   = exp(-x)*sin(t)-1
-      E   = exp(-3*alpha*t)*sin(pi*x)+5
+      rho = 0.0*exp(x+t)+10.
+      u   = 0.0*exp(-x)*sin(t)+0.
+      E   = 0.0*exp(-3*alpha*t)*sin(pi*x)+5.+10.*x
       
       # create solution for radiation field
       psim = 0
@@ -79,7 +79,7 @@ class TestHydroMMS(unittest.TestCase):
       psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
       
       # create uniform mesh
-      n_elems = 50
+      n_elems = 4
       #n_elems = 20
       width = 1.0
       mesh = Mesh(n_elems, width)
@@ -108,11 +108,10 @@ class TestHydroMMS(unittest.TestCase):
       # transient options
       t_start  = 0.0
       t_end = 0.1
-      #dt_constant = 0.001
-      #t_end = dt_constant
+      dt_constant = 0.05
 
       # slope limiter option
-      slope_limiter = "vanleer"
+      slope_limiter = "minmod"
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -122,10 +121,10 @@ class TestHydroMMS(unittest.TestCase):
       rad_new, hydro_new = runNonlinearTransient(
          mesh         = mesh,
          problem_type = 'rad_hydro',
-         dt_option    = 'CFL',
-         #dt_option    = 'constant',
-         CFL          = 0.5,
-         #dt_constant  = dt_constant,
+     #    dt_option    = 'CFL',
+         dt_option    = 'constant',
+    #     CFL          = 0.5,
+         dt_constant  = dt_constant,
          slope_limiter = slope_limiter,
          use_2_cycles = False,
          t_start      = t_start,
@@ -150,7 +149,7 @@ class TestHydroMMS(unittest.TestCase):
             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
          # plot hydro solution
-         plotHydroSolutions(mesh, hydro_new, exact=hydro_exact)
+         plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(), exact=hydro_exact)
 
 
 # run main function from unittest module

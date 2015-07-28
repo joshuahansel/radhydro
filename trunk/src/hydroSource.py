@@ -252,13 +252,16 @@ class VelocityUpdateSourceHandler(TransientSourceTerm):
 
         Q_local = evalMomentumExchangeAverage(i, rad=rad_prev, hydro=hydro_prev,
            cx=cx_prev) + Qmom_new[i]
+
         return Q_local
 
     #--------------------------------------------------------------------------------
     def evalOld(self, i, rad_old, hydro_old, cx_old, Qmom_old, **kwargs):
 
-        return self.evalImplicit(i, rad_prev=rad_old, hydro_prev=hydro_old,
+        Qreturn = self.evalImplicit(i, rad_prev=rad_old, hydro_prev=hydro_old,
            cx_prev=cx_old, Qmom_new=Qmom_old)
+
+        return Qreturn
 
     #--------------------------------------------------------------------------------
     def evalOlder(self, i, rad_older, hydro_older, cx_older, Qmom_older, **kwargs):

@@ -512,15 +512,13 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
        #plotHydroSolutions(mesh, hydro_star)
 
-#       #The predicted hydro
-#       print "The predicted hydrso"
-#       for i in hydro_star:
-#
-#           print i
-#
-#       print "    THIS Predictor step:"
-#       print Qmom_half, Qerg_half
-#
+       #The predicted hydro
+       print "The predicted hydrso"
+       print len(hydro_star)
+       for i in hydro_star:
+
+           print i
+
        # perform nonlinear solve
        hydro_half, rad_half, cx_half, e_slopes_half = nonlinearSolve(
           mesh         = mesh,
@@ -545,19 +543,17 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           Qmom_older   = Qmom_older, # this is a dummy argument
           Qerg_older   = Qerg_older) # this is a dummy argument
 
-#       print "After predictor nonlinear"
-#
-#       #The predicted hydro
-#       for i in hydro_half:
-#
-#           print i
-#
-#       print "THE OLD SHIT"
-#       for i in hydro_old:
-#
-#           print i
+       print "After predictor nonlinear"
 
+       #The predicted hydro
+       for i in hydro_half:
 
+           print i
+
+       print "THE OLD SHIT"
+       for i in hydro_old:
+
+           print i
 
        print "    Corrector step:"
 
@@ -571,12 +567,15 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        # perform corrector step of MUSCL-Hancock
        hydro_star = hydroCorrector(mesh, hydro_half, hydro_old, dt, bc=hydro_BC)
 
-       #print "After the muscl corrector"
-#
-#       #The predicted hydro
-#       for i in hydro_star:
-#
-#           print i
+
+    
+
+       print "After the muscl corrector"
+
+       #The predicted hydro
+       for i in hydro_star:
+
+           print i
 
 
        # perform nonlinear solve
@@ -608,12 +607,12 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           Qmom_older   = Qmom_older,
           Qerg_older   = Qerg_older)
 
-#       print "After the non_linaer corrector"
-#
-#       #The predicted hydro
-#       for i in hydro_new:
-#
-#           print i
+       print "After the non_linaer corrector"
+
+       #The predicted hydro
+       for i in hydro_new:
+
+           print i
 
        return hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
           Qpsi_new, Qmom_new, Qerg_new

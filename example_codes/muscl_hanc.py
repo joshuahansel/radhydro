@@ -10,7 +10,7 @@ def main():
     #Python requires indentation for nested functions etc.  It is best to use a text
     #editor that allows for tabs to be expanded as spaces
     width = 1.0
-    t_end = 0.05
+    t_end = 0.2
 
     t = 0.0
     cfl = 0.5
@@ -541,22 +541,22 @@ def plotSolutions(x,states=None): #Default func values is trivial
     plt.figure(figsize=(11,8.5))
 
     #get the exact values
-#    f = open('exact_results.txt', 'r')
-#    x_e = []
-#    u_e = []
-#    p_e = []
-#    rho_e = []
-#    e_e = []
-#    for line in f:
-#        if len(line.split())==1:
-#            t = line.split()
-#        else:
-#            data = line.split()
-#            x_e.append(float(data[0]))
-#            u_e.append(float(data[1]))
-#            p_e.append(float(data[2]))
-#            rho_e.append(float(data[4]))
-#            e_e.append(float(data[3]))
+    f = open('exact_results.txt', 'r')
+    x_e = []
+    u_e = []
+    p_e = []
+    rho_e = []
+    e_e = []
+    for line in f:
+        if len(line.split())==1:
+            t = line.split()
+        else:
+            data = line.split()
+            x_e.append(float(data[0]))
+            u_e.append(float(data[1]))
+            p_e.append(float(data[2]))
+            rho_e.append(float(data[4]))
+            e_e.append(float(data[3]))
 
 
     if states==None:
@@ -576,23 +576,23 @@ def plotSolutions(x,states=None): #Default func values is trivial
     x_cent = [0.5*(x[i]+x[i+1]) for i in range(len(x)-1)]
     
     if u != None:
-        plot2D(x_cent,u,"$u$")
+        plot2D(x_cent,u,"$u$",x_ex=x_e,y_ex=u_e)
     
     if rho != None:
-        plot2D(x_cent,rho,r"$\rho$") 
+        plot2D(x_cent,rho,r"$\rho$",x_ex=x_e,y_ex=rho_e) 
 
     if p != None:
-        plot2D(x_cent,p,r"$p$")
+        plot2D(x_cent,p,r"$p$",x_ex=x_e,y_ex=p_e)
 
     if e != None:
-        plot2D(x_cent,e,r"$e$")
+        plot2D(x_cent,e,r"$e$",x_ex=x_e,y_ex=e_e)
 
     plt.show(block=False) #show all plots generated to this point
     raw_input("Press anything to continue...")
     plot2D.fig_num=0
 
 #-------------------------------------------------------------------------------------
-def plot2D(x,y,ylabl):
+def plot2D(x,y,ylabl,x_ex=None,y_ex=None):
 
     #static variable counter
     plot2D.fig_num += 1
@@ -600,7 +600,10 @@ def plot2D(x,y,ylabl):
     plt.subplot(2,2,plot2D.fig_num)
     plt.xlabel('$x$ (cm)')
     plt.ylabel(ylabl)
-    plt.plot(x,y,"b+-",label="Lagrangian")
+    plt.plot(x,y,"b+-",label="Numerical")
+    if (x_ex != None):
+        plt.plot(x_ex,y_ex,"r-x",label="Exact")
+
     plt.savefig("var_"+str(plot2D.fig_num)+".pdf")
     
 plot2D.fig_num=0
