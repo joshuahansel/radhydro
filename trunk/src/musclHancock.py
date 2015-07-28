@@ -22,14 +22,21 @@ from hydroSlopes import HydroSlopes
 # 
 # @return
 #       -#  predicted states at averages
-#       -#  predicted states slopes
 #
 def hydroPredictor(mesh, states_old_a, slopes, dt):
 
     dx = mesh.getElement(0).dx #currently a fixed width
 
-    # number of elements
-    n = mesh.n_elems
+    if mesh.n_elems % 2 != 0: #simple error raise, % has lots of diff meanings in python
+        raise ValueError("Must be even number of cells")
+
+    #Can create lists of things in multiple ways
+    spat_coors = []
+    for i in mesh.elements:
+        spat_coors += [i.xl]
+    spat_coors += [mesh.elements[-1].xr]
+    x = np.array(spat_coors)
+    x_cent = [0.5*(x[i]+x[i+1]) for i in range(len(x)-1)] #for plotting cell centers
 
     #Initialize cell centered variables as passed in
     states = deepcopy(states_old_a)
@@ -39,47 +46,56 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
     #----------------------------------------------------------------
 
     #Create vectors of conserved quantities
-    rho = np.zeros(n)
-    mom = np.zeros(n)
-    erg = np.zeros(n)
-    for i in xrange(n):
-       rho[i], mom[i], erg[i] = states[i].getConservativeVariables()
-
-    # compute linear representations
+    rho = [s.rho for s in states]
+    mom = [s.rho*s.u for s in states]
+    erg = [s.rho*(0.5*s.u*s.u + s.e) for s in states]
     rho_l, rho_r, mom_l, mom_r, erg_l, erg_r =\
-       slopes.createLinearRepresentation(states)
+                   slopes.createLinearRepresentation(states)
 
     #Compute left and right states
     states_l = [deepcopy(i) for i in states] #initialize 
     states_r = [deepcopy(i) for i in states]
-    for i in xrange(n):
+
+    for i in range(len(rho_l)):
         states_l[i].updateState(rho_l[i], mom_l[i], erg_l[i])
         states_r[i].updateState(rho_r[i], mom_r[i], erg_r[i])
 
     #Initialize predicited conserved quantities
-    rho_p = np.zeros(n)
-    mom_p = np.zeros(n)
-    erg_p = np.zeros(n)
-    
-    #Advance in time center variables based on edge fluxes
-    for i in xrange(n):
+    rho_l_p = [0.0 for i in range(len(rho_l))]
+    rho_r_p = [0.0 for i in range(len(rho_l))]
+    mom_l_p = [0.0 for i in range(len(rho_l))]
+    mom_r_p = [0.0 for i in range(len(rho_l))]
+    erg_l_p = [0.0 for i in range(len(rho_l))]
+    erg_r_p = [0.0 for i in range(len(rho_l))]
+
+    #Advance in time each edge variable
+    for i in range(len(rho_l)):
 
         #rho
-        rho_p[i] = advCons(rho[i],dx,0.5*dt,rhoFlux(states_l[i]),rhoFlux(states_r[i])) 
+        rho_l_p[i] = advCons(rho_l[i],dx,0.5*dt,rhoFlux(states_l[i]),rhoFlux(states_r[i])) 
+        rho_r_p[i] = advCons(rho_r[i],dx,0.5*dt,rhoFlux(states_l[i]),rhoFlux(states_r[i])) 
 
         #mom
-        mom_p[i] = advCons(mom[i],dx,0.5*dt,momFlux(states_l[i]),momFlux(states_r[i])) 
+        mom_l_p[i] = advCons(mom_l[i],dx,0.5*dt,momFlux(states_l[i]),momFlux(states_r[i])) 
+        mom_r_p[i] = advCons(mom_r[i],dx,0.5*dt,momFlux(states_l[i]),momFlux(states_r[i])) 
 
         #erg
-        erg_p[i] = advCons(erg[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
+        erg_l_p[i] = advCons(erg_l[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
+        erg_r_p[i] = advCons(erg_r[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
+        
+    #Advance the primitive variables at the edges
+    for i in range(len(rho_l)):
+        states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
+        states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
 
-    #Advance the primitive variables
-    for i in xrange(n):
-        states[i].updateState(rho_p[i], mom_p[i], erg_p[i])
+    #Return the new averages
+    for i in range(len(states)):
+        states[i].updateState(0.5*(rho_l_p[i]+rho_r_p[i]),
+                           0.5*(mom_l_p[i]+mom_r_p[i]),
+                           0.5*(erg_l_p[i]+erg_r_p[i]))
 
-    #Return states at left and right values
+
     return states
-
     
 #-------------------------------------------------------------------------------------
 #
@@ -108,7 +124,7 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
 # @return
 #       -#  predicted states averages
 #
-def hydroCorrector(mesh, states_half_a, states_old_a, dt, bc):
+def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
 
     #Choose riemann solver
     riem_solver = HLLCSolver #HLLSolver, HLLCSolver
@@ -119,52 +135,47 @@ def hydroCorrector(mesh, states_half_a, states_old_a, dt, bc):
     mom_F = np.zeros(n+1)
     erg_F = np.zeros(n+1)
 
-    #Create vectors of predicted variables
-    rho_p = [s.rho                     for s in states_half_a]
-    mom_p = [s.rho*s.u                 for s in states_half_a]
-    erg_p = [s.rho*(0.5*s.u*s.u + s.e) for s in states_half_a]
+    #Create edge values
+    rho_l_p, rho_r_p, mom_l_p, mom_r_p, erg_l_p, erg_r_p =\
+                   slopes_old.createLinearRepresentation(states_half)
+
+    # Create edge states
+    states_l = deepcopy(states_half) 
+    states_l = np.insert(states_l,len(states_l),states_l[0])
+    states_r = deepcopy(states_half)
+    states_r = np.insert(states_r,len(states_r),states_r[0])
+
+    for i in range(len(rho_l_p)):
+
+        states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
+        states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
+        print states_l[i], states_r[i]
+
+    
 
     # get boundary values and states
     rho_BC_L, rho_BC_R, mom_BC_L, mom_BC_R, erg_BC_L, erg_BC_R =\
        bc.getBoundaryValues()
     state_BC_L, state_BC_R = bc.getBoundaryStates()
 
-    # solve Riemann problem at each interface
-    for i in range(0,n+1):
+    #Solve Rieman problem at each face, for each quantity
+    #For boundaries it is easily defined
+    rho_F[0] = rhoFlux(state_BC_L)
+    mom_F[0] = momFlux(state_BC_L)
+    erg_F[0] = ergFlux(state_BC_L)
 
-        # get left and right states for Riemann problem at interface
-        if i == 0: # left boundary edge
-            rho_L = rho_BC_L
-            rho_R = rho_p[i]
-            mom_L = mom_BC_L
-            mom_R = mom_p[i]
-            erg_L = erg_BC_L
-            erg_R = erg_p[i]
-            state_L = state_BC_L
-            state_R = states_half_a[i]
-        elif i == n: # right boundary edge
-            rho_L = rho_p[i-1]
-            rho_R = rho_BC_R
-            mom_L = mom_p[i-1]
-            mom_R = mom_BC_R
-            erg_L = erg_p[i-1]
-            erg_R = erg_BC_R
-            state_L = states_half_a[i-1]
-            state_R = state_BC_R
-        else: # interior edge
-            rho_L = rho_p[i-1]
-            rho_R = rho_p[i]
-            mom_L = mom_p[i-1]
-            mom_R = mom_p[i]
-            erg_L = erg_p[i-1]
-            erg_R = erg_p[i]
-            state_L = states_half_a[i-1]
-            state_R = states_half_a[i]
+    rho_F[-1] = rhoFlux(state_BC_R)
+    mom_F[-1] = momFlux(state_BC_R)
+    erg_F[-1] = ergFlux(state_BC_R)
 
-        # solve Riemann problem at interface
-        rho_F[i] = riem_solver(rho_L, rho_R, state_L, state_R, rhoFlux)
-        mom_F[i] = riem_solver(mom_L, mom_R, state_L, state_R, momFlux)
-        erg_F[i] = riem_solver(erg_L, erg_R, state_L, state_R, ergFlux)
+    for i in range(0,n-1):
+
+        rho_F[i+1] = riem_solver(rho_r_p[i], rho_l_p[i+1], states_r[i],
+                states_l[i+1], rhoFlux)
+        mom_F[i+1] = riem_solver(mom_r_p[i], mom_l_p[i+1], states_r[i],
+                states_l[i+1], momFlux)
+        erg_F[i+1] = riem_solver(erg_r_p[i], erg_l_p[i+1], states_r[i],
+                states_l[i+1], ergFlux)
 
     #Intialize cell average quantity arrays at t_old
     rho = [s.rho for s in states_old_a]
@@ -315,6 +326,70 @@ def HLLCSolver(U_l, U_r, L, R, flux): #quantity of interest U, state to the left
     else:
         print S_l, S_star, S_r
         raise ValueError("HLLC solver produced unrealistic fluxes\n")
+
+
+#------------------------------------------------------------------------------------
+# Create function for reconstructing slopes in entire array
+#------------------------------------------------------------------------------------
+def slopeReconstruction(u):
+
+    limiter = "vanleer"
+
+    #evaluate left and right value in each cell
+    omega = 0.
+    u_l = [0.0 for i in u]
+    u_r = [0.0 for i in u]
+
+    for i in range(len(u)):
+        
+        if i==0:
+            del_i = u[i+1]-u[i]
+        elif i==len(u)-1:
+            del_i = u[i]-u[i-1]
+        else:
+            del_rt = u[i+1]-u[i]
+            del_lt = u[i] - u[i-1]
+            del_i = 0.5*(1.+omega)*del_lt + 0.5*(1.-omega)*del_rt
+
+            #Simple slope limiters
+            if limiter == "minmod":
+
+                del_i = minMod(del_rt,del_lt)
+
+            elif limiter == "vanleer":
+
+                beta = 1.
+
+                #Catch if divide by zero
+                if abs(u[i+1] - u[i]) < 0.000000001*(u[i]+0.00001):
+                    if abs(u[i]-u[i-1]) < 0.000000001*(u[i]+0.00001):
+                        r = 1.0
+                    else:
+                        r = -1.
+                else:
+                    r = del_lt/del_rt
+                        
+                if r < 0.0 or isinf(r):
+                    del_i = 0.0
+                else:
+
+                    zeta =  min(2.*r/(1.+r),2.*beta/(1.-omega+(1.+omega)*r))
+                    del_i = zeta*del_i
+
+            elif limiter == "none":
+                del_i = del_i
+
+            elif limiter == "step":
+                del_i = 0.0
+
+            else:
+                raise ValueError("Invalid slope limiter\n")
+            
+        u_l[i] = u[i] - 0.5*del_i
+        u_r[i] = u[i] + 0.5*del_i
+
+    return u_l, u_r
+
 
 
 #-------------------------------------------------------------------------------------

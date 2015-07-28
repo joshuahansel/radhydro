@@ -509,7 +509,9 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        #plotHydroSolutions(mesh, hydro_old, slopes=slopes_old)
 
        # perform predictor step of MUSCL-Hancock
+ #      hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
        hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
+
        #plotHydroSolutions(mesh, hydro_star)
 
        #The predicted hydro
@@ -565,7 +567,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        hydro_BC.update(states=hydro_half, t=t_old+0.5*dt)
 
        # perform corrector step of MUSCL-Hancock
-       hydro_star = hydroCorrector(mesh, hydro_half, hydro_old, dt, bc=hydro_BC)
+       hydro_star = hydroCorrector(mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
 
 
     

@@ -44,8 +44,8 @@ class HydroBC(object):
       # boundary cells in case Dirichlet BC are used
       cell_L = mesh.getElement(0)
       cell_R = mesh.getElement(mesh.n_elems-1)
-      self.x_L = cell_L.x_cent - cell_L.dx
-      self.x_R = cell_R.x_cent + cell_R.dx
+      self.x_L = cell_L.x_cent - 0.5*cell_L.dx
+      self.x_R = cell_R.x_cent + 0.5*cell_R.dx
 
    ## Updates the boundary values for each conservative variable.
    #
