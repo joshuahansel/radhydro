@@ -141,17 +141,14 @@ def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
 
     # Create edge states
     states_l = deepcopy(states_half) 
-    states_l = np.insert(states_l,len(states_l),states_l[0])
     states_r = deepcopy(states_half)
-    states_r = np.insert(states_r,len(states_r),states_r[0])
 
     for i in range(len(rho_l_p)):
 
         states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
         states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
-        print states_l[i], states_r[i]
 
-    
+
 
     # get boundary values and states
     rho_BC_L, rho_BC_R, mom_BC_L, mom_BC_R, erg_BC_L, erg_BC_R =\
@@ -160,14 +157,40 @@ def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
 
     #Solve Rieman problem at each face, for each quantity
     #For boundaries it is easily defined
-    rho_F[0] = rhoFlux(state_BC_L)
-    mom_F[0] = momFlux(state_BC_L)
-    erg_F[0] = ergFlux(state_BC_L)
+    
+    #Check if it is reflective, if so we need to reset the states due to the way the
+    #edge values work. This is kind of crappy coding
+    if bc.bc_type == "reflective":
 
-    rho_F[-1] = rhoFlux(state_BC_R)
-    mom_F[-1] = momFlux(state_BC_R)
-    erg_F[-1] = ergFlux(state_BC_R)
+        rho_F[0] = rhoFlux(states_l[0])
+        mom_F[0] = momFlux(states_l[0])
+        erg_F[0] = ergFlux(states_l[0])
 
+        rho_F[-1] = rhoFlux(states_r[-1])
+        mom_F[-1] = momFlux(states_r[-1])
+        erg_F[-1] = ergFlux(states_r[-1])
+
+    else:
+
+        rho_F[0] = riem_solver(rho_BC_L, rho_l_p[0], state_BC_L, states_l[0], rhoFlux)
+        mom_F[0] = riem_solver(mom_BC_L, mom_l_p[0], state_BC_L, states_l[0], momFlux)
+        erg_F[0] = riem_solver(erg_BC_L, erg_l_p[0], state_BC_L, states_l[0], ergFlux)
+
+        print "HI LEFT "  
+        print "rho_F    ", rho_BC_R, rho_r_p[-1], rho_F[-1], rhoFlux(states_r[-1]), rhoFlux(state_BC_R)
+        print "mom_F    ", mom_BC_R, mom_r_p[-1], mom_F[-1], momFlux(states_r[-1]), momFlux(state_BC_R)
+        print "erg_F    ", erg_BC_R, erg_r_p[-1], erg_F[-1], ergFlux(states_r[-1]), ergFlux(state_BC_R)
+
+        rho_F[-1] = riem_solver(rho_BC_R, rho_r_p[-1], state_BC_R, states_r[-1], rhoFlux)
+        mom_F[-1] = riem_solver(mom_BC_R, mom_r_p[-1], state_BC_R, states_r[-1], momFlux)
+        erg_F[-1] = riem_solver(erg_BC_R, erg_r_p[-1], state_BC_R, states_r[-1], ergFlux)
+
+        print "HI RIGHT "  
+        print "rho_F    ", "BC_value: ", rho_BC_R, rho_r_p[-1], "chosen F", rho_F[-1], rhoFlux(states_r[-1]), rhoFlux(state_BC_R)
+        print "mom_F    ", "BC_value: ", mom_BC_R, mom_r_p[-1], "chosen F", mom_F[-1], momFlux(states_r[-1]), momFlux(state_BC_R)
+        print "erg_F    ", "BC_value: ", erg_BC_R, erg_r_p[-1], "chosen F", erg_F[-1], ergFlux(states_r[-1]), ergFlux(state_BC_R)
+
+    #Do the interior cells
     for i in range(0,n-1):
 
         rho_F[i+1] = riem_solver(rho_r_p[i], rho_l_p[i+1], states_r[i],
@@ -176,6 +199,7 @@ def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
                 states_l[i+1], momFlux)
         erg_F[i+1] = riem_solver(erg_r_p[i], erg_l_p[i+1], states_r[i],
                 states_l[i+1], ergFlux)
+
 
     #Intialize cell average quantity arrays at t_old
     rho = [s.rho for s in states_old_a]
@@ -312,19 +336,28 @@ def HLLCSolver(U_l, U_r, L, R, flux): #quantity of interest U, state to the left
 
     #Return appropraite state
     if S_r < 0:
+
+        #print "Return F_r", F_r
         return F_r
 
     elif S_l <= 0.0 and S_star > 0.0:
+        
+        #print "Retrun F_lstar", F_lstar
         return F_lstar
 
     elif S_star <= 0.0 and S_r > 0.0:
+
+        #print "Return F_rstar", F_rstar
         return F_rstar
 
     elif S_l > 0.0:
+
+        #print "Return F_l", F_l
         return F_l
 
     else:
-        print S_l, S_star, S_r
+
+        #print S_l, S_star, S_r
         raise ValueError("HLLC solver produced unrealistic fluxes\n")
 
 

@@ -41,9 +41,9 @@ class TestRadHydroMMS(unittest.TestCase):
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-      rho =0.0* exp(x+t) + 1
-      u   =0.0* (exp(-x)*sin(t) - 1) + 0.
-      E   =0.0* exp(-2*alpha*t)*sin(pi*x) + 5+x+t
+      rho =exp(x+t) 
+      u   =(exp(-x)*sin(t) - 1) 
+      E   = exp(-2*alpha*t)*sin(pi*x)+50
       
       # create solution for radiation field
       rad_scale = 1
@@ -55,7 +55,7 @@ class TestRadHydroMMS(unittest.TestCase):
       cv_value    = 1.0
       gamma_value = 1.4
       sig_s = 1.0
-      sig_a = 0.0
+      sig_a = 1.0
       
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
@@ -152,7 +152,7 @@ class TestRadHydroMMS(unittest.TestCase):
             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
          # plot hydro solution
-         plotHydroSolutions(mesh, hydro_new, exact=hydro_exact)
+         plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),exact=hydro_exact)
 
          #plot exact and our E_r
          Er_exact_fn = 1./GC.SPD_OF_LGT*(psim + psip)
