@@ -41,21 +41,24 @@ class TestRadHydroMMS(unittest.TestCase):
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-      rho =exp(x+t) 
-      u   =(exp(-x)*sin(t) - 1) 
-      E   = exp(-2*alpha*t)*sin(pi*x)+50
+      rho =exp(x+t)*0.0+5
+      u   =(exp(-x)*sin(t) - 1)*0.0+3
+      E   = 0.0*exp(-2*alpha*t)*sin(pi*x)+50
       
       # create solution for radiation field
+      c = GC.SPD_OF_LGT
       rad_scale = 1
-      psim = rad_scale*2*t*sin(pi*(1-x))
-      psip = rad_scale*t*sin(pi*x)
+      #psim = rad_scale*2*t*sin(pi*(1-x))*0.+50*c
+      #psip = rad_scale*t*sin(pi*x)*0.+20*c
+      psim = 50.*c + 0.0*(t*x)
+      psip = 50.*c + 0.0*(t*x)
       
       # numeric values
       alpha_value = 0.01
       cv_value    = 1.0
       gamma_value = 1.4
       sig_s = 1.0
-      sig_a = 1.0
+      sig_a = 0.0
       
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
@@ -113,7 +116,7 @@ class TestRadHydroMMS(unittest.TestCase):
 
       # transient options
       t_start  = 0.0
-      t_end = 0.1
+      t_end = 0.01
 #      t_end = 0.002
 
       # if run standalone, then be verbose

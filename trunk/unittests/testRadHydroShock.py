@@ -96,7 +96,7 @@ class TestRadHydroShock(unittest.TestCase):
   
       # transient options
       t_start  = 0.0
-      t_end = 0.01
+      t_end = 0.5
 
       # if run standalone, then be verbose
       if __name__ == '__main__':

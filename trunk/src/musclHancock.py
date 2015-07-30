@@ -36,7 +36,6 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
         spat_coors += [i.xl]
     spat_coors += [mesh.elements[-1].xr]
     x = np.array(spat_coors)
-    x_cent = [0.5*(x[i]+x[i+1]) for i in range(len(x)-1)] #for plotting cell centers
 
     #Initialize cell centered variables as passed in
     states = deepcopy(states_old_a)
@@ -82,11 +81,12 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
         #erg
         erg_l_p[i] = advCons(erg_l[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
         erg_r_p[i] = advCons(erg_r[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
-        
+
     #Advance the primitive variables at the edges
     for i in range(len(rho_l)):
         states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
         states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
+
 
     #Return the new averages
     for i in range(len(states)):
@@ -177,9 +177,9 @@ def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
         erg_F[0] = riem_solver(erg_BC_L, erg_l_p[0], state_BC_L, states_l[0], ergFlux)
 
         print "HI LEFT "  
-        print "rho_F    ", rho_BC_R, rho_r_p[-1], rho_F[-1], rhoFlux(states_r[-1]), rhoFlux(state_BC_R)
-        print "mom_F    ", mom_BC_R, mom_r_p[-1], mom_F[-1], momFlux(states_r[-1]), momFlux(state_BC_R)
-        print "erg_F    ", erg_BC_R, erg_r_p[-1], erg_F[-1], ergFlux(states_r[-1]), ergFlux(state_BC_R)
+        print "rho_F    ", rho_BC_L, rho_l_p[0], rho_F[0], rhoFlux(states_l[0]), rhoFlux(state_BC_L)
+        print "mom_F    ", mom_BC_L, mom_l_p[0], mom_F[0], momFlux(states_l[0]), momFlux(state_BC_L)
+        print "erg_F    ", erg_BC_L, erg_l_p[0], erg_F[0], ergFlux(states_l[0]), ergFlux(state_BC_L)
 
         rho_F[-1] = riem_solver(rho_BC_R, rho_r_p[-1], state_BC_R, states_r[-1], rhoFlux)
         mom_F[-1] = riem_solver(mom_BC_R, mom_r_p[-1], state_BC_R, states_r[-1], momFlux)

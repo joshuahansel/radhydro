@@ -69,6 +69,7 @@ class HydroBC(object):
       elif self.bc_type == 'dirichlet':
 
 
+
          # If updating for use in slopes different than if for use in Riemman solve
          if edge_value:
 
@@ -80,6 +81,9 @@ class HydroBC(object):
              self.mom_R = self.mom_BC(self.x_R-0.5*self.dx_R, t)
              self.erg_L = self.erg_BC(self.x_L+0.5*self.dx_L, t)
              self.erg_R = self.erg_BC(self.x_R-0.5*self.dx_R, t)
+
+             print "I AM HAPPENING HERE"
+#             exit()
 
          else: #cell center value
 
@@ -100,7 +104,6 @@ class HydroBC(object):
       self.state_R = deepcopy(states[0])
       self.state_L.updateState(rho=self.rho_L, mom=self.mom_L, erg=self.erg_L)
       self.state_R.updateState(rho=self.rho_R, mom=self.mom_R, erg=self.erg_R)
-
 
    ## Returns the left and right boundary values for each conservative variable.
    #

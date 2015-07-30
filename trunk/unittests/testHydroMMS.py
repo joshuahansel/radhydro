@@ -39,9 +39,9 @@ class TestHydroMMS(unittest.TestCase):
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-      rho = 0.0*exp(x+t)+2+t-x
+      rho = 0.0*exp(x+t)+1+x-t
       u   = 0.0*exp(-x)*sin(t)+1
-      E   = 0.0*exp(-3*alpha*t)*sin(pi*x)+5+5.*x+50*x*x
+      E   = 0.0*exp(-3*alpha*t)*sin(pi*x)+5+5*(x-0.5)**2
       
       # create solution for radiation field
       psim = 0

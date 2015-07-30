@@ -217,6 +217,7 @@ def runNonlinearTransient(mesh, problem_type,
                  t_old        = t_old,
                  Qpsi_old     = Qpsi_old,
                  Qmom_old     = Qmom_old,
+                 slope_limiter= slope_limiter,
                  Qerg_old     = Qerg_old)
 
               # take a half time step with BDF2
@@ -238,6 +239,7 @@ def runNonlinearTransient(mesh, problem_type,
                  slopes_older = deepcopy(slopes_old),
                  e_slopes_old = e_slopes_old,
                  e_slopes_older = deepcopy(e_slopes_old),
+                 slope_limiter= slope_limiter,
                  psim_src     = psim_src,
                  psip_src     = psip_src,
                  mom_src      = mom_src,
@@ -367,7 +369,7 @@ def runNonlinearTransient(mesh, problem_type,
                 time_stepper_corrector = 'CN'
              else:
                 time_stepper_corrector = 'BDF2'
-            
+
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
              Qpsi_new, Qmom_new, Qerg_new =\
@@ -433,7 +435,7 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
    cx_old=None, cx_older=None, hydro_old=None, hydro_older=None, rad_old=None, rad_older=None,
    hydro_BC=None, slopes_older=None, e_slopes_old=None, e_slopes_older=None,
    psim_src=None, psip_src=None, mom_src=None, E_src=None, t_old=None, Qpsi_old=None, Qmom_old=None, Qerg_old=None,
-   Qpsi_older=None, Qmom_older=None, Qerg_older=None):
+   Qpsi_older=None, Qmom_older=None, Qerg_older=None, slope_limiter=None):
 
        # compute new extraneous sources
        Qpsi_new, Qmom_new, Qerg_new = computeExtraneousSources(
@@ -443,7 +445,7 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
        hydro_BC.update(states=hydro_old, t=t_old)
 
        # compute slopes
-       slopes_old = HydroSlopes(hydro_old, bc=hydro_BC)
+       slopes_old = HydroSlopes(hydro_old, bc=hydro_BC, limiter=slope_limiter)
 
        # if there is no material motion, then the homogeneous hydro solution
        # should be equal to the old hydro solution
@@ -515,7 +517,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        #plotHydroSolutions(mesh, hydro_star)
 
        #The predicted hydro
-       print "The predicted hydrso"
+       print "The predicted hydro"
        print len(hydro_star)
        for i in hydro_star:
 
@@ -568,9 +570,6 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
 
        # perform corrector step of MUSCL-Hancock
        hydro_star = hydroCorrector(mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
-
-
-    
 
        print "After the muscl corrector"
 
