@@ -55,6 +55,8 @@ class TestRadHydroMMS(unittest.TestCase):
       rad_scale = 1
       psim = rad_scale*2*t*sin(pi*(1-x))
       psip = rad_scale*t*sin(pi*x)
+      #psim = symbols('0')
+      #psip = symbols('0')
       
       # numeric values
       alpha_value = 0.01
