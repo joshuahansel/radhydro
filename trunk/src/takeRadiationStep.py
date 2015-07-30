@@ -23,11 +23,11 @@ def takeRadiationStep(mesh, time_stepper, problem_type, dt,
    Qpsi_older, Qpsi_old, Qpsi_new, **kwargs):
 
    # assert that the appropriate sources were provided
-   assert Qpsi_new != None, 'New source must be provided'
+   assert Qpsi_new.size != 0, 'New source must be provided'
    if time_stepper != 'BE':
-      assert Qpsi_old != None, 'Old source must be provided for CN or BDF2'
+      assert Qpsi_old.size != 0, 'Old source must be provided for CN or BDF2'
    if time_stepper == 'BDF2':
-      assert Qpsi_older != None, 'Older source must be provided for BDF2'
+      assert Qpsi_older.size != 0, 'Older source must be provided for BDF2'
 
    # evaluate transient source
    Q_tr = computeRadiationSource(

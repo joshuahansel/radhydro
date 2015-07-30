@@ -38,20 +38,22 @@ class TestRadHydroMMS(unittest.TestCase):
    def test_RadHydroMMS(self):
       
       # declare symbolic variables
-      x, t, alpha = symbols('x t alpha')
+      x, t, alpha, c = symbols('x t alpha c')
       
       # create solution for thermodynamic state and flow field
-      rho =exp(x+t)*0.0+5
-      u   =(exp(-x)*sin(t) - 1)*0.0+3
-      E   = 0.0*exp(-2*alpha*t)*sin(pi*x)+50
+      rho = symbols('5')
+      u   = symbols('3')
+      E   = symbols('50')
+      #rho = exp(x+t)
+      #u   = exp(-x)*sin(t) - 1
+      #E   = exp(-2*alpha*t)*sin(pi*x)
       
       # create solution for radiation field
-      c = GC.SPD_OF_LGT
-      rad_scale = 1
+      #rad_scale = 1
       #psim = rad_scale*2*t*sin(pi*(1-x))*0.+50*c
       #psip = rad_scale*t*sin(pi*x)*0.+20*c
-      psim = 50.*c + 0.0*(t*x)
-      psip = 50.*c + 0.0*(t*x)
+      psim = 50*c
+      psip = 50*c
       
       # numeric values
       alpha_value = 0.01
@@ -77,16 +79,19 @@ class TestRadHydroMMS(unittest.TestCase):
       # create functions for exact solutions
       substitutions = dict()
       substitutions['alpha'] = alpha_value
+      substitutions['c']     = GC.SPD_OF_LGT
       rho = rho.subs(substitutions)
       u   = u.subs(substitutions)
       mom = rho*u
       E   = E.subs(substitutions)
-      rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy")
-      u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy")
-      mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy")
-      E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy")
-      psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy")
-      psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
+      psim = psim.subs(substitutions)
+      psip = psip.subs(substitutions)
+      rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy", dummify=False)
+      u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy", dummify=False)
+      mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy", dummify=False)
+      E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy", dummify=False)
+      psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy", dummify=False)
+      psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy", dummify=False)
       
       # create uniform mesh
       n_elems = 50

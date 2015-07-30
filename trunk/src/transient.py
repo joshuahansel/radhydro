@@ -253,7 +253,6 @@ def runNonlinearTransient(mesh, problem_type,
                  Qerg_older   = deepcopy(Qerg_old))
              
 
-
           else: #assume its a single step method
 
               # take time step without MUSCL-Hancock
@@ -495,6 +494,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
    Qpsi_old, Qmom_old, Qerg_old, Qpsi_older, Qmom_older, Qerg_older,
    time_stepper_predictor='CN', time_stepper_corrector='BDF2'):
 
+       debug_mode = False
+
        # assert that BDF2 was not chosen for the predictor time-stepper
        assert time_stepper_predictor != 'BDF2', 'BDF2 cannot be used in\
           the predictor step.'
@@ -511,17 +512,18 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        #plotHydroSolutions(mesh, hydro_old, slopes=slopes_old)
 
        # perform predictor step of MUSCL-Hancock
- #      hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
        hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
 
        #plotHydroSolutions(mesh, hydro_star)
 
-       #The predicted hydro
-       print "The predicted hydro"
-       print len(hydro_star)
-       for i in hydro_star:
+       if debug_mode:
+          print "hydro_old:"
+          for i in hydro_old:
+             print i
 
-           print i
+          print "hydro_star predictor:"
+          for i in hydro_star:
+             print i
 
        # perform nonlinear solve
        hydro_half, rad_half, cx_half, e_slopes_half = nonlinearSolve(
@@ -547,17 +549,10 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           Qmom_older   = Qmom_older, # this is a dummy argument
           Qerg_older   = Qerg_older) # this is a dummy argument
 
-       print "After predictor nonlinear"
-
-       #The predicted hydro
-       for i in hydro_half:
-
-           print i
-
-       print "THE OLD SHIT"
-       for i in hydro_old:
-
-           print i
+       if debug_mode:
+          print "hydro_half:"
+          for i in hydro_half:
+             print i
 
        print "    Corrector step:"
 
@@ -571,13 +566,10 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        # perform corrector step of MUSCL-Hancock
        hydro_star = hydroCorrector(mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
 
-       print "After the muscl corrector"
-
-       #The predicted hydro
-       for i in hydro_star:
-
-           print i
-
+       if debug_mode:
+          print "hydro_star corrector:"
+          for i in hydro_star:
+             print i
 
        # perform nonlinear solve
        hydro_new, rad_new, cx_new, e_slopes_new = nonlinearSolve(
@@ -608,12 +600,10 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           Qmom_older   = Qmom_older,
           Qerg_older   = Qerg_older)
 
-       print "After the non_linaer corrector"
-
-       #The predicted hydro
-       for i in hydro_new:
-
-           print i
+       if debug_mode:
+          print "hydro_new:"
+          for i in hydro_new:
+             print i
 
        return hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
           Qpsi_new, Qmom_new, Qerg_new

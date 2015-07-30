@@ -26,7 +26,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
       assert(hydro_older    != None)
       assert(cx_older       != None)
       assert(slopes_older   != None)
-      assert(e_slopes_older != None)
+      assert(e_slopes_older.size != 0)
 
    # initialize iterates to the old quantities
    hydro_new  = deepcopy(hydro_star)

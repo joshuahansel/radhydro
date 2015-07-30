@@ -56,6 +56,8 @@ class HydroBC(object):
    #
    def update(self, states, t, edge_value=False):
 
+      debug_mode = False
+
       if self.bc_type == 'reflective':
 
          # for reflective, gradient is zero at boundaries
@@ -82,8 +84,8 @@ class HydroBC(object):
              self.erg_L = self.erg_BC(self.x_L+0.5*self.dx_L, t)
              self.erg_R = self.erg_BC(self.x_R-0.5*self.dx_R, t)
 
-             print "I AM HAPPENING HERE"
-#             exit()
+             if debug_mode:
+                print "I AM HAPPENING HERE"
 
          else: #cell center value
 

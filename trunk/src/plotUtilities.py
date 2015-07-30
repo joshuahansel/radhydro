@@ -389,8 +389,9 @@ def plotHydroSolutions(mesh, states, slopes=None, x_exact=None, exact=None,
        plt.savefig(filename)
 
     # show figure
-    plt.show(block=False) #show all plots generated to this point
-    raw_input("Press anything to continue...")
+    #plt.show(block=False) #show all plots generated to this point
+    #raw_input("Press anything to continue...")
+    plt.show()
     plotSingle.fig_num=0
 
 

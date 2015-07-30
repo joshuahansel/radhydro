@@ -126,6 +126,8 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
 #
 def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
 
+    debug_mode = False
+
     #Choose riemann solver
     riem_solver = HLLCSolver #HLLSolver, HLLCSolver
 
@@ -176,19 +178,21 @@ def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
         mom_F[0] = riem_solver(mom_BC_L, mom_l_p[0], state_BC_L, states_l[0], momFlux)
         erg_F[0] = riem_solver(erg_BC_L, erg_l_p[0], state_BC_L, states_l[0], ergFlux)
 
-        print "HI LEFT "  
-        print "rho_F    ", rho_BC_L, rho_l_p[0], rho_F[0], rhoFlux(states_l[0]), rhoFlux(state_BC_L)
-        print "mom_F    ", mom_BC_L, mom_l_p[0], mom_F[0], momFlux(states_l[0]), momFlux(state_BC_L)
-        print "erg_F    ", erg_BC_L, erg_l_p[0], erg_F[0], ergFlux(states_l[0]), ergFlux(state_BC_L)
+        if debug_mode:
+           print "HI LEFT "  
+           print "rho_F    ", rho_BC_L, rho_l_p[0], rho_F[0], rhoFlux(states_l[0]), rhoFlux(state_BC_L)
+           print "mom_F    ", mom_BC_L, mom_l_p[0], mom_F[0], momFlux(states_l[0]), momFlux(state_BC_L)
+           print "erg_F    ", erg_BC_L, erg_l_p[0], erg_F[0], ergFlux(states_l[0]), ergFlux(state_BC_L)
 
         rho_F[-1] = riem_solver(rho_BC_R, rho_r_p[-1], state_BC_R, states_r[-1], rhoFlux)
         mom_F[-1] = riem_solver(mom_BC_R, mom_r_p[-1], state_BC_R, states_r[-1], momFlux)
         erg_F[-1] = riem_solver(erg_BC_R, erg_r_p[-1], state_BC_R, states_r[-1], ergFlux)
 
-        print "HI RIGHT "  
-        print "rho_F    ", "BC_value: ", rho_BC_R, rho_r_p[-1], "chosen F", rho_F[-1], rhoFlux(states_r[-1]), rhoFlux(state_BC_R)
-        print "mom_F    ", "BC_value: ", mom_BC_R, mom_r_p[-1], "chosen F", mom_F[-1], momFlux(states_r[-1]), momFlux(state_BC_R)
-        print "erg_F    ", "BC_value: ", erg_BC_R, erg_r_p[-1], "chosen F", erg_F[-1], ergFlux(states_r[-1]), ergFlux(state_BC_R)
+        if debug_mode:
+           print "HI RIGHT "  
+           print "rho_F    ", "BC_value: ", rho_BC_R, rho_r_p[-1], "chosen F", rho_F[-1], rhoFlux(states_r[-1]), rhoFlux(state_BC_R)
+           print "mom_F    ", "BC_value: ", mom_BC_R, mom_r_p[-1], "chosen F", mom_F[-1], momFlux(states_r[-1]), momFlux(state_BC_R)
+           print "erg_F    ", "BC_value: ", erg_BC_R, erg_r_p[-1], "chosen F", erg_F[-1], ergFlux(states_r[-1]), ergFlux(state_BC_R)
 
     #Do the interior cells
     for i in range(0,n-1):
