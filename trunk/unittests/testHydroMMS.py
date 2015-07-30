@@ -42,7 +42,7 @@ class TestHydroMMS(unittest.TestCase):
       rho = symbols('1')
       u   = symbols('1')
       E   = symbols('10')
-      #rho = 1 + x - t
+      #rho = 1+x-t
       #u   = symbols('1')
       #E   = 5 + 5*(x-0.5)**2
       #rho = exp(x+t)

@@ -41,12 +41,15 @@ class TestRadHydroMMS(unittest.TestCase):
       x, t, alpha, c = symbols('x t alpha c')
       
       # create solution for thermodynamic state and flow field
-      rho = symbols('5')
-      u   = symbols('3')
-      E   = symbols('50')
+      rho = symbols('1')
+      u   = symbols('1')
+      E   = symbols('10')
+      #rho = 1 + x - t
+      #u   = symbols('1')
+      #E   = 5 + 5*(x - 0.5)**2
       #rho = exp(x+t)
       #u   = exp(-x)*sin(t) - 1
-      #E   = exp(-2*alpha*t)*sin(pi*x)
+      #E   = 10*exp(x+t)
       
       # create solution for radiation field
       #rad_scale = 1
