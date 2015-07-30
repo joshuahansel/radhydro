@@ -58,7 +58,7 @@ class TestRadHydroMMS(unittest.TestCase):
       cv_value    = 1.0
       gamma_value = 1.4
       sig_s = 1.0
-      sig_a = 0.0
+      sig_a = 1.0
       
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
