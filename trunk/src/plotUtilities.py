@@ -398,7 +398,7 @@ def plotSingle(x_num, x_exact, y, y_label, exact=None):
     if exact != None:
        plt.plot(x_exact, exact, "r-x", label="Analytic")
     plt.legend(loc='best')
-    plt.axis([min(min(x_num),min(x_exact)), max(x_exact), 0.99*min(y),1.01*max(y)])
+    plt.axis([min(x_num), max(x_num), 0.99*min(y),1.01*max(y)])
     
 plotSingle.fig_num=0
 
