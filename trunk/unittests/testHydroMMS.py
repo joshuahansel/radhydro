@@ -6,7 +6,7 @@ import sys
 sys.path.append('../src')
 
 # symbolic math packages
-from sympy import symbols, exp, sin, pi
+from sympy import symbols, exp, sin, pi, sympify
 from sympy.utilities.lambdify import lambdify
 
 # numpy
@@ -39,19 +39,19 @@ class TestHydroMMS(unittest.TestCase):
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-      #rho = symbols('1')
-      #u   = symbols('1')
-      #E   = symbols('10')
+      #rho = sympify('1')
+      #u   = sympify('1')
+      #E   = sympify('10')
       rho = 1+x-t
-      u   = symbols('1')
+      u   = sympify('1')
       E   = 5 + 5*(x-0.5)**2
       #rho = exp(x+t)
       #u   = exp(-x)*sin(t)-1
       #E   = 10*exp(x+t)
       
       # create solution for radiation field
-      psim = 0
-      psip = 0
+      psim = sympify('0')
+      psip = sympify('0')
       
       # numeric values
       alpha_value = 0.01
@@ -77,12 +77,12 @@ class TestHydroMMS(unittest.TestCase):
       u   = u.subs(substitutions)
       mom = rho*u
       E   = E.subs(substitutions)
-      rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy", dummify=False)
-      u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy", dummify=False)
-      mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy", dummify=False)
-      E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy", dummify=False)
-      psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy", dummify=False)
-      psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy", dummify=False)
+      rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy")
+      u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy")
+      mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy")
+      E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy")
+      psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy")
+      psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
       
       # create uniform mesh
       n_elems = 50
