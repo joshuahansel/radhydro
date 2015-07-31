@@ -13,6 +13,7 @@ from hydroSource import computeMomentumExtraneousSource,\
 from takeRadiationStep import takeRadiationStep
 from hydroSlopes import HydroSlopes
 from musclHancock import hydroPredictor, hydroCorrector
+#from musclHancockJosh import hydroPredictor, hydroCorrector
 #from balanceChecker import BalanceChecker
 from plotUtilities import plotHydroSolutions
 
@@ -524,13 +525,9 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
 
        # compute slopes
        slopes_old = HydroSlopes(hydro_old, bc=hydro_BC, limiter=slope_limiter)
-       #plotHydroSolutions(mesh, hydro_old, slopes=slopes_old)
 
        # perform predictor step of MUSCL-Hancock
        hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
-
-       #plotHydroSolutions(mesh, hydro_old)
-       #plotHydroSolutions(mesh, hydro_star)
 
        if debug_mode:
           print "hydro_old:"
@@ -566,8 +563,6 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           Qerg_older   = Qerg_older, # this is a dummy argument
           verbose      = verbose)
 
-       #plotHydroSolutions(mesh, hydro_half)
-
        if debug_mode:
           print "hydro_half:"
           for i in hydro_half:
@@ -582,6 +577,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
 
        # update hydro BC
        hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=True)
+       #hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=False)
 
        # perform corrector step of MUSCL-Hancock
        hydro_star = hydroCorrector(mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
