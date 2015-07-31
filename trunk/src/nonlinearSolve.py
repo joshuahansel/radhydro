@@ -18,7 +18,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
    Qpsi_new, Qmom_new, Qerg_new, Qpsi_old, Qmom_old, Qerg_old, Qpsi_older,
    Qmom_older, Qerg_older,
    rad_older=None, cx_older=None, hydro_older=None, slopes_older=None,
-   e_slopes_older=None, tol=1.0e-9):
+   e_slopes_older=None, tol=1.0e-9, verbose=False):
 
    # assert that that older arguments were passed if using BDF2
    if time_stepper == 'BDF2':
@@ -137,9 +137,11 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
        # check nonlinear convergence
        # TODO: compute diff of rad solution as well to add to convergence criteria
        rel_diff = computeL2RelDiff(hydro_new, hydro_prev, aux_func=lambda x: x.e)
-       print("      Iteration %d: Difference = %7.3e" % (k,rel_diff))
+       if verbose:
+          print("      Iteration %d: Difference = %7.3e" % (k,rel_diff))
        if rel_diff < tol:
-          print("      Nonlinear iteration converged")
+          if verbose:
+             print("      Nonlinear iteration converged")
           break
 
        # reset previous iteration quantities if needed

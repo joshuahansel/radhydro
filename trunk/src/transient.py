@@ -188,8 +188,7 @@ def runNonlinearTransient(mesh, problem_type,
           t_new = t_old + dt
 
        # print each time step
-       if verbose:
-          print("\nTime step %d: t = %f -> %f:" % (time_index,t_old,t_new))
+       print("Time step %d: t = %f -> %f:" % (time_index,t_old,t_new))
   
        # take time step
        if problem_type == 'rad_mat':
@@ -325,7 +324,8 @@ def runNonlinearTransient(mesh, problem_type,
                 Qerg_old     = Qerg_old,
                 Qpsi_older   = Qpsi_older,
                 Qmom_older   = Qmom_older,
-                Qerg_older   = Qerg_older)
+                Qerg_older   = Qerg_older,
+                verbose      = verbose)
 
              print("  Cycle 2:")
 
@@ -360,7 +360,8 @@ def runNonlinearTransient(mesh, problem_type,
                 Qerg_old     = Qerg_half,
                 Qpsi_older   = Qpsi_old,
                 Qmom_older   = Qmom_old,
-                Qerg_older   = Qerg_old)
+                Qerg_older   = Qerg_old,
+                verbose      = verbose)
 
           else:
 
@@ -401,7 +402,8 @@ def runNonlinearTransient(mesh, problem_type,
                 Qerg_old     = Qerg_old,
                 Qpsi_older   = Qpsi_older,
                 Qmom_older   = Qmom_older,
-                Qerg_older   = Qerg_older)
+                Qerg_older   = Qerg_older,
+                verbose      = verbose)
 
        #Compute Balance
        #bal = BalanceChecker(mesh, time_stepper, dt)
@@ -502,13 +504,16 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
    hydro_BC, slope_limiter, slopes_older, e_slopes_old, e_slopes_older,
    psim_src, psip_src, mom_src, E_src, t_old,
    Qpsi_old, Qmom_old, Qerg_old, Qpsi_older, Qmom_older, Qerg_older,
-   time_stepper_predictor='CN', time_stepper_corrector='BDF2'):
+   time_stepper_predictor='CN', time_stepper_corrector='BDF2',verbose=False):
 
        debug_mode = False
 
        # assert that BDF2 was not chosen for the predictor time-stepper
        assert time_stepper_predictor != 'BDF2', 'BDF2 cannot be used in\
           the predictor step.'
+
+       if verbose:
+          print "    Predictor step:"
 
        # compute new extraneous sources
        Qpsi_half, Qmom_half, Qerg_half = computeExtraneousSources(
@@ -558,7 +563,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           Qerg_old     = Qerg_old,
           Qpsi_older   = Qpsi_older, # this is a dummy argument
           Qmom_older   = Qmom_older, # this is a dummy argument
-          Qerg_older   = Qerg_older) # this is a dummy argument
+          Qerg_older   = Qerg_older, # this is a dummy argument
+          verbose      = verbose)
 
        #plotHydroSolutions(mesh, hydro_half)
 
@@ -567,7 +573,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           for i in hydro_half:
              print i
 
-       print "    Corrector step:"
+       if verbose:
+          print "    Corrector step:"
 
        # compute new extraneous sources
        Qpsi_new, Qmom_new, Qerg_new = computeExtraneousSources(
@@ -611,7 +618,11 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           Qerg_old     = Qerg_old,
           Qpsi_older   = Qpsi_older,
           Qmom_older   = Qmom_older,
-          Qerg_older   = Qerg_older)
+          Qerg_older   = Qerg_older,
+          verbose      = verbose)
+
+       if verbose:
+          print ""
 
        if debug_mode:
           print "hydro_new:"

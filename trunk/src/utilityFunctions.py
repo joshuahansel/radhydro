@@ -132,6 +132,24 @@ def computeDiscreteL1Norm(values):
 
    return norm
 
+## Function to compute the error for the hydro solution.
+#
+def computeHydroError(hydro, hydro_exact):
+
+#   # number of elements
+#   n = len(hydro)
+#
+#   # initialize error to zero
+#   err = 0.0
+#
+#   # loop over tuples
+#   for i in xrange(n):
+#      err += abs(hydro[i].e - hydro_exact[i].e)
+
+   err = computeL2RelDiff(hydro, hydro_exact, aux_func=lambda x: x.e)
+
+   return err
+
 ## Function to compute the L2 integral based on relative error of the larger 
 #  of the two values. Passed in values are 2-tuples. Average of the L and R values is
 #  used to computed average
