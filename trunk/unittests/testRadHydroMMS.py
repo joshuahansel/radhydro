@@ -89,12 +89,12 @@ class TestRadHydroMMS(unittest.TestCase):
       E   = E.subs(substitutions)
       psim = psim.subs(substitutions)
       psip = psip.subs(substitutions)
-      rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy", dummify=False)
-      u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy", dummify=False)
-      mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy", dummify=False)
-      E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy", dummify=False)
-      psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy", dummify=False)
-      psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy", dummify=False)
+      rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy")
+      u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy")
+      mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy")
+      E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy")
+      psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy")
+      psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
       
       # create uniform mesh
       n_elems = 50
