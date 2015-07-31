@@ -13,7 +13,7 @@ from hydroSource import computeMomentumExtraneousSource,\
 from takeRadiationStep import takeRadiationStep
 from hydroSlopes import HydroSlopes
 from musclHancock import hydroPredictor, hydroCorrector
-from balanceChecker import BalanceChecker
+#from balanceChecker import BalanceChecker
 from plotUtilities import plotHydroSolutions
 
 ## Runs transient for a radiation-only problem.
@@ -404,9 +404,9 @@ def runNonlinearTransient(mesh, problem_type,
                 Qerg_older   = Qerg_older)
 
        #Compute Balance
-       bal = BalanceChecker(mesh, time_stepper, dt)
-       bal.computeRadiationBalance(psi_left, psi_right, hydro_old,
-               hydro_new, rad_old, rad_new, write=True)
+       #bal = BalanceChecker(mesh, time_stepper, dt)
+       #bal.computeRadiationBalance(psi_left, psi_right, hydro_old,
+       #        hydro_new, rad_old, rad_new, write=True)
 
 
        # save older solutions
@@ -524,6 +524,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        # perform predictor step of MUSCL-Hancock
        hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
 
+       #plotHydroSolutions(mesh, hydro_old)
        #plotHydroSolutions(mesh, hydro_star)
 
        if debug_mode:
@@ -558,6 +559,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           Qpsi_older   = Qpsi_older, # this is a dummy argument
           Qmom_older   = Qmom_older, # this is a dummy argument
           Qerg_older   = Qerg_older) # this is a dummy argument
+
+       #plotHydroSolutions(mesh, hydro_half)
 
        if debug_mode:
           print "hydro_half:"

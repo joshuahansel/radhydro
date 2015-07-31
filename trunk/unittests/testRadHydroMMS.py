@@ -7,7 +7,7 @@ import sys
 sys.path.append('../src')
 
 # symbolic math packages
-from sympy import symbols, exp, sin, pi
+from sympy import symbols, exp, sin, pi, sympify
 from sympy.utilities.lambdify import lambdify
 
 # numpy
@@ -41,15 +41,15 @@ class TestRadHydroMMS(unittest.TestCase):
       x, t, alpha, c = symbols('x t alpha c')
       
       # create solution for thermodynamic state and flow field
-      rho = symbols('1')
-      u   = symbols('1')
-      E   = symbols('10')
+      #rho = sympify('1')
+      #u   = sympify('1')
+      #E   = sympify('10')
       #rho = 1 + x - t
-      #u   = symbols('1')
+      #u   = sympify('1')
       #E   = 5 + 5*(x - 0.5)**2
-      #rho = exp(x+t)
-      #u   = exp(-x)*sin(t) - 1
-      #E   = 10*exp(x+t)
+      rho = exp(x+t)
+      u   = exp(-x)*sin(t) - 1
+      E   = 10*exp(x+t)
       
       # create solution for radiation field
       #rad_scale = 1
@@ -57,6 +57,8 @@ class TestRadHydroMMS(unittest.TestCase):
       #psip = rad_scale*t*sin(pi*x)*0.+20*c
       psim = 50*c
       psip = 50*c
+      #psim = sympify('0')
+      #psip = sympify('0')
       
       # numeric values
       alpha_value = 0.01
@@ -124,8 +126,8 @@ class TestRadHydroMMS(unittest.TestCase):
 
       # transient options
       t_start  = 0.0
-      t_end = 0.01
-#      t_end = 0.002
+#      t_end = 0.005
+      t_end = 0.1
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -136,8 +138,11 @@ class TestRadHydroMMS(unittest.TestCase):
          mesh         = mesh,
          problem_type = 'rad_hydro',
          dt_option    = 'CFL',
+         #dt_option    = 'constant',
          CFL          = 0.5,
-         use_2_cycles = True,
+         #dt_constant  = t_end,
+         #use_2_cycles = True,
+         use_2_cycles = False,
          t_start      = t_start,
          t_end        = t_end,
          psi_left     = psi_left,

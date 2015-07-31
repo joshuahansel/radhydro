@@ -6,7 +6,7 @@ import sys
 sys.path.append('../src')
 
 # symbolic math packages
-from sympy import symbols, exp, sin, pi
+from sympy import symbols, exp, sin, pi, sympify
 from sympy.utilities.lambdify import lambdify
 
 # numpy
@@ -39,15 +39,15 @@ class TestHydroMMS(unittest.TestCase):
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-      rho = symbols('1')
-      u   = symbols('1')
-      E   = symbols('10')
+      rho = sympify('1')
+      u   = sympify('1')
+      E   = sympify('10')
       #rho = 1+x-t
-      #u   = symbols('1')
+      #u   = sympify('1')
       #E   = 5 + 5*(x-0.5)**2
       #rho = exp(x+t)
       #u   = exp(-x)*sin(t) - 1
-      #E   = symbols('10')
+      #E   = sympify('10')
       
       # create solution for radiation field
       psim = 0

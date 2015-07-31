@@ -9,7 +9,7 @@
 from IPython.display import display
 
 # symbolic math packages
-from sympy import symbols, sqrt, diff, Eq, init_printing
+from sympy import symbols, sqrt, diff, Eq, init_printing, simplify, sympify
 from sympy.utilities.lambdify import lambdify
 
 import numpy as np # numpy
@@ -197,11 +197,11 @@ def createMMSSourceFunctionsRadHydro(rho, u, E, psim, psip,
    phi = psim + psip
    Er = phi/c
    Fr = (psip - psim)/sqrt(3)
-   Fr0 = Fr - 4/3*Er*u
+   Fr0 = Fr - sympify('4/3')*Er*u
    Q0 = siga*a*c*T**4 - sigt*u/c*Fr0
-   Q1 = 4/3*sigt*Er*u
-   Qm = Q0 - 3/sqrt(3)*Q1
-   Qp = Q0 + 3/sqrt(3)*Q1
+   Q1 = sympify('4/3')*sigt*Er*u
+   Qm = Q0 - sympify('3/sqrt(3)')*Q1
+   Qp = Q0 + sympify('3/sqrt(3)')*Q1
    
    # temporal derivatives
    drhodt   = diff(rho,t)
@@ -238,7 +238,7 @@ def createMMSSourceFunctionsRadHydro(rho, u, E, psim, psip,
       display(eq)
       eq = Eq(symbols('E'),E)
       display(eq)
-      eq = Eq(symbols('e'),e)
+      eq = Eq(symbols('e'),simplify(e))
       display(eq)
       eq = Eq(symbols('T'),T)
       display(eq)
