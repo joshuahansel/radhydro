@@ -42,12 +42,15 @@ class TestHydroMMS(unittest.TestCase):
       #rho = sympify('1')
       #u   = sympify('1')
       #E   = sympify('10')
-      rho = 1+x-t
-      u   = sympify('1')
-      E   = 5 + 5*(x-0.5)**2
-      #rho = exp(x+t)
-      #u   = exp(-x)*sin(t)-1
-      #E   = 10*exp(x+t)
+      #rho = 1+x-t
+      #u   = sympify('1')
+      #E   = 5 + 5*(x-0.5)**2
+      rho = exp(x+t)
+      u   = exp(-x)*sin(t)-1
+      E   = 10*exp(x+t)
+      #rho = 1 + sin(pi*x)
+      #u   = 1/(1 + sin(pi*x))
+      #E   = 10 + sin(pi*x)
       
       # create solution for radiation field
       psim = sympify('0')
@@ -68,7 +71,7 @@ class TestHydroMMS(unittest.TestCase):
          gamma_value   = gamma_value,
          cv_value      = cv_value,
          alpha_value   = alpha_value,
-         display_equations = True)
+         display_equations = False)
 
       # create functions for exact solutions
       substitutions = dict()
@@ -113,7 +116,7 @@ class TestHydroMMS(unittest.TestCase):
 
       # transient options
       t_start  = 0.0
-      t_end = 0.1
+      t_end = 0.02
       #dt_constant = 0.001
       #t_end = dt_constant
 
