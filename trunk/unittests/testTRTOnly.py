@@ -34,7 +34,7 @@ class TestTRTOnly(unittest.TestCase):
       # time step size and transient start and end times
       dt      = 0.001
       t_start = 0.
-      t_end   = 0.04
+      t_end   = 0.001
 
       # initialize temperature
       T_init = 0.05

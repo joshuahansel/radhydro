@@ -13,7 +13,7 @@ from hydroSource import computeMomentumExtraneousSource,\
 from takeRadiationStep import takeRadiationStep
 from hydroSlopes import HydroSlopes
 from musclHancock import hydroPredictor, hydroCorrector
-
+from balanceChecker import BalanceChecker
 from plotUtilities import plotHydroSolutions
 
 ## Runs transient for a radiation-only problem.
@@ -274,6 +274,7 @@ def runNonlinearTransient(mesh, problem_type,
                  slopes_older = slopes_older,
                  e_slopes_old = e_slopes_old,
                  e_slopes_older = e_slopes_older,
+                 slope_limiter = slope_limiter,
                  psim_src     = psim_src,
                  psip_src     = psip_src,
                  mom_src      = mom_src,
@@ -402,6 +403,12 @@ def runNonlinearTransient(mesh, problem_type,
                 Qmom_older   = Qmom_older,
                 Qerg_older   = Qerg_older)
 
+       #Compute Balance
+       bal = BalanceChecker(mesh, time_stepper, dt)
+       bal.computeRadiationBalance(psi_left, psi_right, hydro_old,
+               hydro_new, rad_old, rad_new, write=True)
+
+
        # save older solutions
        cx_older  = deepcopy(cx_old)
        rad_older = deepcopy(rad_old)
@@ -421,6 +428,9 @@ def runNonlinearTransient(mesh, problem_type,
        Qpsi_old = deepcopy(Qpsi_new)
        Qmom_old = deepcopy(Qmom_new)
        Qerg_old = deepcopy(Qerg_new)
+
+
+
 
    # return final solutions
    return rad_new, hydro_new

@@ -15,6 +15,7 @@ from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotScalarFlux, makeContinuousXPoints
 from radUtilities import computeScalarFlux, extractAngularFluxes
 from integrationUtilities import computeL1ErrorLD
+from balanceChecker import BalanceChecker
 
 ## Derived unittest class to run a diffusion problem and compare to exact solution.
 #
@@ -83,6 +84,9 @@ class TestDiffusionProblem(unittest.TestCase):
       # check that L1 error is small
       n_decimal_places = 3
       self.assertAlmostEqual(L1_relative_error,0.0,n_decimal_places)
+
+      bal = BalanceChecker(mesh, None, None)
+      bal.computeSSRadBalance(0.0, 0.0, rad, sig_a, 0.5*Q)
 
 
 # run main function from unittest module
