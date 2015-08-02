@@ -204,6 +204,15 @@ def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
         erg_F[i+1] = riem_solver(erg_r_p[i], erg_l_p[i+1], states_r[i],
                 states_l[i+1], ergFlux)
 
+    #Store the boundary condition fluxes
+    bound_F_left = {}
+    bound_F_right = {}
+    bound_F_left['rho'] = rho_F[0]
+    bound_F_left['mom'] = mom_F[0]
+    bound_F_left['erg'] = erg_F[0]
+    bound_F_right['rho'] = rho_F[-1]
+    bound_F_right['mom'] = mom_F[-1]
+    bound_F_right['erg'] = erg_F[-1]
 
     #Intialize cell average quantity arrays at t_old
     rho = [s.rho for s in states_old_a]
@@ -226,7 +235,7 @@ def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
     for i in range(len(states_a)):
         states_a[i].updateState(rho[i],mom[i],erg[i])
 
-    return states_a
+    return states_a, bound_F_left, bound_F_right
 
 #------------------------------------------------------------------------------------
 # Define some functions for evaluating fluxes for different state variables

@@ -14,7 +14,7 @@ from takeRadiationStep import takeRadiationStep
 from hydroSlopes import HydroSlopes
 from musclHancock import hydroPredictor, hydroCorrector
 #from musclHancockJosh import hydroPredictor, hydroCorrector
-#from balanceChecker import BalanceChecker
+from balanceChecker import BalanceChecker
 from plotUtilities import plotHydroSolutions
 
 ## Runs transient for a radiation-only problem.
@@ -296,7 +296,7 @@ def runNonlinearTransient(mesh, problem_type,
 
              # take time step with MUSCL-Hancock
              hydro_half, rad_half, cx_half, slopes_old, e_slopes_half,\
-             Qpsi_half, Qmom_half, Qerg_half =\
+             Qpsi_half, Qmom_half, Qerg_half, hydro_F_left, hydro_F_right =\
                 takeTimeStepMUSCLHancock(
                 mesh           = mesh,
                 dt             = 0.5*dt, 
@@ -332,7 +332,7 @@ def runNonlinearTransient(mesh, problem_type,
 
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_half, e_slopes_new,\
-             Qpsi_new, Qmom_new, Qerg_new =\
+             Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right =\
                 takeTimeStepMUSCLHancock(
                 mesh           = mesh,
                 dt             = 0.5*dt, 
@@ -374,7 +374,7 @@ def runNonlinearTransient(mesh, problem_type,
 
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
-             Qpsi_new, Qmom_new, Qerg_new =\
+             Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right =\
                 takeTimeStepMUSCLHancock(
                 mesh           = mesh,
                 dt             = dt, 
@@ -407,9 +407,10 @@ def runNonlinearTransient(mesh, problem_type,
                 verbose      = verbose)
 
        #Compute Balance
-       #bal = BalanceChecker(mesh, time_stepper, dt)
-       #bal.computeRadiationBalance(psi_left, psi_right, hydro_old,
-       #        hydro_new, rad_old, rad_new, write=True)
+       bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
+       bal.computeBalance(psi_left, psi_right, hydro_old,
+               hydro_new, rad_old, rad_new, hydro_F_right=hydro_F_right,
+               hydro_F_left=hydro_F_left, src_totals=src_totals, write=True)
 
 
        # save older solutions
@@ -431,9 +432,6 @@ def runNonlinearTransient(mesh, problem_type,
        Qpsi_old = deepcopy(Qpsi_new)
        Qmom_old = deepcopy(Qmom_new)
        Qerg_old = deepcopy(Qerg_new)
-
-
-
 
    # return final solutions
    return rad_new, hydro_new
@@ -580,7 +578,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        #hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=False)
 
        # perform corrector step of MUSCL-Hancock
-       hydro_star = hydroCorrector(mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
+       hydro_star, hydro_F_left, hydro_F_right = hydroCorrector(mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
 
        if debug_mode:
           print "hydro_star corrector:"
@@ -626,7 +624,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
              print i
 
        return hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
-          Qpsi_new, Qmom_new, Qerg_new
+          Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right
 
 
 ## Computes all extraneous sources

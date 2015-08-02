@@ -25,7 +25,7 @@ class TestHydro(unittest.TestCase):
    def test_Hydro(self):
 
       # create mesh
-      n_elems = 400
+      n_elems = 100
       width = 1.0
       mesh = Mesh(n_elems,width)
       x_diaphragm = 0.3
