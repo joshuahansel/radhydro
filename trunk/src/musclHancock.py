@@ -126,7 +126,7 @@ def hydroPredictor(mesh, states_old_a, slopes, dt):
 #
 def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
 
-    debug_mode = False
+    debug_mode = True
 
     #Choose riemann solver
     riem_solver = HLLCSolver #HLLSolver, HLLCSolver

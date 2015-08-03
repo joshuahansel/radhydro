@@ -773,7 +773,8 @@ class PlanckianTerm(TransientSourceTerm):
         rho = computeEdgeDensities(i, state_prev, slopes_old)
         T = computeEdgeTemperatures(state_prev, e_slopes_old[i])
         e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
-        e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
+        print "ALSO CHANGING e_star in planckian"
+        e_star = computeEdgeInternalEnergies(state_star, slopes_old.erg_slopes[i])
 
         # compute Planckian term for each edge on element
         planckian = [0.0,0.0]

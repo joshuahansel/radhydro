@@ -194,6 +194,10 @@ def runNonlinearTransient(mesh, problem_type,
        # take time step
        if problem_type == 'rad_mat':
 
+          #Force balance checker vars to zeros
+          hydro_F_left = {"rho":0.,"erg":0.,"mom":0.}
+          hydro_F_right = {"rho":0.,"erg":0.,"mom":0.}
+
           if time_stepper == 'TRBDF2':
 
               # take a half time step with CN
@@ -287,7 +291,7 @@ def runNonlinearTransient(mesh, problem_type,
                  Qmom_older   = Qmom_older,
                  Qerg_older   = Qerg_older)
 
-       else:
+       else: #a rad hydro problem
 
           # if user chose to use the 2-cycle scheme
           if use_2_cycles:
@@ -296,7 +300,8 @@ def runNonlinearTransient(mesh, problem_type,
 
              # take time step with MUSCL-Hancock
              hydro_half, rad_half, cx_half, slopes_old, e_slopes_half,\
-             Qpsi_half, Qmom_half, Qerg_half, hydro_F_left, hydro_F_right =\
+             Qpsi_half, Qmom_half, Qerg_half, hydro_F_left, hydro_F_right,\
+             src_totals =\
                 takeTimeStepMUSCLHancock(
                 mesh           = mesh,
                 dt             = 0.5*dt, 
@@ -332,7 +337,8 @@ def runNonlinearTransient(mesh, problem_type,
 
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_half, e_slopes_new,\
-             Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right =\
+             Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
+             src_totals =\
                 takeTimeStepMUSCLHancock(
                 mesh           = mesh,
                 dt             = 0.5*dt, 
@@ -372,9 +378,17 @@ def runNonlinearTransient(mesh, problem_type,
              else:
                 time_stepper_corrector = 'BDF2'
 
+             # predictor always CN basically
+             time_stepper_predictor = 'CN'
+
+             print "HACKED IN BE IN TRANSIENT"
+             time_stepper_predictor = 'BE'
+             time_stepper_corrector = 'BE'
+
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
-             Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right =\
+             Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
+             src_totals =\
                 takeTimeStepMUSCLHancock(
                 mesh           = mesh,
                 dt             = dt, 
@@ -405,6 +419,8 @@ def runNonlinearTransient(mesh, problem_type,
                 Qmom_older   = Qmom_older,
                 Qerg_older   = Qerg_older,
                 verbose      = verbose)
+
+       print "MMS Soruce totals not computed yet!"
 
        #Compute Balance
        bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
@@ -615,6 +631,14 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           Qerg_older   = Qerg_older,
           verbose      = verbose)
 
+       #Accumulate sources over entire time step
+       src_totals = {}
+       vol = mesh.getElement(0).dx
+
+       #Add in corrector energies
+       src_totals["mom"] = sum([vol*dt*i for i in Qmom_new])
+       src_totals["erg"] = sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
+
        if verbose:
           print ""
 
@@ -624,7 +648,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
              print i
 
        return hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
-          Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right
+          Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
+          src_totals
 
 
 ## Computes all extraneous sources

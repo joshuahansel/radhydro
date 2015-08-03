@@ -70,7 +70,7 @@ class BalanceChecker:
     #
     def computeBalance(self, psi_left, psi_right, hydro_old,
             hydro_new, rad_old, rad_new, hydro_F_left=None, hydro_F_right=None, 
-            Q_ext={"rad":0.0,"mass":0.0,"erg":0.0,"mom":0.0}, write=True):
+            src_totals={"rad":0.0,"mass":0.0,"erg":0.0,"mom":0.0}, write=True):
 
         #assume uniform volume
         vol = self.mesh.getElement(0).dx
@@ -99,7 +99,7 @@ class BalanceChecker:
         mom_new = sum([vol*(i.rho*i.u) for i in hydro_new])
         mom_old = sum([vol*(i.rho*i.u) for i in hydro_old])
 
-        if (self.time_stepper == 'BE' and self.prob == 'rad_mat'):
+        if (self.prob == 'rad_mat'):
 
             erg_bal = em_new + Er_new - Er_old - em_old - (j_in - j_out_new)*dt 
             mass_bal = mass_new - mass_old
@@ -110,9 +110,9 @@ class BalanceChecker:
             mass_bal = mass_new - mass_old + dt*(hydro_F_right["rho"] -
                 hydro_F_left["rho"])
             mom_bal = mom_new - mom_old + dt*(hydro_F_right["mom"] -
-                hydro_F_left["mom"])
+                hydro_F_left["mom"]) - src_totals["mom"]
             erg_bal = em_new + KE_new - em_old - KE_old + dt*(hydro_F_right["erg"] -
-                    hydro_F_left["erg"])
+                    hydro_F_left["erg"]) - src_totals["erg"]
 
                 
         #simple balance
@@ -137,9 +137,15 @@ class BalanceChecker:
             print "momentum flux right:   %.6e" % (hydro_F_right["mom"]*dt)
             print "energy flux right:     %.6e" % (hydro_F_right["erg"]*dt)
             print "-----------------------------------------------------"
-            print "        Mass Balance (Relative):  %.6e (%.6e)" % (mass_bal, mass_bal/(mass_new))
-            print "    Momentum Balance (Relative):  %.6e (%.6e)" % (mom_bal, mom_bal/(mom_new))
-            print "      Energy Balance (Relative):  %.6e (%.6e)" % (erg_bal, erg_bal/(em_new+Er_new))
+            print "Momentum source total: %.6e" % (src_totals["mom"])
+            print "Energy source total:   %.6e" % (src_totals["erg"])
+            print "-----------------------------------------------------"
+            print "        Mass Balance (Relative):  %.6e (%.6e)" % (mass_bal,
+                    mass_bal/max(mass_new,1.E-65))
+            print "    Momentum Balance (Relative):  %.6e (%.6e)" % (mom_bal, 
+                    mom_bal/max(mom_new+src_totals["mom"],1.E-65))
+            print "      Energy Balance (Relative):  %.6e (%.6e)" % (erg_bal,
+                    erg_bal/max(em_new+Er_new+src_totals["erg"],1.E-65))
             print "=====================================================\n"
 
 

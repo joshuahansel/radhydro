@@ -66,7 +66,9 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
 
         # compute edge internal energies
         e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
-        e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
+
+        print "CHANGING SLOPES IN UPDATEINTERNAL ENERGY"
+        e_star = computeEdgeInternalEnergies(state_star, slopes_old.erg_slopes[i])
 
         # loop over edges to compute new internal energies
         e_new = np.zeros(2)
@@ -194,6 +196,7 @@ class QEHandler(TransientSourceTerm):
         Q_local = np.array(evalEnergyExchange(i, rad=rad_prev, hydro=hydro_prev,
                            cx=cx_prev, slopes=slopes_old))\
            + np.array(Qerg_new[i])
+
         return Q_local
 
     #--------------------------------------------------------------------------------

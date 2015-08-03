@@ -37,10 +37,10 @@ class TestHydroMMS(unittest.TestCase):
    def test_HydroMMS(self):
       
       # number of elements in first cycle
-      n_elems = 10
+      n_elems = 20
 
       # number of refinement cycles
-      n_cycles = 4
+      n_cycles = 1
 
       # declare symbolic variables
       x, t, alpha = symbols('x t alpha')
@@ -49,15 +49,15 @@ class TestHydroMMS(unittest.TestCase):
       #rho = sympify('1')
       #u   = sympify('1')
       #E   = sympify('10')
-      #rho = 1+x-t
-      #u   = sympify('1')
-      #E   = 5 + 5*(x-0.5)**2
+      rho = 1+x-t
+      u   = sympify('1')
+      E   = 5 + 5*(x-0.5)**2*0.0 + 5*x
       #rho = exp(x+t)
       #u   = exp(-x)*sin(t) - 1
       #E   = 10*exp(x+t)
-      rho = 1 + sin(pi*x)
-      u   = 1/(1 + sin(pi*x))
-      E   = 10 + sin(pi*x)
+    #  rho = 1 + sin(pi*x)
+    #  u   = 1/(1 + sin(pi*x))
+    #  E   = 10 + sin(pi*x)
       
       # create solution for radiation field
       psim = sympify('0')
@@ -98,6 +98,7 @@ class TestHydroMMS(unittest.TestCase):
       width = 1.0
       t_start  = 0.0
       t_end = 0.05
+      t_end = 0.009085
 
       # compute radiation BC; assumes BC is independent of time
       psi_left  = psip_f(x=0.0,   t=0.0)
