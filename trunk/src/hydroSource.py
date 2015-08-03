@@ -60,6 +60,8 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         # compute edge velocities
         u_new  = computeEdgeVelocities(i, state_new,  slopes_old)
         u_star = computeEdgeVelocities(i, state_star, slopes_old)
+        print " THe new velocity is", u_new
+        print " THe new star is", u_star
 
         # compute edge temperatures
         T_prev = computeEdgeTemperatures(state_prev, e_slopes_old[i])

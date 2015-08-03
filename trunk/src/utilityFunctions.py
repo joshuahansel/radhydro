@@ -262,6 +262,7 @@ def computeEffectiveOpacities(time_stepper, dt, cx_prev, hydro_prev,
         # get density and temperature at edges
         rho = computeEdgeDensities(i, state, slopes_old)
         T   = computeEdgeTemperatures(state, e_slopes_old[i])
+        print "NOT SURE T USES THE RIGHT STUFF"
 
         # loop over edges
         for x in range(2): 
