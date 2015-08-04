@@ -1,0 +1,83 @@
+\documentclass[preprint,12pt]{elsarticle}
+\usepackage{amsmath}
+
+\begin{document}
+
+\section{Slope Confusion}
+
+We want to conserve total energy $E$ in the system by preserving the average $E$ in
+each cell.  We need the internal energy $e$ at edges (and thus a
+corresponding slope) such that the total energy in each cell is conserved, at least
+this is my understanding.
+
+For now, forget about the different $e$-slope that comes from the radiation solve. We have
+slopes $\Delta$ for all hydro conserved variables from the hydro solver. Thus,
+\begin{equation}\label{E}
+    E_{L/R} = E_i \pm \Delta_E
+\end{equation}
+Similarly, 
+\begin{equation}
+    \rho_L/R = \rho_i \pm \Delta_\rho
+\end{equation}
+The edge momentums are 
+\begin{equation}
+    (\rho u)_{L/R} = (\rho_i u_i) \pm \Delta_{\rho u}
+\end{equation}
+giving edge velocities 
+\begin{equation}
+    u_{L/R} = \frac{(\rho u)_{L/R}}{  \rho_{L/R} }
+\end{equation}
+Then, we can choose the edge internal energies to be
+\begin{equation}\label{e_edge}
+    \tilde e_{L} = \frac{E_L}{\rho_L} - \frac{1}{2} u_L^2
+\end{equation}
+and the same expression for with $L\rightarrow R$. Now, clearly this will give us an expression that
+conserves the average total energy, i.e.,
+\begin{equation}
+    \frac{1}{2}\left[\rho_L(\tilde e_L + \frac{1}{2} u_L^2) + \rho_R(\tilde e_R + \frac{1}{2}
+    u_R^2)\right]  = \frac{1}{2}(E_L + E_R) = E_i
+\end{equation}
+where the last equality is guaranteed by Eq.~\eqref{E}. 
+
+The discrepancy I don't understand is
+\begin{equation}
+  e_i \neq \frac{1}{2}\left(  \tilde{e}_L + \tilde{e}_r \right)
+\end{equation}
+So I see no way to write the internal energy as
+\begin{equation}
+    e_{L/R} = e_i \pm \Delta_e
+\end{equation}
+such that the average total energy and average internal energy is conserved (this is an
+overdefined system), so I don't see how to incorporate the $\Delta_e$ from the
+radiation $e$-slopes into the edge values for $e^*$. It seems to me that we should
+choose $e_{L/R}^*$ using Eq.~\eqref{e_edge}, or the total energy is not conserved.
+Any similar approach using the rad slopes would have to produce the same $e_{L/R}$
+values as Eq.~\eqref{e_edge} to
+produce $E_R$ and $E_L$ correctly.
+
+\section{Implementation}
+
+I will now explain what the code currently does and why I think it is wrong.
+Consider the case of the hydro MMS (rad-hydro algorithm, but we have set $\sigma_t =
+0$).  This is the simplified version of Eq. 34 in manual.pdf.
+
+In the corrector step, of going from $t_n$ to $t_{n+1}$, assume we have states at $*$ from the Riemann solvers,
+and now we are going to $n+1$ from
+$*$ based on the MMS sources. We evaluate the momentum update equation at the cell
+centered values (if there were radiation terms on the right hand side we just average the $L$ and $R$ values
+to get the center values). So it is simply
+\begin{equation}
+    \rho_i(u_i^{n+1} - u_i^{*}) = Q^\rho_i \Delta t 
+\end{equation}
+which preserves the average momentum.
+
+For the energy equation, we do the updates at each edge value. The $L$ equation is
+\begin{equation}
+    E_{i,L}^{n+1} - E_{i,L}^* = Q^E_i \Delta t
+\end{equation}
+In implementation, we construct $E*_L = \rho^*_L(e^*_L + u_L^{*2}/2)$.  But $e^*_L$ is
+constructed as $e^*_i - \Delta e$.  Thus, from my argument above, $E_L^*\neq E_i^* - \Delta E$, and
+therefore the average of the left and right equations does not produce $E_i^*$
+correctly, ultimately yielding the discrepancy in total energy conservation.
+
+\end{document}
