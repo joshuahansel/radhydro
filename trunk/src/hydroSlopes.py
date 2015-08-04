@@ -31,6 +31,34 @@ class HydroSlopes:
        self.mom_slopes = self.slopeReconstruction(mom, mom_L, mom_R)
        self.erg_slopes = self.slopeReconstruction(erg, erg_L, erg_R)
 
+       # compute an internal energy slope such that the edge internal energies conserve the TOTAL energy
+       # I DONT THINK THIS IS RIGHT OR EVEN POSSILBE?
+ #      rho_l, rho_r, mom_l, mom_r, erg_l, erg_r = self.createLinearRepresentation(states)
+
+ #      self.e_slopes = np.zeros(len(states))
+ #      for i in range(len(states)):
+ #       
+ #         el = erg_l[i]/rho_l[i] - 0.5*mom_l[i]**2./rho_l[i]**2.
+ #         er = erg_r[i]/rho_r[i] - 0.5*mom_r[i]**2./rho_r[i]**2.
+
+ #         ul = mom_l[i]/rho_l[i]
+ #         ur = mom_r[i]/rho_r[i]
+ #         print "New E?", (0.5*( rho_r[i]*(er + 0.5*ur*ur) + rho_l[i]*(el+0.5*ul*ul)))
+ #       
+ #         print "What the fuCK!?", 0.5*(el+er), states[i].e
+ #         self.e_slopes[i] = (er - el)
+
+ #      print "CHECKING: ",
+ #      for i in range(len(states)):
+ #        
+ #         print "Average E", states[i].getConservativeVariables()[2]
+ #         el = states[i].e - 0.5*self.e_slopes[i]
+ #         er = states[i].e + 0.5*self.e_slopes[i]
+ #         ul = mom_l[i]/rho_l[i]
+ #         ur = mom_r[i]/rho_r[i]
+ #         El = rho_l[i]*(el + 0.5*ul**2)
+ #         Er = rho_r[i]*(er + 0.5*ur**2)
+ #         print "New E", 0.5*(El+Er)
 
     ## Creates linear representation for solution using slopes
     #

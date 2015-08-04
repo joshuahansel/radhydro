@@ -773,15 +773,12 @@ class PlanckianTerm(TransientSourceTerm):
         u_new = computeEdgeVelocities(i, hydro_new[i], slopes_old)
         u_star= computeEdgeVelocities(i, hydro_star[i], slopes_old)
 
-        print "U new", u_new
-        print "U_star", u_star
-
         # compute edge quantities
         rho = computeEdgeDensities(i, state_prev, slopes_old)
         T = computeEdgeTemperatures(state_prev, e_slopes_old[i])
         e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
-        print "ALSO CHANGING e_star in planckian"
-        e_star = computeEdgeInternalEnergies(state_star, slopes_old.erg_slopes[i])
+        e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
+        print "HERE IS THE OTHER SLOPE"
 
         # compute Planckian term for each edge on element
         planckian = [0.0,0.0]

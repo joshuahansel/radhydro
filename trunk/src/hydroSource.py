@@ -70,7 +70,16 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
 
         print "CHANGING SLOPES IN UPDATEINTERNAL ENERGY"
-        e_star = computeEdgeInternalEnergies(state_star, slopes_old.erg_slopes[i])
+        e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
+        print "old e_star_avg: ", state_star.e
+        print "new e_star_avg: ", 0.5*(e_star[0] + e_star[1])
+        print "LEFT RIGHT WTF?!", e_star[0], e_star[1]
+
+        # Compute the total energy before and after
+        E_l = rho[0]*(0.5*u_star[0]*u_star[0] + e_star[0])
+        E_r = rho[1]*(0.5*u_star[1]*u_star[1] + e_star[1])
+        print "Old E_star avg: ", state_star.getConservativeVariables()[2]
+        print "New E_star avg: ", 0.5*(E_l + E_r)
 
         # loop over edges to compute new internal energies
         e_new = np.zeros(2)
