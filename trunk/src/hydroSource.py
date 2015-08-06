@@ -33,7 +33,7 @@ def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
 #  param[in,out] hydro_new  contains new velocities
 #
 def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
-    hydro_prev, hydro_star, slopes_old, e_slopes_old):
+    hydro_prev, hydro_star, slopes_old, e_slopes_old, E_slopes_old=None):
  
     # constants
     a = GC.RAD_CONSTANT
@@ -59,9 +59,7 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
 
         # compute edge velocities
         u_new  = computeEdgeVelocities(i, state_new,  slopes_old)
-        u_star = computeEdgeVelocities(i, state_star, slopes_old)
         print " THe new velocity is", u_new
-        print " THe new star is", u_star
 
         # compute edge temperatures
         T_prev = computeEdgeTemperatures(state_prev, e_slopes_old[i])
@@ -76,9 +74,13 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         print "new e_star_avg: ", 0.5*(e_star[0] + e_star[1])
         print "LEFT RIGHT WTF?!", e_star[0], e_star[1]
 
+        #Compute the total energy at left and right
+        E_star = [hydro_star[i].E() - 0.5*E_slopes_old[i],
+                  hydro_star[i].E() + 0.5*E_slopes_old[i]]
+
         # Compute the total energy before and after
-        E_l = rho[0]*(0.5*u_star[0]*u_star[0] + e_star[0])
-        E_r = rho[1]*(0.5*u_star[1]*u_star[1] + e_star[1])
+        E_l = E_star[0]
+        E_r = E_star[1]
         print "Old E_star avg: ", state_star.getConservativeVariables()[2]
         print "New E_star avg: ", 0.5*(E_l + E_r)
 
@@ -102,8 +104,8 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
 
             # compute new internal energy
             e_new[x] = (1.0-nu)*scale*dt/rho[x] * (sig_a*c*(Er - aT4) + QE_elem/scale)\
-               + (1.0-nu)*e_star[x] + nu*e_prev[x]\
-               - 0.5*(1.0-nu)*(u_new[x]**2 - u_star[x]**2)
+               + (1.0-nu)*E_star[x]/rho[x] + nu*e_prev[x]\
+               - 0.5*(1.0-nu)*(u_new[x]**2)
 
         # compute new average internal energy
         e_new_avg = 0.5*e_new[0] + 0.5*e_new[1]

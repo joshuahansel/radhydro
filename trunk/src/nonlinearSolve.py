@@ -6,8 +6,10 @@ from copy import deepcopy
 
 from takeRadiationStep import takeRadiationStep
 from utilityFunctions import computeL2RelDiff, computeEffectiveOpacities,\
-   updateCrossSections
+   updateCrossSections, computeHydroInternalEnergies
 from hydroSource import updateVelocity, updateInternalEnergy, QEHandler
+from radSlopesHandler import RadSlopes
+
 
 ## Performs nonlinear solve
 #
@@ -38,6 +40,9 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
    converged = False
    k = 0
 
+   #Rad slopes handler
+   rad_slopes = RadSlopes(hydro_star, slopes_old)
+
    # perform nonlinear iterations:
    while not converged:
 
@@ -63,7 +68,19 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
              Qmom_new     = Qmom_new,
              Qmom_old     = Qmom_old,
              Qmom_older   = Qmom_older)
-        
+
+       # Compute E_slopes for use by E_star state
+       # For now it is hardcoded with E_star slopes
+       e_slopes = []
+       e_avg = []
+       for i in xrange(len(hydro_star)):
+          e_star = computeHydroInternalEnergies(i,hydro_star[i],slopes_old)
+          e_slopes.append(e_star[1] - e_star[0])
+          e_avg.append(0.5*(e_star[1]+e_star[0]))
+       # Compute E_slopes
+       E_slopes_old = rad_slopes.getTotalEnergySlopes(e_avg,e_slopes)
+       E_slopes_older = deepcopy(E_slopes_old)
+
        # compute QE
        src_handler = QEHandler(mesh, time_stepper)
        QE = src_handler.computeTerm(
@@ -78,6 +95,8 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
           hydro_older = hydro_older,
           slopes_old  = slopes_old,
           slopes_older = slopes_older,
+          E_slopes_old = E_slopes_old,
+          E_slopes_older = E_slopes_older,
           e_slopes_old = e_slopes_old,
           e_slopes_older = e_slopes_older,
           Qerg_new     = Qerg_new,
@@ -116,7 +135,9 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
            QE            = QE,
            slopes_old    = slopes_old,
            slopes_older  = slopes_older,
-           e_slopes_old  = e_slopes_old,
+           E_slopes_old  = E_slopes_old,
+           E_slopes_older = E_slopes_older,
+           e_slopes_old = e_slopes_old,
            e_slopes_older = e_slopes_older,
            Qpsi_new      = Qpsi_new,
            Qpsi_old      = Qpsi_old,
@@ -133,6 +154,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
           hydro_prev   = hydro_prev,
           hydro_star   = hydro_star,
           slopes_old   = slopes_old,
+          E_slopes_old = E_slopes_old,
           e_slopes_old = e_slopes_old)
 
        # check nonlinear convergence

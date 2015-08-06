@@ -157,6 +157,12 @@ class HydroState:
     
        return rho, mom, erg
 
+    def E(self):
+       
+       return self.rho*(0.5*self.u*self.u + self.e)
+
+
+
 
 ## Computes volume
 #

@@ -136,6 +136,11 @@ class TestHydro(unittest.TestCase):
 
          plotHydroSolutions(mesh, hydro_new,x_exact=x_e,exact=hydro_exact)
 
+         # print out the states
+         for i in hydro_new:
+
+             print i
+
   
 # run main function from unittest module
 if __name__ == '__main__':

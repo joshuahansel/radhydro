@@ -150,8 +150,6 @@ def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
         states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
         states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
 
-
-
     # get boundary values and states
     rho_BC_L, rho_BC_R, mom_BC_L, mom_BC_R, erg_BC_L, erg_BC_R =\
        bc.getBoundaryValues()

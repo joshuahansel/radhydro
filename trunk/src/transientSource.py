@@ -751,7 +751,7 @@ class PlanckianTerm(TransientSourceTerm):
     #  @param[in] i             element id
     #  @param[in] cx_prev       previous cross sections \f$\sigma^k\f$
     #
-    def evalImplicit(self, i, dt, cx_prev, hydro_prev, hydro_star, QE, 
+    def evalImplicit(self, i, dt, cx_prev, hydro_prev, hydro_star, E_slopes_old, QE, 
         slopes_old, e_slopes_old, hydro_new=None, **kwargs):
 
         # get coefficient corresponding to time-stepper
@@ -764,20 +764,20 @@ class PlanckianTerm(TransientSourceTerm):
 
         # get previous hydro state and specific heat
         state_prev = hydro_prev[i]
-        spec_heat = state_prev.spec_heat
-
-        # get star state
         state_star = hydro_star[i]
+        spec_heat = state_prev.spec_heat
 
         #Compute edge velocities
         u_new = computeEdgeVelocities(i, hydro_new[i], slopes_old)
-        u_star= computeEdgeVelocities(i, hydro_star[i], slopes_old)
+
+        #Compute left and right star energyes
+        E_star = [state_star.E() - 0.5*E_slopes_old[i],
+                  state_star.E() + 0.5*E_slopes_old[i]]
 
         # compute edge quantities
         rho = computeEdgeDensities(i, state_prev, slopes_old)
         T = computeEdgeTemperatures(state_prev, e_slopes_old[i])
         e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
-        e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
         print "HERE IS THE OTHER SLOPE"
 
         # compute Planckian term for each edge on element
@@ -794,8 +794,8 @@ class PlanckianTerm(TransientSourceTerm):
             # compute Planckian
             emission = (1.0 - nu)*sig_a*a*c*T[edge]**4
             planckian[edge] = emission \
-                -   nu*rho[edge]/(scale*dt)*( e_prev[edge] - e_star[edge] \
-                    +   0.5*(u_new[edge]**2 - u_star[edge]**2) ) \
+                -   nu/(scale*dt)*( rho[edge]*(e_prev[edge] +0.5*u_new[edge]**2)  \
+                -   E_star[edge] ) \
                 + nu*QE_elem/scale 
 
         # get local indices

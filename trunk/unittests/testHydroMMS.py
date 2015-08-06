@@ -40,7 +40,7 @@ class TestHydroMMS(unittest.TestCase):
       n_elems = 50
 
       # number of refinement cycles
-      n_cycles = 4
+      n_cycles = 1
 
       # declare symbolic variables
       x, t, alpha = symbols('x t alpha')
