@@ -37,10 +37,10 @@ class TestHydroMMS(unittest.TestCase):
    def test_HydroMMS(self):
       
       # number of elements in first cycle
-      n_elems = 4
+      n_elems = 50
 
       # number of refinement cycles
-      n_cycles = 1
+      n_cycles = 4
 
       # declare symbolic variables
       x, t, alpha = symbols('x t alpha')
@@ -51,7 +51,7 @@ class TestHydroMMS(unittest.TestCase):
       #E   = sympify('10')
       rho = 1+x-t
       u   = sympify('1')
-      E   = 5 + 50*x#+ 5*(x-0.5)**2
+      E   = 5 + 50*x+t+50*(x-0.5)**2
       #rho = exp(x+t)
       #u   = exp(-x)*sin(t) - 1
       #E   = 10*exp(x+t)

@@ -6,7 +6,7 @@ import globalConstants as GC
 import numpy as np
 import utilityFunctions as UT
 from utilityFunctions import getNu, computeEdgeVelocities, computeEdgeTemperatures,\
-   computeEdgeDensities, computeEdgeInternalEnergies
+   computeEdgeDensities, computeEdgeInternalEnergies, computeHydroInternalEnergies
 
 #--------------------------------------------------------------------------------
 ## Updates velocities.
@@ -70,7 +70,8 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
 
         print "CHANGING SLOPES IN UPDATEINTERNAL ENERGY"
-        e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
+        e_star = computeHydroInternalEnergies(i, state_star, slopes_old)
+       # e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
         print "old e_star_avg: ", state_star.e
         print "new e_star_avg: ", 0.5*(e_star[0] + e_star[1])
         print "LEFT RIGHT WTF?!", e_star[0], e_star[1]
@@ -106,6 +107,21 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
 
         # compute new average internal energy
         e_new_avg = 0.5*e_new[0] + 0.5*e_new[1]
+
+        #Compute a new total energy at each edge, that is what we are really
+        #conserving and this will ensure regular hydro is unchanged
+        print "The old way of e_avg", e_new_avg
+        print "Hacking in a new internal energy computation"
+        E_new = [rho[x]*(0.5*u_new[x]**2 + e_new[x]) for x in range(2)]
+        E_new_avg = 0.5*(E_new[0] + E_new[1])
+        e_new_avg = E_new_avg/state_new.rho - 0.5*(state_new.u)**2
+        print "The new way of computing e_new_avg", e_new_avg
+
+#       The following is a handy check that must be passed for a pure hydro, no
+#       sources, problem
+ #       if (abs(e_new_avg - state_star.e) > 0.0000001):
+  #          raw_input()
+
 
         # put new internal energy in the new hydro state
         hydro_new[i].updateStateDensityInternalEnergy(state_star.rho, e_new_avg)
