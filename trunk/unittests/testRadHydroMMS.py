@@ -79,7 +79,7 @@ class TestRadHydroMMS(unittest.TestCase):
          gamma_value   = gamma_value,
          cv_value      = cv_value,
          alpha_value   = alpha_value,
-         display_equations = True)
+         display_equations = False)
 
       # create functions for exact solutions
       substitutions = dict()

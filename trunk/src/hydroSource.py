@@ -60,8 +60,6 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         # compute edge velocities
         u_new  = computeEdgeVelocities(i, state_new,  slopes_old)
         u_star = computeEdgeVelocities(i, state_star, slopes_old)
-        print " THe new velocity is", u_new
-        print " THe new star is", u_star
 
         # compute edge temperatures
         T_prev = computeEdgeTemperatures(state_prev, e_slopes_old[i])
@@ -69,18 +67,12 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         # compute edge internal energies
         e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
 
-        print "CHANGING SLOPES IN UPDATEINTERNAL ENERGY"
         e_star = computeHydroInternalEnergies(i, state_star, slopes_old)
-       # e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
-        print "old e_star_avg: ", state_star.e
-        print "new e_star_avg: ", 0.5*(e_star[0] + e_star[1])
-        print "LEFT RIGHT WTF?!", e_star[0], e_star[1]
+        #e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
 
         # Compute the total energy before and after
         E_l = rho[0]*(0.5*u_star[0]*u_star[0] + e_star[0])
         E_r = rho[1]*(0.5*u_star[1]*u_star[1] + e_star[1])
-        print "Old E_star avg: ", state_star.getConservativeVariables()[2]
-        print "New E_star avg: ", 0.5*(E_l + E_r)
 
         # loop over edges to compute new internal energies
         e_new = np.zeros(2)
@@ -110,18 +102,12 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
 
         #Compute a new total energy at each edge, that is what we are really
         #conserving and this will ensure regular hydro is unchanged
-        print "The old way of e_avg", e_new_avg
-        print "Hacking in a new internal energy computation"
+        #print "The old way of e_avg", e_new_avg
+        #print "Hacking in a new internal energy computation"
         E_new = [rho[x]*(0.5*u_new[x]**2 + e_new[x]) for x in range(2)]
         E_new_avg = 0.5*(E_new[0] + E_new[1])
         e_new_avg = E_new_avg/state_new.rho - 0.5*(state_new.u)**2
-        print "The new way of computing e_new_avg", e_new_avg
-
-#       The following is a handy check that must be passed for a pure hydro, no
-#       sources, problem
- #       if (abs(e_new_avg - state_star.e) > 0.0000001):
-  #          raw_input()
-
+        #print "The new way of computing e_new_avg", e_new_avg
 
         # put new internal energy in the new hydro state
         hydro_new[i].updateStateDensityInternalEnergy(state_star.rho, e_new_avg)

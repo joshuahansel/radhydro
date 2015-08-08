@@ -124,15 +124,6 @@ class HydroSlopes:
             else:
                 raise ValueError("Invalid slope limiter\n")
 
-            #hardcoded change
-  #          print "DEBUG changing how slope is computed in hydroSlopes"
-  #          if i == 0:
-
-  #              del_i = u[i+1]-u[i]
-  #          elif i==len(u)-1:
-  #              del_i = u[i]-u[i-1]
-
-
             # save slope
             u_slopes[i] = del_i
 

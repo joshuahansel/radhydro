@@ -778,7 +778,6 @@ class PlanckianTerm(TransientSourceTerm):
         T = computeEdgeTemperatures(state_prev, e_slopes_old[i])
         e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
         e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
-        print "HERE IS THE OTHER SLOPE"
 
         # compute Planckian term for each edge on element
         planckian = [0.0,0.0]

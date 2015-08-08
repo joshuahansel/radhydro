@@ -256,7 +256,6 @@ def runNonlinearTransient(mesh, problem_type,
                  Qmom_older   = deepcopy(Qmom_old),
                  Qerg_older   = deepcopy(Qerg_old))
              
-
           else: #assume its a single step method
 
               # take time step without MUSCL-Hancock
@@ -291,7 +290,7 @@ def runNonlinearTransient(mesh, problem_type,
                  Qmom_older   = Qmom_older,
                  Qerg_older   = Qerg_older)
 
-       else: #a rad hydro problem
+       else: # problem_type == 'rad_hydro'
 
           # if user chose to use the 2-cycle scheme
           if use_2_cycles:
@@ -370,20 +369,13 @@ def runNonlinearTransient(mesh, problem_type,
                 Qerg_older   = Qerg_old,
                 verbose      = verbose)
 
-          else:
+          else: # use only 1 cycle
 
              # for first step, can't use BDF2; use CN instead
              if time_index == 1:
                 time_stepper_corrector = 'CN'
              else:
                 time_stepper_corrector = 'BDF2'
-
-             # predictor always CN basically
-             time_stepper_predictor = 'CN'
-
-             print "HACKED IN BE IN TRANSIENT"
-             time_stepper_predictor = 'BE'
-             time_stepper_corrector = 'BE'
 
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
@@ -420,14 +412,11 @@ def runNonlinearTransient(mesh, problem_type,
                 Qerg_older   = Qerg_older,
                 verbose      = verbose)
 
-       print "MMS Soruce totals not computed yet!"
-
-       #Compute Balance
+       # compute balance
        bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
        bal.computeBalance(psi_left, psi_right, hydro_old,
                hydro_new, rad_old, rad_new, hydro_F_right=hydro_F_right,
                hydro_F_left=hydro_F_left, src_totals=src_totals, write=True)
-
 
        # save older solutions
        cx_older  = deepcopy(cx_old)
@@ -594,7 +583,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        #hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=False)
 
        # perform corrector step of MUSCL-Hancock
-       hydro_star, hydro_F_left, hydro_F_right = hydroCorrector(mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
+       hydro_star, hydro_F_left, hydro_F_right = hydroCorrector(
+          mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
 
        if debug_mode:
           print "hydro_star corrector:"
@@ -634,8 +624,6 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        #Accumulate sources over entire time step
        src_totals = {}
        vol = mesh.getElement(0).dx
-
-       #Add in corrector energies
        src_totals["mom"] = sum([vol*dt*i for i in Qmom_new])
        src_totals["erg"] = sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
 

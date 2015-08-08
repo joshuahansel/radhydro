@@ -399,17 +399,32 @@ def plotHydroSolutions(mesh, states, slopes=None, x_exact=None, exact=None,
 #
 def plotSingle(x_num, x_exact, y, y_label, exact=None):
 
-    #static variable counter
+    # static variable counter
     plotSingle.fig_num += 1
 
     plt.subplot(2,2,plotSingle.fig_num)
+
     plt.xlabel('$x$')
     plt.ylabel(y_label)
+
+    # min and max y for plot
+    plot_min = min(y)
+    plot_max = max(y)
+
     plt.plot(x_num, y, "b+-", label="Numeric")
     if exact != None:
        plt.plot(x_exact, exact, "r-x", label="Analytic")
+       plot_min = min(plot_min, min(exact))
+       plot_max = max(plot_max, max(exact))
+
     plt.legend(loc='best')
-    plt.axis([min(x_num), max(x_num), 0.99*min(y),1.01*max(y)])
+
+    # if solution profile is approximately constant, then adjust axes
+    den = plot_max
+    if den == 0.0:
+       den = 1.0
+    if abs((plot_max - plot_min)/den) < 1.0e-3:
+       plt.axis([min(x_num), max(x_num), 0.99*plot_min, 1.01*plot_max])
     
 plotSingle.fig_num=0
 
