@@ -1,3 +1,5 @@
+## @package src.hydroSource
+#  Contains classes to compute sources for hydrodynamics updates.
 
 from crossXInterface import CrossXInterface
 from transientSource import TransientSourceTerm, evalPlanckianOld
@@ -9,9 +11,9 @@ from utilityFunctions import getNu, computeEdgeVelocities, computeEdgeTemperatur
    computeEdgeDensities, computeEdgeInternalEnergies, computeHydroInternalEnergies
 
 #--------------------------------------------------------------------------------
-## Updates velocities.
+## Updates cell-average velocities \f$u_i\f$.
 #
-#  param[in,out] hydro_new
+#  @param[in,out] hydro_new
 #
 def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
  
@@ -28,9 +30,10 @@ def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
 
 
 #--------------------------------------------------------------------------------
-## Updates internal energy.
+## Updates internal energy slopes \f$\delta e_i\f$.
 #
-#  param[in,out] hydro_new  contains new velocities
+#  @param[in,out] hydro_new  new hydro unknowns \f$\mathbf{H}^{k+1}\f$,
+#    which contains new velocities \f$u_i^{k+1}\f$
 #
 def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
     hydro_prev, hydro_star, slopes_old, e_slopes_old):
@@ -305,14 +308,15 @@ def evalMomentumExchangeAverage(i, rad, hydro, cx):
     return sig_t/GC.SPD_OF_LGT*(F - 4.0/3.0*E*hydro[i].u)
 
 
-## Computes an extraneous source vector for the momentum equation
+## Computes an extraneous source vector for the momentum equation,
+#  \f$Q^{ext,\rho u}\f$, evaluated at each cell center
 #
 #  @param[in] mom_src  function handle for the momentum extraneous source
 #  @param[in] mesh     mesh
 #  @param[in] t        time at which to evaluate the function
 #
 #  @return list of the momentum extraneous source function evaluated
-#          at each cell center
+#          at each cell center, \f$Q^{ext,\rho u}_i\f$
 #
 def computeMomentumExtraneousSource(mom_src, mesh, t):
 
@@ -320,14 +324,15 @@ def computeMomentumExtraneousSource(mom_src, mesh, t):
    return [mom_src(mesh.getElement(i).x_cent,t) for i in xrange(mesh.n_elems)]
 
 
-## Computes an extraneous source vector for the energy equation
+## Computes an extraneous source vector for the energy equation,
+#  \f$Q^{ext,E}\f$, evaluated at each cell edge
 #
 #  @param[in] erg_src  function handle for the energy extraneous source
 #  @param[in] mesh     mesh
 #  @param[in] t        time at which to evaluate the function
 #
 #  @return list of tuples of the energy extraneous source function evaluated
-#          at each edge on each cell
+#          at each edge on each cell, \f$(Q^{ext,E}_{i,L},Q^{ext,E}_{i,R})\f$
 #
 def computeEnergyExtraneousSource(erg_src, mesh, t):
 

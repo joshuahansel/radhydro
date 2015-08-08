@@ -28,6 +28,7 @@
 #   \frac{Y^{n+1} - Y^{n}}{c\Delta t} = \frac{2}{3}A^{n+1} + \frac{1}{6} A^{n} +
 #   \frac{1}{6} A^{n-1}
 # \f]
+#
 # for the general problem 
 # \f[
 #   \frac{\partial Y}{c\partial t} = A[ Y(t)]
@@ -125,6 +126,7 @@ def computeRadiationSource(mesh, time_stepper, problem_type,
 ## Base class for source handlers. More info given in package documentation. Here, 
 #  the evaluate functions are only implemented to raise errors
 #  in case developer incorrectly creates a derived class
+#
 class TransientSourceTerm:
 
     #---------------------------------------------------------------------------
@@ -290,7 +292,7 @@ class OldIntensityTerm(TransientSourceTerm):
 
 #====================================================================================
 ## Derived class for computing streaming term,
-#  \f$\mu^\pm \frac{\partial\Psi}{\partial x}\f$
+#  \f$\mu^\pm \frac{\partial\Psi^\pm}{\partial x}\f$
 #
 class StreamingTerm(TransientSourceTerm):
 
@@ -310,7 +312,8 @@ class StreamingTerm(TransientSourceTerm):
         return np.zeros(4)
 
     #--------------------------------------------------------------------------------
-    ## Computes old streaming term, \f$\mu^\pm\frac{\partial\Psi^n}{\partial x}\f$
+    ## Computes old streaming term,
+    #  \f$\mu^\pm\frac{\partial\Psi^{\pm,n}}{\partial x}\f$
     #
     #  @param[in] i         element id
     #  @param[in] rad_old   old radiation
@@ -360,7 +363,7 @@ class StreamingTerm(TransientSourceTerm):
 
     #--------------------------------------------------------------------------------
     ## Computes older streaming term,
-    #  \f$\mu^\pm\frac{\partial\Psi^{n-1}}{\partial x}\f$
+    #  \f$\mu^\pm\frac{\partial\Psi^{\pm,n-1}}{\partial x}\f$
     #
     #  @param[in] i           element id
     #  @param[in] rad_older   older radiation
@@ -377,6 +380,7 @@ class StreamingTerm(TransientSourceTerm):
 
 #====================================================================================
 ## Derived class for computing reaction term, \f$\sigma_t\Psi^\pm\f$
+#
 class ReactionTerm(TransientSourceTerm):
 
     #-------------------------------------------------------------------------------
@@ -432,11 +436,11 @@ class ReactionTerm(TransientSourceTerm):
     def evalOlder(self, i, rad_older, cx_older, **kwargs):
 
         # Use old function but with older arguments.
-        # Note that you cannot pass in **kwargs or it will duplicate some arguments
         return self.evalOld(i, rad_old=rad_older, cx_old=cx_older)
 
 #====================================================================================
 ## Derived class for computing scattering source term, \f$\frac{\sigma_s}{2}\phi\f$
+#
 class ScatteringTerm(TransientSourceTerm):
 
     #-------------------------------------------------------------------------------
@@ -502,6 +506,7 @@ class ScatteringTerm(TransientSourceTerm):
 
 #====================================================================================
 ## Derived class for computing source term, \f$\mathcal{Q}\f$
+#
 class SourceTerm(TransientSourceTerm):
 
     #-------------------------------------------------------------------------------
@@ -716,12 +721,12 @@ class AnisotropicTerm(TransientSourceTerm):
            rad_prev=rad_older, slopes_old=slopes_older)
 
 #====================================================================================
-## Derived class for computing placnkian emission source term,
-# \f$\frac{1}{2}\sigma_a a c T^4\f$
+## Derived class for computing Planckian emission source term,
+#  \f$\frac{1}{2}\sigma_a a c T^4\f$
 #
-# The evalImplicit function requires a passed in argument planckian_new. Note that we
-# cannot simply due T_new^4 because it will not be consistent with the linearization,
-# which will result in inaccurate energy conservation.
+#  The evalImplicit function requires a passed in argument planckian_new. Note that we
+#  cannot simply use T_new^4 because it will not be consistent with the linearization,
+#  which will result in inaccurate energy conservation.
 #
 class PlanckianTerm(TransientSourceTerm):
 
@@ -734,12 +739,11 @@ class PlanckianTerm(TransientSourceTerm):
         TransientSourceTerm.__init__(self, *args)
 
     #--------------------------------------------------------------------------------
-    ## Computes implicit Planckian term,
-    #  \f$\frac{1}{2}\sigma_a^k a c (T^{k+1})^4\f$,
-    #  which is linearized.
+    ## Computes the RHS portion of the implicit linearized Planckian term,
+    #  \f$\frac{1}{2}\sigma_a^k a c (T^{k+1})^4 - \frac{1}{2}\sigma_a^k c \nu^k
+    #    \mathcal{E}^{k+1}\f$.
     #
-    #  Note that the term
-    #  \f$\frac{1}{2}\sigma_a^k c \nu^k \mathcal{E}^{k+1}\f$
+    #  The term \f$\frac{1}{2}\sigma_a^k c \nu^k \mathcal{E}^{k+1}\f$
     #  is not evaluated here but is instead evaluated as part of the scattering
     #  term \f$\sigma_s^k\phi^{k+1}\f$ by making the substitution
     #  \[
@@ -747,7 +751,6 @@ class PlanckianTerm(TransientSourceTerm):
     #  \]
     #  where \f$\tilde{\sigma_s^k} \equiv \sigma_s^k + \nu^k\sigma_a^k\f$.
     #   
-    #
     #  @param[in] i             element id
     #  @param[in] cx_prev       previous cross sections \f$\sigma^k\f$
     #
@@ -813,7 +816,7 @@ class PlanckianTerm(TransientSourceTerm):
         return Q_local
 
     #--------------------------------------------------------------------------------
-    ## Evaluate old planckian. No need to use linearization, will conserve energy
+    ## Evaluate old Planckian.
     #  \f$\frac{1}{2}\sigma_a^n a c (T^n)^4\f$
     #
     #  @param[in] i          element id
@@ -853,8 +856,8 @@ class PlanckianTerm(TransientSourceTerm):
 ## Evaluates a Planckian term \f$\sigma_a^n a c (T^n)^4\f$.
 #
 #  @param[in] i          element id
-#  @param[in] cx_old     old cross sections \f$\sigma^n\f$
 #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
+#  @param[in] cx_old     old cross sections \f$\sigma^n\f$
 #
 def evalPlanckianOld(i, hydro_old, cx_old, e_slopes_old):
 

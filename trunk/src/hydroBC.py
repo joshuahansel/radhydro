@@ -1,4 +1,5 @@
-## @package Contains class for handling hydrodynamics boundary conditions.
+## @package src.hydroBC
+#  Contains class for handling hydrodynamics boundary conditions.
 
 from copy import deepcopy
 from hydroState import HydroState

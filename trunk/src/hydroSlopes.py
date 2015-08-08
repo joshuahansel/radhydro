@@ -1,4 +1,4 @@
-## @package hydroSlopes
+## @package src.hydroSlopes
 #  Contains class for computing and storing hydro slopes.
 
 import numpy as np
