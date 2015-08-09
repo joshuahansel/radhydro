@@ -10,8 +10,9 @@ class HydroSlopes:
 
     ## Constructor
     #
-    #  @param[in] states  hydro state for each cell
-    #  @param[in] bc      hydro BC object
+    #  @param[in] states   hydro state for each cell \f$\mathbf{H}_i\f$
+    #  @param[in] bc       hydro BC object
+    #  @param[in] limiter  string for choice of slope limiter
     #
     def __init__(self, states, bc, limiter):
 
@@ -27,13 +28,20 @@ class HydroSlopes:
        rho_L, rho_R, mom_L, mom_R, erg_L, erg_R = bc.getBoundaryValues()
 
        # compute slopes
-       self.rho_slopes = self.slopeReconstruction(rho, rho_L, rho_R)
-       self.mom_slopes = self.slopeReconstruction(mom, mom_L, mom_R)
-       self.erg_slopes = self.slopeReconstruction(erg, erg_L, erg_R)
+       self.rho_slopes = self.computeSlopes(rho, rho_L, rho_R)
+       self.mom_slopes = self.computeSlopes(mom, mom_L, mom_R)
+       self.erg_slopes = self.computeSlopes(erg, erg_L, erg_R)
 
-    ## Creates linear representation for solution using slopes
+
+    ## Computes edge values for each conservative variable:
+    #  \f$\rho_{i,L},\rho_{i,R},(\rho u)_{i,L},(\rho u)_{i,R},E_{i,L},E_{i,R}\f$.
     #
-    def createLinearRepresentation(self, states):
+    #  @param[in] states  cell-average hydro states \f$\mathbf{H}_i\f$
+    #
+    #  @return left and right edge values for each conservative variable:
+    #     \f$\rho_{i,L},\rho_{i,R},(\rho u)_{i,L},(\rho u)_{i,R},E_{i,L},E_{i,R}\f$
+    #
+    def computeEdgeConservativeVariablesValues(self, states):
 
        n = len(states)
        rho_l = np.zeros(n)
@@ -54,15 +62,15 @@ class HydroSlopes:
        return rho_l, rho_r, mom_l, mom_r, erg_l, erg_r
 
 
-    ## Reconstructs slopes for a single conservative variable
+    ## Computes slopes for a single conservative variable \f$y\f$
     #
-    #  @param[in] u     cell average values for each cell
-    #  @param[in] bc_L  value for left boundary ghost cell
-    #  @param[in] bc_R  value for right boundary ghost cell
+    #  @param[in] u     cell-average values for each cell, \f$y_i\f$
+    #  @param[in] bc_L  value for left boundary ghost cell, \f$y_0\f$
+    #  @param[in] bc_R  value for right boundary ghost cell, \f$y_{N+1}\f$
     #
-    #  @return limited slopes for each cell
+    #  @return limited slopes for each cell, \f$\Delta y_i\f$
     #
-    def slopeReconstruction(self, u, bc_L, bc_R):
+    def computeSlopes(self, u, bc_L, bc_R):
     
         # omega of 0 gives centered approximation
         omega = 0.
@@ -86,14 +94,17 @@ class HydroSlopes:
             del_L = u[i] - u_L
             del_R = u_R  - u[i]
 
-            # compute tentative slope
+            # compute un-limited slope
             del_i = 0.5*(1.+omega)*del_L + 0.5*(1.-omega)*del_R
 
             # compute limited slope
+
+            # minmod limiter
             if self.limiter == "minmod":
 
                 del_i = minMod(del_R,del_L)
 
+            # vanLeer limiter
             elif self.limiter == "vanleer":
 
                 beta = 1.
@@ -115,9 +126,11 @@ class HydroSlopes:
                     zeta =  min(2.*r/(1.+r), zeta_R)
                     del_i = zeta*del_i
 
+            # no limiter; Lax-Wendroff
             elif self.limiter == "none":
                 del_i = del_i
 
+            # zero slopes; Godunov scheme
             elif self.limiter == "step":
                 del_i = 0.0
 
@@ -129,7 +142,15 @@ class HydroSlopes:
 
         return u_slopes
 
+
 # ----------------------------------------------------------------------------------
+## Computes the minmod() function for the minmod slope limiter.
+#
+#  @param[in] a  first value
+#  @param[in] b  second value
+#
+#  @return minmod(a,b)
+#
 def minMod(a,b):
 
     if a > 0 and b > 0:

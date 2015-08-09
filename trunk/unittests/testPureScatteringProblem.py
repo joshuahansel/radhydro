@@ -1,4 +1,4 @@
-## @package testPureScatteringProblem
+## @package unittests.testPureScatteringProblem
 #  Runs a pure scattering problem and compares to exact solution.
 
 # add source directory to module search path

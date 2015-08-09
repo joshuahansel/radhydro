@@ -1,3 +1,5 @@
+## @package src.musclHancock
+#  Contains functions for implementing MUSCL-Hancock.
 
 import numpy as np
 from pylab import *
@@ -7,200 +9,278 @@ from utilityFunctions import *
 from hydroState import HydroState
 from hydroSlopes import HydroSlopes
 
-#-------------------------------------------------------------------------------------
-#
 ## Predictor solver for hydro.
 #
-# Boundary Conditions: Essentially boundaries are treated as reflective. The fluxes
-# on the boundary are just estimated based on the flux based on the edge state at
-# that node. There is no need to pass in the boundary conditions then.
-#
-# @param[in] mesh           Basic spatial mesh object
-# @param[in] states_old_a   Averages at old state. 
-# @param[in] dt             time step size for this hydro solve. To predict values at 
-#                           0.5 dt, pass in 1.0 dt
+#  @param[in] mesh        mesh object
+#  @param[in] states_old  old cell-average states, \f$\mathbf{H}^n_i\f$
+#  @param[in] slopes      slopes, \f$\Delta_i\f$
+#  @param[in] dt          full time step size, \f$\Delta t\f$
 # 
-# @return
-#       -#  predicted states at averages
+#  @return
+#     -# predicted cell-average states, \f$\mathbf{H}^{n+\frac{1}{2}_i}\f$
 #
-def hydroPredictor(mesh, states_old_a, slopes, dt):
+def hydroPredictor(mesh, states_old, slopes, dt):
 
-    dx = mesh.getElement(0).dx #currently a fixed width
+    # mesh size. NOTE: uniform mesh size is assumed here
+    dx = mesh.getElement(0).dx
 
-    if mesh.n_elems % 2 != 0: #simple error raise, % has lots of diff meanings in python
-        raise ValueError("Must be even number of cells")
+    # number of elements
+    n = mesh.n_elems
 
-    #Can create lists of things in multiple ways
-    spat_coors = []
-    for i in mesh.elements:
-        spat_coors += [i.xl]
-    spat_coors += [mesh.elements[-1].xr]
-    x = np.array(spat_coors)
+    ##Create vectors of conserved quantities
+    #rho = [s.rho for s in states]
+    #mom = [s.rho*s.u for s in states]
+    #erg = [s.rho*(0.5*s.u*s.u + s.e) for s in states]
+    #rho_l, rho_r, mom_l, mom_r, erg_l, erg_r =\
+    #   slopes.computeEdgeConservativeVariablesValues(states)
 
-    #Initialize cell centered variables as passed in
-    states = deepcopy(states_old_a)
+    ##Compute left and right states
+    #states_l = [deepcopy(i) for i in states] #initialize 
+    #states_r = [deepcopy(i) for i in states]
+    #for i in range(len(rho_l)):
+    #    states_l[i].updateState(rho_l[i], mom_l[i], erg_l[i])
+    #    states_r[i].updateState(rho_r[i], mom_r[i], erg_r[i])
 
-    #-----------------------------------------------------------------
-    # Solve Problem
-    #----------------------------------------------------------------
+    ##Initialize predicited conserved quantities
+    #rho_l_p = [0.0 for i in range(len(rho_l))]
+    #rho_r_p = [0.0 for i in range(len(rho_l))]
+    #mom_l_p = [0.0 for i in range(len(rho_l))]
+    #mom_r_p = [0.0 for i in range(len(rho_l))]
+    #erg_l_p = [0.0 for i in range(len(rho_l))]
+    #erg_r_p = [0.0 for i in range(len(rho_l))]
+
+    ##Advance in time each edge variable
+    #for i in range(len(rho_l)):
+
+    #    #rho
+    #    rho_l_p[i] = advCons(rho_l[i],dx,0.5*dt,rhoFlux(states_l[i]),rhoFlux(states_r[i])) 
+    #    rho_r_p[i] = advCons(rho_r[i],dx,0.5*dt,rhoFlux(states_l[i]),rhoFlux(states_r[i])) 
+
+    #    #mom
+    #    mom_l_p[i] = advCons(mom_l[i],dx,0.5*dt,momFlux(states_l[i]),momFlux(states_r[i])) 
+    #    mom_r_p[i] = advCons(mom_r[i],dx,0.5*dt,momFlux(states_l[i]),momFlux(states_r[i])) 
+
+    #    #erg
+    #    erg_l_p[i] = advCons(erg_l[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
+    #    erg_r_p[i] = advCons(erg_r[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
+
+    ##Advance the primitive variables at the edges
+    #for i in range(len(rho_l)):
+    #    states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
+    #    states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
+
+    ##Return the new averages
+    #for i in range(len(states)):
+    #    states[i].updateState(0.5*(rho_l_p[i]+rho_r_p[i]),
+    #                       0.5*(mom_l_p[i]+mom_r_p[i]),
+    #                       0.5*(erg_l_p[i]+erg_r_p[i]))
 
     #Create vectors of conserved quantities
-    rho = [s.rho for s in states]
-    mom = [s.rho*s.u for s in states]
-    erg = [s.rho*(0.5*s.u*s.u + s.e) for s in states]
-    rho_l, rho_r, mom_l, mom_r, erg_l, erg_r =\
-                   slopes.createLinearRepresentation(states)
+    rho = np.zeros(n)
+    mom = np.zeros(n)
+    erg = np.zeros(n)
+    for i in xrange(n):
+       rho[i], mom[i], erg[i] = states_old[i].getConservativeVariables()
 
-    #Compute left and right states
-    states_l = [deepcopy(i) for i in states] #initialize 
-    states_r = [deepcopy(i) for i in states]
+    # compute edge values
+    rho_L, rho_R, mom_L, mom_R, erg_L, erg_R =\
+       slopes.computeEdgeConservativeVariablesValues(states_old)
 
-    for i in range(len(rho_l)):
-        states_l[i].updateState(rho_l[i], mom_l[i], erg_l[i])
-        states_r[i].updateState(rho_r[i], mom_r[i], erg_r[i])
+    # compute left and right edge states
+    states_L = [deepcopy(i) for i in states_old]
+    states_R = [deepcopy(i) for i in states_old]
+    for i in xrange(n):
+        states_L[i].updateState(rho_L[i], mom_L[i], erg_L[i])
+        states_R[i].updateState(rho_R[i], mom_R[i], erg_R[i])
 
-    #Initialize predicited conserved quantities
-    rho_l_p = [0.0 for i in range(len(rho_l))]
-    rho_r_p = [0.0 for i in range(len(rho_l))]
-    mom_l_p = [0.0 for i in range(len(rho_l))]
-    mom_r_p = [0.0 for i in range(len(rho_l))]
-    erg_l_p = [0.0 for i in range(len(rho_l))]
-    erg_r_p = [0.0 for i in range(len(rho_l))]
+    # initialize predicited conserved quantities
+    rho_p = np.zeros(n)
+    mom_p = np.zeros(n)
+    erg_p = np.zeros(n)
 
-    #Advance in time each edge variable
-    for i in range(len(rho_l)):
+    # advance each conservation variable by half a time step
+    for i in xrange(n):
 
         #rho
-        rho_l_p[i] = advCons(rho_l[i],dx,0.5*dt,rhoFlux(states_l[i]),rhoFlux(states_r[i])) 
-        rho_r_p[i] = advCons(rho_r[i],dx,0.5*dt,rhoFlux(states_l[i]),rhoFlux(states_r[i])) 
+        rho_p[i] = advCons(rho[i],dx,0.5*dt,rhoFlux(states_L[i]),rhoFlux(states_R[i])) 
 
         #mom
-        mom_l_p[i] = advCons(mom_l[i],dx,0.5*dt,momFlux(states_l[i]),momFlux(states_r[i])) 
-        mom_r_p[i] = advCons(mom_r[i],dx,0.5*dt,momFlux(states_l[i]),momFlux(states_r[i])) 
+        mom_p[i] = advCons(mom[i],dx,0.5*dt,momFlux(states_L[i]),momFlux(states_R[i])) 
 
         #erg
-        erg_l_p[i] = advCons(erg_l[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
-        erg_r_p[i] = advCons(erg_r[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
+        erg_p[i] = advCons(erg[i],dx,0.5*dt,ergFlux(states_L[i]),ergFlux(states_R[i])) 
+        
+    # compute the predicted cell-average states
+    states_half = deepcopy(states_old)
+    for i in xrange(n):
+        states_half[i].updateState(rho_p[i], mom_p[i], erg_p[i])
 
-    #Advance the primitive variables at the edges
-    for i in range(len(rho_l)):
-        states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
-        states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
+    return states_half
 
-
-    #Return the new averages
-    for i in range(len(states)):
-        states[i].updateState(0.5*(rho_l_p[i]+rho_r_p[i]),
-                           0.5*(mom_l_p[i]+mom_r_p[i]),
-                           0.5*(erg_l_p[i]+erg_r_p[i]))
-
-
-    return states
     
-#-------------------------------------------------------------------------------------
-#
 ## Corrector solver for hydro.
 #
-# The corrector solve takes in a predicted state at dt/2, and computes new values at
-# dt.  The input is averages and slopes, the output is new averages, with the slopes
-# un-adjusted.
-#
-# The slopes are defined based on the following relation in a cell:
-# 
-# \f$U(x) = U_a + \frac{2U_x}{h_x}(x - x_i) \f$
-#
-# Thus, \f$U_R = U_a + U_x\f$ and \f$U_L = U_a - U_x\f$, and 
-# \f$U_x = \frac{U_R - U_L}{2}\f$
-#
-# @param[in] mesh           Basic spatial mesh object
-# @param[in] states_half_a  States evaluate at dt/2
-# @param[in] states_old_a   Averages at old state. 
-# @param[in] states_l       Predicted values at left nodes, at dt/2
-# @param[in] states_r       Predicted values at right nodes, at dt/2
-# @param[in] delta_t        time step size for this hydro solve. To predict values at 
-#                           0.5 dt, pass in 1.0 dt
-# 
+# @param[in] mesh         mesh object
+# @param[in] states_half  predicted cell-average states,
+#    \f$\mathbf{H}^{n+\frac{1}{2}}\f$
+# @param[in] states_old   old cell-average states, \f$\mathbf{H}^n\f$
+# @param[in] slopes_old   old slopes, \f$\Delta^n\f$
+# @param[in] dt           full time step size, \f$\Delta t\f$
+# @param[in] bc           hydro BC object
 #
 # @return
-#       -#  predicted states averages
+#    -#  new cell-average states, \f$\mathbf{H}^{n+1}_i\f$
 #
-def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
-
-    debug_mode = False
+def hydroCorrectorJosh(mesh, states_old, states_half, slopes_old, dt, bc):
 
     #Choose riemann solver
     riem_solver = HLLCSolver #HLLSolver, HLLCSolver
 
     #Solve for fluxes and values at faces
     n = mesh.n_elems
-    rho_F = np.zeros(n+1)
-    mom_F = np.zeros(n+1)
-    erg_F = np.zeros(n+1)
 
-    #Create edge values
-    rho_l_p, rho_r_p, mom_l_p, mom_r_p, erg_l_p, erg_r_p =\
-                   slopes_old.createLinearRepresentation(states_half)
-
-    # Create edge states
-    states_l = deepcopy(states_half) 
-    states_r = deepcopy(states_half)
-
-    for i in range(len(rho_l_p)):
-
-        states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
-        states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
+    #Create vectors of predicted variables
+    rho_p = [s.rho                     for s in states_half]
+    mom_p = [s.rho*s.u                 for s in states_half]
+    erg_p = [s.rho*(0.5*s.u*s.u + s.e) for s in states_half]
 
     # get boundary values and states
     rho_BC_L, rho_BC_R, mom_BC_L, mom_BC_R, erg_BC_L, erg_BC_R =\
        bc.getBoundaryValues()
     state_BC_L, state_BC_R = bc.getBoundaryStates()
 
-    #Solve Rieman problem at each face, for each quantity
-    #For boundaries it is easily defined
+    rho_F = np.zeros(n+1)
+    mom_F = np.zeros(n+1)
+    erg_F = np.zeros(n+1)
+
+    # solve Riemann problem at each interface
+    for i in range(0,n+1):
+
+        # get left and right states for Riemann problem at interface
+        if i == 0: # left boundary edge
+            rho_L = rho_BC_L
+            rho_R = rho_p[i]
+            mom_L = mom_BC_L
+            mom_R = mom_p[i]
+            erg_L = erg_BC_L
+            erg_R = erg_p[i]
+            state_L = state_BC_L
+            state_R = states_half[i]
+        elif i == n: # right boundary edge
+            rho_L = rho_p[i-1]
+            rho_R = rho_BC_R
+            mom_L = mom_p[i-1]
+            mom_R = mom_BC_R
+            erg_L = erg_p[i-1]
+            erg_R = erg_BC_R
+            state_L = states_half[i-1]
+            state_R = state_BC_R
+        else: # interior edge
+            rho_L = rho_p[i-1]
+            rho_R = rho_p[i]
+            mom_L = mom_p[i-1]
+            mom_R = mom_p[i]
+            erg_L = erg_p[i-1]
+            erg_R = erg_p[i]
+            state_L = states_half[i-1]
+            state_R = states_half[i]
+
+        # solve Riemann problem at interface
+        rho_F[i] = riem_solver(rho_L, rho_R, state_L, state_R, rhoFlux)
+        mom_F[i] = riem_solver(mom_L, mom_R, state_L, state_R, momFlux)
+        erg_F[i] = riem_solver(erg_L, erg_R, state_L, state_R, ergFlux)
+
+    #Intialize cell average quantity arrays at t_old
+    rho = [s.rho for s in states_old]
+    mom = [s.rho*s.u for s in states_old]
+    erg = [s.rho*(0.5*s.u**2. + s.e) for s in states_old]
     
+    #Advance conserved values at centers based on edge fluxes
+    for i in range(len(rho)):
+
+        dx = mesh.getElement(i).dx
+
+        #Example of edge fluxes:
+        #   i is 0 for 1st element, so edge 0 and edge 1 is i and i+1
+        rho[i] = advCons(rho[i],dx,dt,rho_F[i],rho_F[i+1])
+        mom[i] = advCons(mom[i],dx,dt,mom_F[i],mom_F[i+1])
+        erg[i] = advCons(erg[i],dx,dt,erg_F[i],erg_F[i+1])
+
+    # store the boundary fluxes
+    bound_F_left = {}
+    bound_F_right = {}
+    bound_F_left['rho'] = rho_F[0]
+    bound_F_left['mom'] = mom_F[0]
+    bound_F_left['erg'] = erg_F[0]
+    bound_F_right['rho'] = rho_F[-1]
+    bound_F_right['mom'] = mom_F[-1]
+    bound_F_right['erg'] = erg_F[-1]
+
+    #Advance primitive variables
+    states_new = [deepcopy(i) for i in states_old] 
+    for i in range(len(states_new)):
+        states_new[i].updateState(rho[i],mom[i],erg[i])
+
+    return states_new, bound_F_left, bound_F_right
+
+
+def hydroCorrectorSimon(mesh, states_old, states_half, slopes_old, dt, bc):
+
+    # choose riemann solver
+    riem_solver = HLLCSolver #HLLSolver, HLLCSolver
+
+    #Create edge values
+    rho_half_L, rho_half_R, mom_half_L, mom_half_R, erg_half_L, erg_half_R =\
+       slopes_old.computeEdgeConservativeVariablesValues(states_half)
+
+    # Create edge states
+    states_L = deepcopy(states_half) 
+    states_R = deepcopy(states_half)
+    for i in range(len(rho_half_L)):
+        states_L[i].updateState(rho_half_L[i], mom_half_L[i], erg_half_L[i])
+        states_R[i].updateState(rho_half_R[i], mom_half_R[i], erg_half_R[i])
+
+    # get boundary values and states
+    rho_BC_L, rho_BC_R, mom_BC_L, mom_BC_R, erg_BC_L, erg_BC_R =\
+       bc.getBoundaryValues()
+    state_BC_L, state_BC_R = bc.getBoundaryStates()
+
+    n = mesh.n_elems
+    rho_F = np.zeros(n+1)
+    mom_F = np.zeros(n+1)
+    erg_F = np.zeros(n+1)
+
     #Check if it is reflective, if so we need to reset the states due to the way the
     #edge values work. This is kind of crappy coding
     if bc.bc_type == "reflective":
 
-        rho_F[0] = rhoFlux(states_l[0])
-        mom_F[0] = momFlux(states_l[0])
-        erg_F[0] = ergFlux(states_l[0])
+        rho_F[0] = rhoFlux(states_L[0])
+        mom_F[0] = momFlux(states_L[0])
+        erg_F[0] = ergFlux(states_L[0])
 
-        rho_F[-1] = rhoFlux(states_r[-1])
-        mom_F[-1] = momFlux(states_r[-1])
-        erg_F[-1] = ergFlux(states_r[-1])
+        rho_F[-1] = rhoFlux(states_R[-1])
+        mom_F[-1] = momFlux(states_R[-1])
+        erg_F[-1] = ergFlux(states_R[-1])
 
-    else:
+    else: # Dirichlet
 
-        rho_F[0] = riem_solver(rho_BC_L, rho_l_p[0], state_BC_L, states_l[0], rhoFlux)
-        mom_F[0] = riem_solver(mom_BC_L, mom_l_p[0], state_BC_L, states_l[0], momFlux)
-        erg_F[0] = riem_solver(erg_BC_L, erg_l_p[0], state_BC_L, states_l[0], ergFlux)
+        rho_F[0] = riem_solver(rho_BC_L, rho_half_L[0], state_BC_L, states_L[0], rhoFlux)
+        mom_F[0] = riem_solver(mom_BC_L, mom_half_L[0], state_BC_L, states_L[0], momFlux)
+        erg_F[0] = riem_solver(erg_BC_L, erg_half_L[0], state_BC_L, states_L[0], ergFlux)
 
-        if debug_mode:
-           print "HI LEFT "  
-           print "rho_F    ", rho_BC_L, rho_l_p[0], rho_F[0], rhoFlux(states_l[0]), rhoFlux(state_BC_L)
-           print "mom_F    ", mom_BC_L, mom_l_p[0], mom_F[0], momFlux(states_l[0]), momFlux(state_BC_L)
-           print "erg_F    ", erg_BC_L, erg_l_p[0], erg_F[0], ergFlux(states_l[0]), ergFlux(state_BC_L)
-
-        rho_F[-1] = riem_solver(rho_BC_R, rho_r_p[-1], state_BC_R, states_r[-1], rhoFlux)
-        mom_F[-1] = riem_solver(mom_BC_R, mom_r_p[-1], state_BC_R, states_r[-1], momFlux)
-        erg_F[-1] = riem_solver(erg_BC_R, erg_r_p[-1], state_BC_R, states_r[-1], ergFlux)
-
-        if debug_mode:
-           print "HI RIGHT "  
-           print "rho_F    ", "BC_value: ", rho_BC_R, rho_r_p[-1], "chosen F", rho_F[-1], rhoFlux(states_r[-1]), rhoFlux(state_BC_R)
-           print "mom_F    ", "BC_value: ", mom_BC_R, mom_r_p[-1], "chosen F", mom_F[-1], momFlux(states_r[-1]), momFlux(state_BC_R)
-           print "erg_F    ", "BC_value: ", erg_BC_R, erg_r_p[-1], "chosen F", erg_F[-1], ergFlux(states_r[-1]), ergFlux(state_BC_R)
+        rho_F[-1] = riem_solver(rho_BC_R, rho_half_R[-1], state_BC_R, states_R[-1], rhoFlux)
+        mom_F[-1] = riem_solver(mom_BC_R, mom_half_R[-1], state_BC_R, states_R[-1], momFlux)
+        erg_F[-1] = riem_solver(erg_BC_R, erg_half_R[-1], state_BC_R, states_R[-1], ergFlux)
 
     #Do the interior cells
     for i in range(0,n-1):
 
-        rho_F[i+1] = riem_solver(rho_r_p[i], rho_l_p[i+1], states_r[i],
-                states_l[i+1], rhoFlux)
-        mom_F[i+1] = riem_solver(mom_r_p[i], mom_l_p[i+1], states_r[i],
-                states_l[i+1], momFlux)
-        erg_F[i+1] = riem_solver(erg_r_p[i], erg_l_p[i+1], states_r[i],
-                states_l[i+1], ergFlux)
+        rho_F[i+1] = riem_solver(rho_half_R[i], rho_half_L[i+1], states_R[i],
+                states_L[i+1], rhoFlux)
+        mom_F[i+1] = riem_solver(mom_half_R[i], mom_half_L[i+1], states_R[i],
+                states_L[i+1], momFlux)
+        erg_F[i+1] = riem_solver(erg_half_R[i], erg_half_L[i+1], states_R[i],
+                states_L[i+1], ergFlux)
 
     #Store the boundary condition fluxes
     bound_F_left = {}
@@ -213,9 +293,9 @@ def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
     bound_F_right['erg'] = erg_F[-1]
 
     #Intialize cell average quantity arrays at t_old
-    rho = [s.rho for s in states_old_a]
-    mom = [s.rho*s.u for s in states_old_a]
-    erg = [s.rho*(0.5*s.u**2. + s.e) for s in states_old_a]
+    rho = [s.rho for s in states_old]
+    mom = [s.rho*s.u for s in states_old]
+    erg = [s.rho*(0.5*s.u**2. + s.e) for s in states_old]
     
     #Advance conserved values at centers based on edge fluxes
     for i in range(len(rho)):
@@ -229,11 +309,12 @@ def hydroCorrector(mesh, states_old_a, states_half, slopes_old, dt, bc):
         erg[i] = advCons(erg[i],dx,dt,erg_F[i],erg_F[i+1])
 
     #Advance primitive variables
-    states_a = [deepcopy(i) for i in states_old_a] 
-    for i in range(len(states_a)):
-        states_a[i].updateState(rho[i],mom[i],erg[i])
+    states_new = [deepcopy(i) for i in states_old] 
+    for i in range(len(states_new)):
+        states_new[i].updateState(rho[i],mom[i],erg[i])
 
-    return states_a, bound_F_left, bound_F_right
+    return states_new, bound_F_left, bound_F_right
+
 
 #------------------------------------------------------------------------------------
 # Define some functions for evaluating fluxes for different state variables

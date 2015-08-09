@@ -1,3 +1,6 @@
+## @package src.hydroState
+#  Contains class for describing a hydrodynamic state.
+
 from math import sqrt
 
 ## Class for defining the hydrodynamic state at a point

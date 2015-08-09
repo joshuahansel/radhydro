@@ -12,8 +12,7 @@ from hydroSource import computeMomentumExtraneousSource,\
    computeEnergyExtraneousSource
 from takeRadiationStep import takeRadiationStep
 from hydroSlopes import HydroSlopes
-from musclHancock import hydroPredictor, hydroCorrector
-#from musclHancockJosh import hydroPredictor, hydroCorrector
+from musclHancock import hydroPredictor, hydroCorrectorSimon, hydroCorrectorJosh
 from balanceChecker import BalanceChecker
 from plotUtilities import plotHydroSolutions
 
@@ -123,7 +122,7 @@ def runNonlinearTransient(mesh, problem_type,
    psim_src=None, psip_src=None, mom_src=None, E_src=None,
    time_stepper='BE', dt_option='constant', dt_constant=None, CFL=0.5,
    slope_limiter="vanleer", t_start=0.0, t_end=1.0, use_2_cycles=False,
-   verbose=False):
+   verbose=False, compute_balance=False):
 
    # check input arguments
    if dt_option == 'constant':
@@ -300,7 +299,7 @@ def runNonlinearTransient(mesh, problem_type,
              # take time step with MUSCL-Hancock
              hydro_half, rad_half, cx_half, slopes_old, e_slopes_half,\
              Qpsi_half, Qmom_half, Qerg_half, hydro_F_left, hydro_F_right,\
-             src_totals =\
+             src_totals_cycle1 =\
                 takeTimeStepMUSCLHancock(
                 mesh           = mesh,
                 dt             = 0.5*dt, 
@@ -337,7 +336,7 @@ def runNonlinearTransient(mesh, problem_type,
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_half, e_slopes_new,\
              Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
-             src_totals =\
+             src_totals_cycle2 =\
                 takeTimeStepMUSCLHancock(
                 mesh           = mesh,
                 dt             = 0.5*dt, 
@@ -368,6 +367,9 @@ def runNonlinearTransient(mesh, problem_type,
                 Qmom_older   = Qmom_old,
                 Qerg_older   = Qerg_old,
                 verbose      = verbose)
+
+             # add up source totals for each cycle to total for whole time step
+             src_totals = src_totals_cycle1 + src_totals_cycle2
 
           else: # use only 1 cycle
 
@@ -413,10 +415,11 @@ def runNonlinearTransient(mesh, problem_type,
                 verbose      = verbose)
 
        # compute balance
-       bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
-       bal.computeBalance(psi_left, psi_right, hydro_old,
-               hydro_new, rad_old, rad_new, hydro_F_right=hydro_F_right,
-               hydro_F_left=hydro_F_left, src_totals=src_totals, write=True)
+       if compute_balance:
+          bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
+          bal.computeBalance(psi_left, psi_right, hydro_old,
+                 hydro_new, rad_old, rad_new, hydro_F_right=hydro_F_right,
+                 hydro_F_left=hydro_F_left, src_totals=src_totals, write=True)
 
        # save older solutions
        cx_older  = deepcopy(cx_old)
@@ -519,10 +522,6 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        if verbose:
           print "    Predictor step:"
 
-       # compute new extraneous sources
-       Qpsi_half, Qmom_half, Qerg_half = computeExtraneousSources(
-          psim_src, psip_src, mom_src, E_src, mesh, t_old+0.5*dt)
-
        # update hydro BC
        hydro_BC.update(states=hydro_old, t=t_old)
 
@@ -540,6 +539,10 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           print "hydro_star predictor:"
           for i in hydro_star:
              print i
+
+       # compute new extraneous sources
+       Qpsi_half, Qmom_half, Qerg_half = computeExtraneousSources(
+          psim_src, psip_src, mom_src, E_src, mesh, t_old+0.5*dt)
 
        # perform nonlinear solve
        hydro_half, rad_half, cx_half, e_slopes_half = nonlinearSolve(
@@ -574,22 +577,23 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        if verbose:
           print "    Corrector step:"
 
-       # compute new extraneous sources
-       Qpsi_new, Qmom_new, Qerg_new = computeExtraneousSources(
-          psim_src, psip_src, mom_src, E_src, mesh, t_old+dt)
-
        # update hydro BC
-       hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=True)
-       #hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=False)
+       #hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=True)
+       hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=False)
 
        # perform corrector step of MUSCL-Hancock
-       hydro_star, hydro_F_left, hydro_F_right = hydroCorrector(
+       #hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorSimon(
+       hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorJosh(
           mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
 
        if debug_mode:
           print "hydro_star corrector:"
           for i in hydro_star:
              print i
+
+       # compute new extraneous sources
+       Qpsi_new, Qmom_new, Qerg_new = computeExtraneousSources(
+          psim_src, psip_src, mom_src, E_src, mesh, t_old+dt)
 
        # perform nonlinear solve
        hydro_new, rad_new, cx_new, e_slopes_new = nonlinearSolve(
@@ -621,7 +625,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           Qerg_older   = Qerg_older,
           verbose      = verbose)
 
-       #Accumulate sources over entire time step
+       # add up sources for entire time step for balance checker
        src_totals = {}
        vol = mesh.getElement(0).dx
        src_totals["mom"] = sum([vol*dt*i for i in Qmom_new])
@@ -640,7 +644,17 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           src_totals
 
 
-## Computes all extraneous sources
+## Computes all extraneous sources at time \f$t\f$
+#
+#  @param[in] psim_src
+#  @param[in] psip_src
+#  @param[in] mom_src
+#  @param[in] E_src
+#  @param[in] mesh
+#  @param[in] t
+#
+#  @return extraneous source vectors evaluated at \f$t\f$:
+#    \f$Q^{ext,\pm}\f$, \f$Q^{ext,\rho u}\f$, \f$Q^{ext,E}\f$
 #
 def computeExtraneousSources(psim_src, psip_src, mom_src, E_src, mesh, t):
 

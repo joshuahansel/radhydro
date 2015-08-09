@@ -1,4 +1,4 @@
-## @package testTRTOnly
+## @package unittests.testMarshakWave
 #  Contains unit test for a 2-material TRT problem, using BE time discretization.
 
 import sys

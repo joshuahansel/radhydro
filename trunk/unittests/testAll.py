@@ -1,3 +1,6 @@
+## @package unittests.testAll
+#  Runs unit test suite.
+
 from unittest import TestSuite, defaultTestLoader, TextTestRunner
 
 ## Main function.

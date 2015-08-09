@@ -1,6 +1,5 @@
-## @package testRadTransient
+## @package unittests.testRadTransient
 #  Contains unit test to run a radiation transient to steady-state using BDF2
-#
 
 import sys
 sys.path.append('../src')

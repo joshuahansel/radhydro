@@ -59,6 +59,15 @@ class Mesh:
     def getCellCenters(self):
        return [el.x_cent for el in self.elements]
 
+    ## Returns list of cell edges
+    #
+    #  @return cell edges, \f$x_{i-\frac{1}{2}},\quad i=1\ldots N+1\f$
+    #
+    def getCellEdges(self):
+       cell_edges = [cell.xl for cell in self.elements]
+       cell_edges += [self.elements[-1].xr]
+       return cell_edges
+
     ## Returns list of cell edges for plotting discontinuous data
     #
     def getCellEdgesDiscontinuous(self):

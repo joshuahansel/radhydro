@@ -1,4 +1,4 @@
-## @package testTransientSource
+## @package unittests.testTransientSource
 #  Tests the transient source builder with Crank-Nicolson.
 #
 #  The sources are built using the steady-state solution as

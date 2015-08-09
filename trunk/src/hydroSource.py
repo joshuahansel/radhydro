@@ -13,7 +13,11 @@ from utilityFunctions import getNu, computeEdgeVelocities, computeEdgeTemperatur
 #--------------------------------------------------------------------------------
 ## Updates cell-average velocities \f$u_i\f$.
 #
-#  @param[in,out] hydro_new
+#  @param[in]     mesh        mesh object
+#  @param[in]     hydro_star  star hydro cell-average states,
+#     \f$\mathbf{H}^*_i\f$
+#  @param[in,out] hydro_new   new hydro cell-average states,
+#     \f$\mathbf{H}^{k+1}_i\f$
 #
 def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
  
@@ -69,9 +73,8 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
 
         # compute edge internal energies
         e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
-
-        e_star = computeHydroInternalEnergies(i, state_star, slopes_old)
         #e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
+        e_star = computeHydroInternalEnergies(i, state_star, slopes_old)
 
         # Compute the total energy before and after
         E_l = rho[0]*(0.5*u_star[0]*u_star[0] + e_star[0])
@@ -165,10 +168,10 @@ def evalEnergyAbsorption(i, rad, cx):
     return [rad.phi[i][x]*cx[i][x].sig_a for x in xrange(2)]
 
 
-#=====================================================================================
-## Class to simplify evaluating the Q_E^k term in linearization. It is similar to 
-#  other terms but with the implicit Planckian removed and angularly integrated
-#  quantities.
+## Class to evaluate the \f$Q_E^k\f$ term in linearization.
+#
+#  It is similar to other terms but with the implicit Planckian removed and
+#  angularly integrated quantities.
 #
 # It utilizes the TransientSource term class to build terms mostly just for
 # simplicity of having access to the time stepping algorithms. The ultimate
@@ -242,7 +245,6 @@ class QEHandler(TransientSourceTerm):
 
 ## Handles velocity update source term.
 #
-#
 class VelocityUpdateSourceHandler(TransientSourceTerm):
 
     #-------------------------------------------------------------------------------
@@ -271,30 +273,28 @@ class VelocityUpdateSourceHandler(TransientSourceTerm):
 
         Q_local = evalMomentumExchangeAverage(i, rad=rad_prev, hydro=hydro_prev,
            cx=cx_prev) + Qmom_new[i]
-
         return Q_local
 
     #--------------------------------------------------------------------------------
     def evalOld(self, i, rad_old, hydro_old, cx_old, Qmom_old, **kwargs):
 
-        Qreturn = self.evalImplicit(i, rad_prev=rad_old, hydro_prev=hydro_old,
-           cx_prev=cx_old, Qmom_new=Qmom_old)
-
-        return Qreturn
+        Q_local = evalMomentumExchangeAverage(i, rad=rad_old, hydro=hydro_old,
+           cx=cx_old) + Qmom_old[i]
+        return Q_local
 
     #--------------------------------------------------------------------------------
     def evalOlder(self, i, rad_older, hydro_older, cx_older, Qmom_older, **kwargs):
 
-        return self.evalImplicit(i, rad_prev=rad_older, hydro_prev=hydro_older,
-           cx_prev=cx_older, Qmom_new=Qmom_older)
+        Q_local = evalMomentumExchangeAverage(i, rad=rad_older, hydro=hydro_older,
+           cx=cx_older) + Qmom_older[i]
+        return Q_local
 
 
 #------------------------------------------------------------------------------------
-## Compute estimated momentum exchange \f$Q\f$ due to the coupling to radiation,
-#  used the in the velocity update equation:
-#  \f[
+## Compute the momentum exchange term in the momentum equation,
+#  \f$
 #      Q = \frac{\sigma_t}{c} \left(F - \frac{4}{3}E u\right)
-#  \f]
+#  \f$.
 #
 def evalMomentumExchangeAverage(i, rad, hydro, cx):
 
@@ -309,7 +309,7 @@ def evalMomentumExchangeAverage(i, rad, hydro, cx):
 
 
 ## Computes an extraneous source vector for the momentum equation,
-#  \f$Q^{ext,\rho u}\f$, evaluated at each cell center
+#  \f$Q^{ext,\rho u}\f$, evaluated at each cell center.
 #
 #  @param[in] mom_src  function handle for the momentum extraneous source
 #  @param[in] mesh     mesh
@@ -325,7 +325,7 @@ def computeMomentumExtraneousSource(mom_src, mesh, t):
 
 
 ## Computes an extraneous source vector for the energy equation,
-#  \f$Q^{ext,E}\f$, evaluated at each cell edge
+#  \f$Q^{ext,E}\f$, evaluated at each cell edge.
 #
 #  @param[in] erg_src  function handle for the energy extraneous source
 #  @param[in] mesh     mesh

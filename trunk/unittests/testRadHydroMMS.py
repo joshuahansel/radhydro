@@ -1,4 +1,4 @@
-## @package testRadHydroMMS
+## @package unittests.testRadHydroMMS
 #  Contains unittest class to test an MMS problem with the full
 #  radiation-hydrodynamics scheme
 

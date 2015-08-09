@@ -1,6 +1,5 @@
-## @package testRadSpatialConvergence
+## @package unittests.testRadSpatialConvergence
 #  Tests spatial convergence rate of a transient MMS radiation problem.
-#
 
 import sys
 sys.path.append('../src')

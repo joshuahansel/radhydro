@@ -1,4 +1,4 @@
-## @package testHydro
+## @package unittests.testHydro
 #  Contains unit test class for testing a pure hydrodynamics test problem.
 
 import sys

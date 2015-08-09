@@ -72,18 +72,20 @@ class HydroBC(object):
          # If updating for use in slopes different than if for use in Riemman solve
          if edge_value:
 
-             # compute conservative variables on edge of boundary to pass to rieman
+             # compute conservative variables on edge of boundary to pass to Riemann
              # solver
-             self.rho_L = self.rho_BC(self.x_L+0.5*self.dx_L, t)
-             self.rho_R = self.rho_BC(self.x_R-0.5*self.dx_R, t)
-             self.mom_L = self.mom_BC(self.x_L+0.5*self.dx_L, t)
-             self.mom_R = self.mom_BC(self.x_R-0.5*self.dx_R, t)
-             self.erg_L = self.erg_BC(self.x_L+0.5*self.dx_L, t)
-             self.erg_R = self.erg_BC(self.x_R-0.5*self.dx_R, t)
+             xL = self.x_L + 0.5*self.dx_L # left boundary of domain
+             xR = self.x_R - 0.5*self.dx_R # right boundary of domain
+             self.rho_L = self.rho_BC(xL, t)
+             self.rho_R = self.rho_BC(xR, t)
+             self.mom_L = self.mom_BC(xL, t)
+             self.mom_R = self.mom_BC(xR, t)
+             self.erg_L = self.erg_BC(xL, t)
+             self.erg_R = self.erg_BC(xR, t)
 
-         else: #cell center value
+         else: # cell center value
 
-             # compute conservative variables on ghost boundary cells
+             # compute conservative variables at centers of ghost boundary cells
              self.rho_L = self.rho_BC(self.x_L, t)
              self.rho_R = self.rho_BC(self.x_R, t)
              self.mom_L = self.mom_BC(self.x_L, t)
@@ -100,6 +102,7 @@ class HydroBC(object):
       self.state_R = deepcopy(states[0])
       self.state_L.updateState(rho=self.rho_L, mom=self.mom_L, erg=self.erg_L)
       self.state_R.updateState(rho=self.rho_R, mom=self.mom_R, erg=self.erg_R)
+
 
    ## Returns the left and right boundary values for each conservative variable.
    #

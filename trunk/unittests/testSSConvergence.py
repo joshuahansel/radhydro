@@ -1,4 +1,4 @@
-## @package testSSConvergence
+## @package unittests.testSSConvergence
 #  Runs a diffusion problem and compares to exact solution.
 
 # add source directory to module search path
