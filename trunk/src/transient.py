@@ -122,7 +122,7 @@ def runNonlinearTransient(mesh, problem_type,
    psim_src=None, psip_src=None, mom_src=None, E_src=None,
    time_stepper='BE', dt_option='constant', dt_constant=None, CFL=0.5,
    slope_limiter="vanleer", t_start=0.0, t_end=1.0, use_2_cycles=False,
-   verbose=False, compute_balance=False):
+   verbose=False, check_balance=False):
 
    # check input arguments
    if dt_option == 'constant':
@@ -415,7 +415,7 @@ def runNonlinearTransient(mesh, problem_type,
                 verbose      = verbose)
 
        # compute balance
-       if compute_balance:
+       if check_balance:
           bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
           bal.computeBalance(psi_left, psi_right, hydro_old,
                  hydro_new, rad_old, rad_new, hydro_F_right=hydro_F_right,

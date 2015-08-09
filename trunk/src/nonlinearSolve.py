@@ -94,7 +94,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
           slopes_old   = slopes_old,
           e_slopes_old = e_slopes_old)
 
-       # evaluate transient source, including linearized planckian
+       # perform radiation solve
        rad_new = takeRadiationStep(
            mesh          = mesh,
            time_stepper  = time_stepper,

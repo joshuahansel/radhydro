@@ -339,8 +339,10 @@ def computeEdgeTemperatures(state, e_slope):
    # compute edge temperature using internal energy slope
    return (eL / cv, eR / cv)
 
-## Computes edge internal energies for a cell given hydro state and total
-#  energy slope.  This is done in a matter so that 0.5*(E_L+E_R)=E_i, preserving
+## Computes edge internal energies for a cell, given hydro state and total
+#  energy slope.
+#
+#  This is done in a matter so that 0.5*(E_L+E_R)=E_i, preserving
 #  total energy conservation
 #
 #  @param[in] state    average hydro state for cell \f$i\f$
@@ -350,26 +352,26 @@ def computeEdgeTemperatures(state, e_slope):
 #
 def computeHydroInternalEnergies(i, state, slopes):
 
-   #Use conserved variables to construct e_l and e_r
+   #Use conserved variables to construct e_L and e_R
    rho, mom, erg = state.getConservativeVariables()
 
    #Need all values at edges
-   rho_l = rho - 0.5*slopes.rho_slopes[i]
-   rho_r = rho + 0.5*slopes.rho_slopes[i]
-   mom_l = mom - 0.5*slopes.mom_slopes[i]
-   mom_r = mom + 0.5*slopes.mom_slopes[i]
-   erg_l = erg - 0.5*slopes.erg_slopes[i]
-   erg_r = erg + 0.5*slopes.erg_slopes[i]
+   rho_L = rho - 0.5*slopes.rho_slopes[i]
+   rho_R = rho + 0.5*slopes.rho_slopes[i]
+   mom_L = mom - 0.5*slopes.mom_slopes[i]
+   mom_R = mom + 0.5*slopes.mom_slopes[i]
+   erg_L = erg - 0.5*slopes.erg_slopes[i]
+   erg_R = erg + 0.5*slopes.erg_slopes[i]
 
    # compute internal energies at left and right edges
-   u_l = mom_l/rho_l
-   u_r = mom_r/rho_r
+   u_L = mom_L/rho_L
+   u_R = mom_R/rho_R
 
-   e_l = erg_l/rho_l - 0.5*u_l*u_l
-   e_r = erg_r/rho_r - 0.5*u_r*u_r
+   e_L = erg_L/rho_L - 0.5*u_L**2
+   e_R = erg_R/rho_R - 0.5*u_R**2
 
    # compute edge temperature using internal energy slope
-   return (e_l, e_r)
+   return (e_L, e_R)
 
 ## Computes edge internal energies for a cell given hydro state and internal energy slope
 #

@@ -76,10 +76,6 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         #e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
         e_star = computeHydroInternalEnergies(i, state_star, slopes_old)
 
-        # Compute the total energy before and after
-        E_l = rho[0]*(0.5*u_star[0]*u_star[0] + e_star[0])
-        E_r = rho[1]*(0.5*u_star[1]*u_star[1] + e_star[1])
-
         # loop over edges to compute new internal energies
         e_new = np.zeros(2)
         for x in range(2):
@@ -110,9 +106,9 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         #conserving and this will ensure regular hydro is unchanged
         #print "The old way of e_avg", e_new_avg
         #print "Hacking in a new internal energy computation"
-        E_new = [rho[x]*(0.5*u_new[x]**2 + e_new[x]) for x in range(2)]
-        E_new_avg = 0.5*(E_new[0] + E_new[1])
-        e_new_avg = E_new_avg/state_new.rho - 0.5*(state_new.u)**2
+        #E_new = [rho[x]*(0.5*u_new[x]**2 + e_new[x]) for x in range(2)]
+        #E_new_avg = 0.5*(E_new[0] + E_new[1])
+        #e_new_avg = E_new_avg/state_new.rho - 0.5*(state_new.u)**2
         #print "The new way of computing e_new_avg", e_new_avg
 
         # put new internal energy in the new hydro state
@@ -148,7 +144,7 @@ def evalEnergyExchange(i, rad, hydro, cx, slopes):
 ## Compute estimated momentum exchange \f$Q\f$ due to the coupling to radiation,
 #  used the in the velocity update equation:
 #  \f[
-#      Q = \frac{\sigma_t}{c} \left(F - \frac{4}{3}E u\right)
+#      Q = \frac{\sigma_t}{c} \left(\mathcal{F} - \frac{4}{3}\mathcal{E} u\right)
 #  \f]
 #
 def evalMomentumExchange(i, rad, hydro, cx, slopes):
@@ -206,8 +202,9 @@ class QEHandler(TransientSourceTerm):
         return Q
 
     #--------------------------------------------------------------------------------
-    ## Computes implicit terms in QE^k. Only an energy exchange term, there is 
-    #  no planckian 
+    ## Computes implicit terms in \f$Q_E^k\f$.
+    #
+    #  There is only an energy exchange term, no Planckian term.
     #
     def evalImplicit(self, i, rad_prev, hydro_prev, cx_prev, slopes_old,
        Qerg_new, **kwargs):
