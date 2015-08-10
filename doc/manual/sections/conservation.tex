@@ -3,18 +3,50 @@
 %===============================================================================
 In the homogeneous hydrodynamics case (where there is no coupling to radiation),
 one can arrive at a conservation statement for a time step for each conserved
-quantity $H$ by summing the conservation equations for all elements:
+quantity $H$ by summing the MUSCL-Hancock update equation, Equation
+\eqref{eq:muscl_corrector}, multiplied by cell volume $h_i$, for all elements:
 \begin{equation}
-   \sum\limits_i H_i^{n+1} = \sum\limits_i H_i^n
-   + \frac{\Delta t^n}{\Delta x_1}F_{\half}^{n+\half}
-   - \frac{\Delta t^n}{\Delta x_N}F_{N+\half}^{n+\half} \pep
+   \sum\limits_i h_i H_i^* = \sum\limits_i h_i H_i^n
+   + \Delta t^n\left(F_{\half}^{H,n+\half} - F_{N+\half}^{H,n+\half}\right) \pep
 \end{equation}
-Recursively applying this conservation statement allows one to express
-conservation in terms of the initial conditions and boundary fluxes
-for each time step:
+The conservation statement for the momentum source update, obtained for
+Crank-Nicolson by summing Equation \eqref{eq:hydromCNfull} multiplied by cell
+volume $h_i$ for all elements, is
 \begin{equation}
-   \sum\limits_i H_i^{n+1} = \sum\limits_i H_i^0
-   + \sum\limits_{k=0}^n \Delta t^k\left(
-   \frac{F_{\half}^{k+\half}}{\Delta x_1}
-   - \frac{F_{N+\half}^{k+\half}}{\Delta x_N}\right) \pep
+   \sum\limits_i h_i \rho_i^* u_i^{k+1} = \sum\limits_i h_i (\rho u)_i^*
+   +\dt^n\left(
+   \half\sum\limits_i h_i \frac{\sigma_{t,i}^n}{c}\F_{0,i}^n
+   + \half\sum\limits_i h_i \frac{\sigma_{t,i}^n}{c}\F_{0,i}^k
+   \right) \pep
 \end{equation}
+The conservation statement for the radiation momentum is obtained by
+manipulating the discretized S-2 equations:
+\begin{multline}
+   \sum\limits_i h_i \frac{\F_i^{k+1}}{c^2} = \sum\limits_i h_i \frac{\F_i^n}{c^2}
+   + \dt^n\Bigg(
+   \half\frac{1}{3c}\fn{\Psi^{+,n}_{inc} - \Psi^{-,n}_{inc}
+   + \Psi^{-,n}_{1,L} - \Psi^{+,n}_{N,R}}\\
+   + \half\frac{1}{3c}\fn{\Psi^{+,k+1}_{inc} - \Psi^{-,k+1}_{inc}
+   + \Psi^{-,k+1}_{1,L} - \Psi^{+,k+1}_{N,R}}\\
+   - \half\sum\limits_i h_i\fn{\half\frac{\sigma_{t,i,L}^n}{c}\F_{0,i,L}^n
+   + \half\frac{\sigma_{t,i,R}^n}{c}\F_{0,i,R}^n}\\
+   - \half\sum\limits_i h_i\fn{\half\frac{\sigma_{t,i,L}^k}{c}\F_{0,i,L}^{k+1}
+   + \half\frac{\sigma_{t,i,R}^k}{c}\F_{0,i,R}^{k+1}}
+   \Bigg) \pep
+\end{multline}
+Combining this with the hydrodynamics momentum conservation statement
+gives the total momentum conservation statement for Crank-Nicolson:
+\begin{multline}
+   \sum\limits_i h_i\fn{\rho_i^* u_i^{k+1} + \frac{\F_i^{k+1}}{c^2}} =
+   \sum\limits_i h_i\fn{\rho_i^* u_i^n + \frac{\F_i^n}{c^2}}\\
+   + \dt^n\bigg(
+   F_{\half}^{n+\half} - F_{N+\half}^{n+\half}
+   + \half\frac{1}{3c}\fn{\Psi^{+,n}_{inc} - \Psi^{-,n}_{inc}
+   + \Psi^{-,n}_{1,L} - \Psi^{+,n}_{N,R}}\\
+   + \half\frac{1}{3c}\fn{\Psi^{+,k+1}_{inc} - \Psi^{-,k+1}_{inc}
+   + \Psi^{-,k+1}_{1,L} - \Psi^{+,k+1}_{N,R}}
+   \bigg) \pep
+\end{multline}
+
+
+
