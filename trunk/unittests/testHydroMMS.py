@@ -140,7 +140,7 @@ class TestHydroMMS(unittest.TestCase):
                          for i in xrange(mesh.n_elems)]
    
          # slope limiter option
-         slope_limiter = "step"
+         slope_limiter = "vanleer"
    
          # if run standalone, then be verbose
          if __name__ == '__main__' and n_cycles == 1:

@@ -188,8 +188,7 @@ def runNonlinearTransient(mesh, problem_type,
           t_new = t_old + dt
 
        # print each time step
-       if verbose:
-          print("Time step %d: t = %f -> %f:" % (time_index,t_old,t_new))
+       print("Time step %d: t = %f -> %f:" % (time_index,t_old,t_new))
   
        # take time step
        if problem_type == 'rad_mat':
