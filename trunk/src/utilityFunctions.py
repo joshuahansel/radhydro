@@ -74,6 +74,37 @@ def computeConvergenceRates(dx,err):
    return rates
 
 #-----------------------------------------------------------------------------------
+## Computes convergence rates for hydro quantities.
+#
+#  @param[in] dx   list of mesh sizes or time step sizes for each cycle
+#  @param[in] err  list of dictionaries of errors for each cycle and quantity
+#
+#  @return  list of dictionaries of convergence rates for each quantity.
+#     The size of this list will be the number of cycles minus one.
+#
+def computeHydroConvergenceRates(dx,err):
+
+   # determine number of refinement cycles from length of lists
+   n_cycles = len(dx)
+
+   # initialize list of rates
+   rates = list()
+
+   # loop over cycles
+   for cycle in xrange(n_cycles):
+      # compute convergence rate
+      if cycle > 0:
+         # loop over keys of dictionary to compute rate for each quantity
+         rate_dict = dict()
+         for key in err[cycle]:
+            rate_dict[key] = log(err[cycle][key]/err[cycle-1][key]) / \
+               log(dx[cycle]/dx[cycle-1])
+         # add rate dictionary to list
+         rates.append(rate_dict)
+
+   return rates
+
+#-----------------------------------------------------------------------------------
 ## Prints convergence table and convergence rates
 #
 #  @param[in] dx        list of mesh sizes or time step sizes for each cycle
@@ -85,7 +116,8 @@ def computeConvergenceRates(dx,err):
 #                       'dx' or 'dt'
 #  @param[in] err_desc  string description for the error, e.g., 'L1' or 'L2'
 #
-def printConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err'):
+def printConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err',
+   quantity_desc=''):
 
    # compute rates if they were not provided
    if rates is None:
@@ -94,8 +126,16 @@ def printConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err'):
    # determine number of refinement cycles from length of lists
    n_cycles = len(dx)
 
+   # create title
+   if quantity_desc == '':
+      title = '\nConvergence:'
+   else:
+      title = '\n' + quantity_desc + ' Convergence:'
+
    # print header
-   print('\n%11s %11s    Rate' % (dx_desc,err_desc))
+   print(title)
+   print('-------------------------------')
+   print('%11s %11s    Rate' % (dx_desc,err_desc))
    print('-------------------------------')
 
    # loop over cycles
@@ -108,7 +148,46 @@ def printConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err'):
 
       # print line to convergence table
       print('%11.3e %11.3e %7s' % (dx[cycle],err[cycle],rate_string))
+   print('-------------------------------')
    print('\n')
+
+
+## Prints convergence table and convergence rates for each hydro quantity
+#
+#  @param[in] dx        list of mesh sizes or time step sizes for each cycle
+#  @param[in] err       list of dictionaries of errors for each cycle and
+#                       each quantity
+#  @param[in] rates     list of dictionaries of convergence rates for each
+#                       quantity. The size of this list will
+#                       be the number of cycles minus one. If this argument
+#                       is not provided, rates are computed in this function.
+#  @param[in] dx_desc   string description for the size quantity, e.g.,
+#                       'dx' or 'dt'
+#  @param[in] err_desc  string description for the error, e.g., 'L1' or 'L2'
+#
+def printHydroConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err'):
+
+   # compute rates if they were not provided
+   if rates is None:
+      rates = computeHydroConvergenceRates(dx,err)
+
+   # loop over each quantity
+   for key in err[0]:
+
+      # extract an error list for the quantity
+      err_quantity = list()
+      for i in xrange(len(err)):
+         err_quantity.append(err[i][key])
+
+      # extract a rate list for the quantity
+      rates_quantity = list()
+      for i in xrange(len(rates)):
+         rates_quantity.append(rates[i][key])
+
+      # call convergence table function
+      printConvergenceTable(dx,err_quantity,rates_quantity,dx_desc,err_desc,
+         quantity_desc=key)
+
 
 ## Function to compute the discrete \f$L^1\f$ norm of an array \f$\mathbf{y}\f$
 #  of 2-tuples: \f$\|\mathbf{y}\|_1 = \sum\limits_i |y_{i,L}| + |y_{i,R}|\f$
@@ -135,18 +214,26 @@ def computeDiscreteL1Norm(values):
 ## Function to compute the error for the hydro solution.
 #
 def computeHydroError(hydro, hydro_exact):
-
-#   # number of elements
-#   n = len(hydro)
-#
-#   # initialize error to zero
-#   err = 0.0
-#
-#   # loop over tuples
-#   for i in xrange(n):
-#      err += abs(hydro[i].e - hydro_exact[i].e)
-
    err = computeL2RelDiff(hydro, hydro_exact, aux_func=lambda x: x.e)
+   return err
+
+## Function to compute the L-2 error for the hydro solution
+#  for a number of different quantities.
+#
+def computeHydroL2Error(hydro, hydro_exact):
+
+   # dictionary of quantities to their function
+   funcs = {'rho':   lambda state: state.rho,
+            'rho u': lambda state: state.getConservativeVariables()[1],
+            'E':     lambda state: state.getConservativeVariables()[2],
+            'u':     lambda state: state.u,
+            'p':     lambda state: state.p,
+            'e':     lambda state: state.e}
+
+   # compute error for each entry in dictionary
+   err = dict()
+   for key in funcs:
+      err[key] = computeL2RelDiff(hydro, hydro_exact, aux_func=funcs[key])
 
    return err
 

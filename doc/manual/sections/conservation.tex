@@ -1,0 +1,20 @@
+%===============================================================================
+\section{Conservation}
+%===============================================================================
+In the homogeneous hydrodynamics case (where there is no coupling to radiation),
+one can arrive at a conservation statement for a time step for each conserved
+quantity $H$ by summing the conservation equations for all elements:
+\begin{equation}
+   \sum\limits_i H_i^{n+1} = \sum\limits_i H_i^n
+   + \frac{\Delta t^n}{\Delta x_1}F_{\half}^{n+\half}
+   - \frac{\Delta t^n}{\Delta x_N}F_{N+\half}^{n+\half} \pep
+\end{equation}
+Recursively applying this conservation statement allows one to express
+conservation in terms of the initial conditions and boundary fluxes
+for each time step:
+\begin{equation}
+   \sum\limits_i H_i^{n+1} = \sum\limits_i H_i^0
+   + \sum\limits_{k=0}^n \Delta t^k\left(
+   \frac{F_{\half}^{k+\half}}{\Delta x_1}
+   - \frac{F_{N+\half}^{k+\half}}{\Delta x_N}\right) \pep
+\end{equation}

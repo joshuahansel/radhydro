@@ -28,7 +28,11 @@ from crossXInterface import ConstantCrossSection
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
 
-## Derived unittest class
+## Class to test a pure hydro problem with uniform initial conditions.
+#
+#  With uniform initial conditions and boundary conditions, it is
+#  impossible for any flux to be generated, so taking any number of
+#  time steps should yield the initial solution.
 #
 class TestHydroUniformIC(unittest.TestCase):
    def setUp(self):
@@ -142,16 +146,18 @@ class TestHydroUniformIC(unittest.TestCase):
          psip_src     = psip_src,
          verbose      = verbose)
 
-      # print convergence table and plot
-      if __name__ == '__main__':
+      # number of decimal places to check
+      n_decimal_places = 15
 
-         # compute exact hydro solution
-         hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,
-            rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
-   
-         # plot hydro solution
-         plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),
-            exact=hydro_exact)
+      # check that states are all equal to the IC
+      for i in xrange(n_elems):
+         state    = hydro_new[i]
+         state_IC = hydro_IC[i]
+         rho, mom, erg = state.getConservativeVariables()
+         rho0, mom0, erg0 = state_IC.getConservativeVariables()
+         self.assertAlmostEqual(rho, rho0, n_decimal_places)
+         self.assertAlmostEqual(mom, mom0, n_decimal_places)
+         self.assertAlmostEqual(erg, erg0, n_decimal_places)
 
 
 # run main function from unittest module

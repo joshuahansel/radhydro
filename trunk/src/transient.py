@@ -188,7 +188,8 @@ def runNonlinearTransient(mesh, problem_type,
           t_new = t_old + dt
 
        # print each time step
-       print("Time step %d: t = %f -> %f:" % (time_index,t_old,t_new))
+       if verbose:
+          print("Time step %d: t = %f -> %f:" % (time_index,t_old,t_new))
   
        # take time step
        if problem_type == 'rad_mat':
@@ -201,7 +202,7 @@ def runNonlinearTransient(mesh, problem_type,
 
               # take a half time step with CN
               hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
-              Qpsi_new, Qmom_new, Qerg_new =\
+              Qpsi_new, Qmom_new, Qerg_new, src_totals_cycle1 =\
                  takeTimeStepRadiationMaterial(
                  mesh         = mesh,
                  time_stepper = 'CN',
@@ -225,7 +226,7 @@ def runNonlinearTransient(mesh, problem_type,
 
               # take a half time step with BDF2
               hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
-              Qpsi_new, Qmom_new, Qerg_new =\
+              Qpsi_new, Qmom_new, Qerg_new, src_totals_cycle2 =\
                  takeTimeStepRadiationMaterial(
                  mesh         = mesh,
                  time_stepper = 'BDF2',
@@ -254,12 +255,17 @@ def runNonlinearTransient(mesh, problem_type,
                  Qpsi_older   = deepcopy(Qpsi_old),
                  Qmom_older   = deepcopy(Qmom_old),
                  Qerg_older   = deepcopy(Qerg_old))
+
+              # add up source totals for each cycle to total for whole time step
+              src_totals = dict()
+              for key in src_totals_cycle1:
+                 src_totals[key] = src_totals_cycle1[key] + src_totals_cycle2[key]
              
-          else: #assume its a single step method
+          else: # assume it's a single step method
 
               # take time step without MUSCL-Hancock
               hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
-              Qpsi_new, Qmom_new, Qerg_new =\
+              Qpsi_new, Qmom_new, Qerg_new, src_totals =\
                  takeTimeStepRadiationMaterial(
                  mesh         = mesh,
                  time_stepper = time_stepper_this_step,
@@ -369,8 +375,10 @@ def runNonlinearTransient(mesh, problem_type,
                 verbose      = verbose)
 
              # add up source totals for each cycle to total for whole time step
-             src_totals = src_totals_cycle1 + src_totals_cycle2
-
+             src_totals = dict()
+             for key in src_totals_cycle1:
+                src_totals[key] = src_totals_cycle1[key] + src_totals_cycle2[key]
+             
           else: # use only 1 cycle
 
              # for first step, can't use BDF2; use CN instead
@@ -498,8 +506,14 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
           Qmom_older   = Qmom_older,
           Qerg_older   = Qerg_older)
 
+       # add up sources for entire time step for balance checker
+       src_totals = {}
+       vol = mesh.getElement(0).dx
+       src_totals["mom"] = sum([vol*dt*i for i in Qmom_new])
+       src_totals["erg"] = sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
+
        return hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
-          Qpsi_new, Qmom_new, Qerg_new
+          Qpsi_new, Qmom_new, Qerg_new, src_totals
 
 
 ## Takes time step with MUSCL-Hancock.
@@ -578,12 +592,12 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           print "    Corrector step:"
 
        # update hydro BC
-       #hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=True)
-       hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=False)
+       hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=True)
+       #hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=False)
 
        # perform corrector step of MUSCL-Hancock
-       #hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorSimon(
-       hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorJosh(
+       hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorSimon(
+       #hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorJosh(
           mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
 
        if debug_mode:

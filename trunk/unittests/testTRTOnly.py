@@ -83,7 +83,7 @@ class TestTRTOnly(unittest.TestCase):
       rad_IC    = Radiation([psi_right for i in range(n_elems*4)])
 
       # time-stepper
-      time_stepper = "BE"
+      time_stepper = "TRBDF2"
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -104,7 +104,8 @@ class TestTRTOnly(unittest.TestCase):
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
-         verbose      = verbose)
+         verbose      = verbose,
+         check_balance = True)
 
       # plot solutions if run standalone
       if __name__ == "__main__":

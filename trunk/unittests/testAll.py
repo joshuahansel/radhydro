@@ -15,7 +15,9 @@ def main():
                    'testTransientSource',
                    'testRadTransient',
                    'testRadSpatialConvergence',
-                   'testCreateMMSSourceFunctions']
+                   'testCreateMMSSourceFunctions',
+                   'testHydroUniformIC',
+                   'testUpdateVelocity']
 
    # add all tests modules to suite
    suite = TestSuite()

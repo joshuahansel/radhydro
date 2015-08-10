@@ -29,7 +29,7 @@ def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
     for i in range(mesh.n_elems):
 
         # update velocity
-        u_new = hydro_star[i].u + dt/hydro_new[i].rho*Q[i]
+        u_new = hydro_star[i].u + dt/hydro_star[i].rho*Q[i]
         hydro_new[i].updateVelocity(u_new)
 
 
@@ -106,9 +106,9 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         #conserving and this will ensure regular hydro is unchanged
         #print "The old way of e_avg", e_new_avg
         #print "Hacking in a new internal energy computation"
-        #E_new = [rho[x]*(0.5*u_new[x]**2 + e_new[x]) for x in range(2)]
-        #E_new_avg = 0.5*(E_new[0] + E_new[1])
-        #e_new_avg = E_new_avg/state_new.rho - 0.5*(state_new.u)**2
+        E_new = [rho[x]*(0.5*u_new[x]**2 + e_new[x]) for x in range(2)]
+        E_new_avg = 0.5*(E_new[0] + E_new[1])
+        e_new_avg = E_new_avg/state_new.rho - 0.5*(state_new.u)**2
         #print "The new way of computing e_new_avg", e_new_avg
 
         # put new internal energy in the new hydro state
