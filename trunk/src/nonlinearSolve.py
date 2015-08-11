@@ -42,6 +42,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
 
    #Rad slopes handler
    rad_slopes = RadSlopes(hydro_star, slopes_old)
+   print rad_slopes
 
    # perform nonlinear iterations:
    while not converged:

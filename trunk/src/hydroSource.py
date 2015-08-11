@@ -73,12 +73,6 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
 
         # compute edge internal energies
         e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
-        #e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
-        e_star = computeHydroInternalEnergies(i, state_star, slopes_old)
-       # e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
-        print "old e_star_avg: ", state_star.e
-        print "new e_star_avg: ", 0.5*(e_star[0] + e_star[1])
-        print "LEFT RIGHT WTF?!", e_star[0], e_star[1]
 
         #Compute the total energy at left and right
         E_star = [hydro_star[i].E() - 0.5*E_slopes_old[i],
