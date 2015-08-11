@@ -134,16 +134,19 @@ def runNonlinearTransient(mesh, problem_type,
    cx_old = deepcopy(cross_sects)
    rad_old = deepcopy(rad_IC)
    hydro_old = deepcopy(hydro_IC)
-   e_slopes_old = np.zeros(mesh.n_elems)
    Qpsi_old, Qmom_old, Qerg_old = computeExtraneousSources(
       psim_src, psip_src, mom_src, E_src, mesh, t_start)
+
+   #Just guess e_rad old is hydro initial conditionsstuff
+   e_rad_old = np.array([(i.e, i.e) for i in hydro_old])
+   
 
    # set older quantities to nothing; these shouldn't exist yet
    cx_older       = None
    rad_older      = None
    hydro_older    = None
    slopes_older   = None
-   e_slopes_older = None
+   e_rad_older = None
    Qpsi_older     = None
    Qmom_older     = None
    Qerg_older     = None
@@ -170,7 +173,7 @@ def runNonlinearTransient(mesh, problem_type,
           # compute time step size according to CFL condition
           sound_speed = [sqrt(i.p * i.gamma / i.rho) + abs(i.u) for i in hydro_old]
           dt_vals = [CFL*(mesh.elements[i].dx)/sound_speed[i]
-             for i in range(len(hydro_old))]
+             for i in xrange(len(hydro_old))]
           dt = min(dt_vals)
 
           # if using 2 cycles, then twice the time step size may be taken
@@ -200,7 +203,7 @@ def runNonlinearTransient(mesh, problem_type,
           if time_stepper == 'TRBDF2':
 
               # take a half time step with CN
-              hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
+              hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
               Qpsi_new, Qmom_new, Qerg_new, src_totals_cycle1 =\
                  takeTimeStepRadiationMaterial(
                  mesh         = mesh,
@@ -212,7 +215,7 @@ def runNonlinearTransient(mesh, problem_type,
                  cx_old       = cx_old,
                  hydro_old    = hydro_old,
                  rad_old      = rad_old,
-                 e_slopes_old = e_slopes_old,
+                 e_rad_old = e_rad_old,
                  psim_src     = psim_src,
                  psip_src     = psip_src,
                  mom_src      = mom_src,
@@ -224,7 +227,7 @@ def runNonlinearTransient(mesh, problem_type,
                  Qerg_old     = Qerg_old)
 
               # take a half time step with BDF2
-              hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
+              hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
               Qpsi_new, Qmom_new, Qerg_new, src_totals_cycle2 =\
                  takeTimeStepRadiationMaterial(
                  mesh         = mesh,
@@ -240,8 +243,8 @@ def runNonlinearTransient(mesh, problem_type,
                  rad_old      = rad_new,
                  rad_older    = deepcopy(rad_old),
                  slopes_older = deepcopy(slopes_old),
-                 e_slopes_old = e_slopes_old,
-                 e_slopes_older = deepcopy(e_slopes_old),
+                 e_rad_old = e_rad_new,
+                 e_rad_older = e_rad_old,
                  slope_limiter= slope_limiter,
                  psim_src     = psim_src,
                  psip_src     = psip_src,
@@ -263,7 +266,7 @@ def runNonlinearTransient(mesh, problem_type,
           else: # assume it's a single step method
 
               # take time step without MUSCL-Hancock
-              hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
+              hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
               Qpsi_new, Qmom_new, Qerg_new, src_totals =\
                  takeTimeStepRadiationMaterial(
                  mesh         = mesh,
@@ -279,8 +282,8 @@ def runNonlinearTransient(mesh, problem_type,
                  rad_old      = rad_old,
                  rad_older    = rad_older,
                  slopes_older = slopes_older,
-                 e_slopes_old = e_slopes_old,
-                 e_slopes_older = e_slopes_older,
+                 e_rad_old = e_rad_old,
+                 e_rad_older = e_rad_older,
                  slope_limiter = slope_limiter,
                  psim_src     = psim_src,
                  psip_src     = psip_src,
@@ -302,7 +305,7 @@ def runNonlinearTransient(mesh, problem_type,
              print("  Cycle 1:")
 
              # take time step with MUSCL-Hancock
-             hydro_half, rad_half, cx_half, slopes_old, e_slopes_half,\
+             hydro_half, rad_half, cx_half, slopes_old, e_rad_half,\
              Qpsi_half, Qmom_half, Qerg_half, hydro_F_left, hydro_F_right,\
              src_totals_cycle1 =\
                 takeTimeStepMUSCLHancock(
@@ -319,8 +322,8 @@ def runNonlinearTransient(mesh, problem_type,
                 rad_old        = rad_old,
                 rad_older      = rad_older,
                 slopes_older   = slopes_older,
-                e_slopes_old   = e_slopes_old,
-                e_slopes_older = e_slopes_older,
+                e_rad_old   = e_rad_old,
+                e_rad_older = e_rad_older,
                 time_stepper_predictor='CN',
                 time_stepper_corrector='CN',
                 psim_src     = psim_src,
@@ -339,7 +342,7 @@ def runNonlinearTransient(mesh, problem_type,
              print("  Cycle 2:")
 
              # take time step with MUSCL-Hancock
-             hydro_new, rad_new, cx_new, slopes_half, e_slopes_new,\
+             hydro_new, rad_new, cx_new, slopes_half, e_rad_new,\
              Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
              src_totals_cycle2 =\
                 takeTimeStepMUSCLHancock(
@@ -356,8 +359,8 @@ def runNonlinearTransient(mesh, problem_type,
                 rad_old        = rad_half,
                 rad_older      = rad_old,
                 slopes_older   = slopes_old,
-                e_slopes_old   = e_slopes_half,
-                e_slopes_older = e_slopes_old,
+                e_rad_old   = e_rad_half,
+                e_rad_older = e_rad_old,
                 time_stepper_predictor='CN',
                 time_stepper_corrector='BDF2',
                 psim_src     = psim_src,
@@ -387,7 +390,7 @@ def runNonlinearTransient(mesh, problem_type,
                 time_stepper_corrector = 'BDF2'
 
              # take time step with MUSCL-Hancock
-             hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
+             hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
              Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
              src_totals =\
                 takeTimeStepMUSCLHancock(
@@ -404,8 +407,8 @@ def runNonlinearTransient(mesh, problem_type,
                 rad_old        = rad_old,
                 rad_older      = rad_older,
                 slopes_older   = slopes_older,
-                e_slopes_old   = e_slopes_old,
-                e_slopes_older = e_slopes_older,
+                e_rad_old   = e_rad_old,
+                e_rad_older = e_rad_older,
                 time_stepper_predictor='CN',
                 time_stepper_corrector=time_stepper_corrector,
                 psim_src     = psim_src,
@@ -433,7 +436,7 @@ def runNonlinearTransient(mesh, problem_type,
        rad_older = deepcopy(rad_old)
        hydro_older = deepcopy(hydro_old)
        slopes_older = deepcopy(slopes_old)
-       e_slopes_older = deepcopy(e_slopes_old)
+       e_rad_older = deepcopy(e_rad_old)
        Qpsi_older = deepcopy(Qpsi_old)
        Qmom_older = deepcopy(Qmom_old)
        Qerg_older = deepcopy(Qerg_old)
@@ -443,7 +446,7 @@ def runNonlinearTransient(mesh, problem_type,
        cx_old  = deepcopy(cx_new)
        rad_old = deepcopy(rad_new)
        hydro_old = deepcopy(hydro_new)
-       e_slopes_old = deepcopy(e_slopes_new)
+       e_rad_old = deepcopy(e_rad_new)
        Qpsi_old = deepcopy(Qpsi_new)
        Qmom_old = deepcopy(Qmom_new)
        Qerg_old = deepcopy(Qerg_new)
@@ -458,7 +461,7 @@ def runNonlinearTransient(mesh, problem_type,
 #
 def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
    cx_old=None, cx_older=None, hydro_old=None, hydro_older=None, rad_old=None, rad_older=None,
-   hydro_BC=None, slopes_older=None, e_slopes_old=None, e_slopes_older=None,
+   hydro_BC=None, slopes_older=None, e_rad_old=None, e_rad_older=None,
    psim_src=None, psip_src=None, mom_src=None, E_src=None, t_old=None, Qpsi_old=None, Qmom_old=None, Qerg_old=None,
    Qpsi_older=None, Qmom_older=None, Qerg_older=None, slope_limiter=None):
 
@@ -477,7 +480,7 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
        hydro_star = deepcopy(hydro_old)
 
        # perform nonlinear solve
-       hydro_new, rad_new, cx_new, e_slopes_new = nonlinearSolve(
+       hydro_new, rad_new, cx_new, e_rad_new = nonlinearSolve(
           mesh         = mesh,
           time_stepper = time_stepper,
           problem_type = 'rad_mat',
@@ -493,8 +496,8 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
           rad_older    = rad_older,
           slopes_old   = slopes_old,
           slopes_older = slopes_older,
-          e_slopes_old = e_slopes_old,
-          e_slopes_older = e_slopes_older,
+          e_rad_old    = e_rad_old,
+          e_rad_older  = e_rad_older,
           Qpsi_new     = Qpsi_new,
           Qmom_new     = Qmom_new,
           Qerg_new     = Qerg_new,
@@ -511,7 +514,7 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
        src_totals["mom"] = sum([vol*dt*i for i in Qmom_new])
        src_totals["erg"] = sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
 
-       return hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
+       return hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
           Qpsi_new, Qmom_new, Qerg_new, src_totals
 
 
@@ -521,7 +524,7 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
 #
 def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
    cx_old, cx_older, hydro_old, hydro_older, rad_old, rad_older,
-   hydro_BC, slope_limiter, slopes_older, e_slopes_old, e_slopes_older,
+   hydro_BC, slope_limiter, slopes_older, e_rad_old, e_rad_older,
    psim_src, psip_src, mom_src, E_src, t_old,
    Qpsi_old, Qmom_old, Qerg_old, Qpsi_older, Qmom_older, Qerg_older,
    time_stepper_predictor='CN', time_stepper_corrector='BDF2',verbose=False):
@@ -558,7 +561,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           psim_src, psip_src, mom_src, E_src, mesh, t_old+0.5*dt)
 
        # perform nonlinear solve
-       hydro_half, rad_half, cx_half, e_slopes_half = nonlinearSolve(
+       hydro_half, rad_half, cx_half, e_rad_half = nonlinearSolve(
           mesh         = mesh,
           time_stepper = time_stepper_predictor,
           problem_type = 'rad_hydro',
@@ -570,7 +573,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           hydro_star   = hydro_star,
           rad_old      = rad_old,
           slopes_old   = slopes_old,
-          e_slopes_old = e_slopes_old,
+          e_rad_old    = e_rad_old,
           Qpsi_new     = Qpsi_half,
           Qmom_new     = Qmom_half,
           Qerg_new     = Qerg_half,
@@ -609,7 +612,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           psim_src, psip_src, mom_src, E_src, mesh, t_old+dt)
 
        # perform nonlinear solve
-       hydro_new, rad_new, cx_new, e_slopes_new = nonlinearSolve(
+       hydro_new, rad_new, cx_new, e_rad_new = nonlinearSolve(
           mesh         = mesh,
           time_stepper = time_stepper_corrector,
           problem_type = 'rad_hydro',
@@ -625,8 +628,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           rad_older    = rad_older,
           slopes_old   = slopes_old,
           slopes_older = slopes_older,
-          e_slopes_old = e_slopes_old,
-          e_slopes_older = e_slopes_older,
+          e_rad_old = e_rad_old,
+          e_rad_older = e_rad_older,
           Qpsi_new     = Qpsi_new,
           Qmom_new     = Qmom_new,
           Qerg_new     = Qerg_new,
@@ -652,7 +655,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           for i in hydro_new:
              print i
 
-       return hydro_new, rad_new, cx_new, slopes_old, e_slopes_new,\
+       return hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
           Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
           src_totals
 

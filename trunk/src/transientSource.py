@@ -53,7 +53,7 @@ import globalConstants as GC
 from radUtilities import mu
 from utilityFunctions import getIndex, getLocalIndex, computeRadiationVector
 from utilityFunctions import getNu, computeEdgeVelocities, computeEdgeTemperatures,\
-   computeEdgeDensities, computeEdgeInternalEnergies
+   computeEdgeDensities 
 
 ## Computes the radiation transient source
 #
@@ -160,7 +160,8 @@ class TransientSourceTerm:
 
         #Loop over all cells and build source 
         Q = np.array([])
-        for i in range(self.mesh.n_elems):
+
+        for i in xrange(self.mesh.n_elems):
             
             Q_elem = self.func(i, **kwargs) #Append source of element i
             Q = np.append(Q, Q_elem)          
@@ -253,7 +254,7 @@ class OldIntensityTerm(TransientSourceTerm):
 
         # Loop over all cells and build source 
         Q = np.array([])
-        for i in range(self.mesh.n_elems):
+        for i in xrange(self.mesh.n_elems):
 
             # Evaluate source of element i
             Q_local = self.computeOldIntensityTerm(i, dt=dt, rad_old=rad_old)
@@ -754,8 +755,8 @@ class PlanckianTerm(TransientSourceTerm):
     #  @param[in] i             element id
     #  @param[in] cx_prev       previous cross sections \f$\sigma^k\f$
     #
-    def evalImplicit(self, i, dt, cx_prev, hydro_prev, hydro_star, E_slopes_old, QE, 
-        slopes_old, e_slopes_old, hydro_new=None, **kwargs):
+    def evalImplicit(self, i, dt, cx_prev=None, hydro_prev=None, hydro_star=None,
+            E_slopes_star=None, QE=None, slopes_old=None, e_rad_prev=None, hydro_new=None, **kwargs):
 
         # get coefficient corresponding to time-stepper
         scales = {"CN":0.5, "BE":1., "BDF2":2./3.}
@@ -774,13 +775,12 @@ class PlanckianTerm(TransientSourceTerm):
         u_new = computeEdgeVelocities(i, hydro_new[i], slopes_old)
 
         #Compute left and right star energyes
-        E_star = [state_star.E() - 0.5*E_slopes_old[i],
-                  state_star.E() + 0.5*E_slopes_old[i]]
+        E_star = [state_star.E() - 0.5*E_slopes_star[i],
+                  state_star.E() + 0.5*E_slopes_star[i]]
 
         # compute edge quantities
         rho = computeEdgeDensities(i, state_prev, slopes_old)
-        T = computeEdgeTemperatures(state_prev, e_slopes_old[i])
-        e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
+        T = computeEdgeTemperatures(spec_heat, e_rad_prev[i])
         print "HERE IS THE OTHER SLOPE"
 
         # compute Planckian term for each edge on element
@@ -797,7 +797,7 @@ class PlanckianTerm(TransientSourceTerm):
             # compute Planckian
             emission = (1.0 - nu)*sig_a*a*c*T[edge]**4
             planckian[edge] = emission \
-                -   nu/(scale*dt)*( rho[edge]*(e_prev[edge] +0.5*u_new[edge]**2)  \
+                -   nu/(scale*dt)*( rho[edge]*(e_rad_prev[i][edge] +0.5*u_new[edge]**2)  \
                 -   E_star[edge] ) \
                 + nu*QE_elem/scale 
 
@@ -824,10 +824,10 @@ class PlanckianTerm(TransientSourceTerm):
     #  @param[in] cx_old     old cross sections \f$\sigma^n\f$
     #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
     #
-    def evalOld(self, i, hydro_old, cx_old, e_slopes_old, **kwargs):
+    def evalOld(self, i, hydro_old, cx_old, e_rad_old=None, **kwargs):
 
         #use function forward to external function
-        planckian = evalPlanckianOld(i, hydro_old, cx_old, e_slopes_old)
+        planckian = evalPlanckianOld(i, hydro_old, cx_old, e_rad_old)
 
         #Store the (isotropic) sources in correct index
         Q = np.zeros(4)
@@ -841,11 +841,11 @@ class PlanckianTerm(TransientSourceTerm):
     #--------------------------------------------------------------------------------
     ## Evaluate older term. Just call the evalOld function as in other source terms
     #
-    def evalOlder(self, i, hydro_older, cx_older, e_slopes_older, **kwargs):
+    def evalOlder(self, i, hydro_older, cx_older, e_rad_older, **kwargs):
 
         # Use old function but with older arguments.
         return self.evalOld(i, hydro_old=hydro_older, cx_old=cx_older,
-           e_slopes_old=e_slopes_older)
+           e_rad_old=e_rad_older)
 
 
 #=====================================================================================
@@ -859,11 +859,12 @@ class PlanckianTerm(TransientSourceTerm):
 #  @param[in] i          element id
 #  @param[in] hydro_old  old hydro states \f$\mathbf{H}^n\f$
 #  @param[in] cx_old     old cross sections \f$\sigma^n\f$
+#  @param[in] e_rad_old  value of e at edge values from radiation solve
 #
-def evalPlanckianOld(i, hydro_old, cx_old, e_slopes_old):
+def evalPlanckianOld(i, hydro_old, cx_old, e_rad_old):
 
     # compute edge temperatures
-    T = computeEdgeTemperatures(hydro_old[i], e_slopes_old[i])
+    T = computeEdgeTemperatures(hydro_old[i].spec_heat, e_rad_old[i])
 
     #calculate at left and right, isotropic emission source
     planckian = [0.0,0.0]

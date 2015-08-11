@@ -37,20 +37,20 @@ def hydroPredictor(mesh, states_old, slopes, dt):
     ##Compute left and right states
     #states_l = [deepcopy(i) for i in states] #initialize 
     #states_r = [deepcopy(i) for i in states]
-    #for i in range(len(rho_l)):
+    #for i in xrange(len(rho_l)):
     #    states_l[i].updateState(rho_l[i], mom_l[i], erg_l[i])
     #    states_r[i].updateState(rho_r[i], mom_r[i], erg_r[i])
 
     ##Initialize predicited conserved quantities
-    #rho_l_p = [0.0 for i in range(len(rho_l))]
-    #rho_r_p = [0.0 for i in range(len(rho_l))]
-    #mom_l_p = [0.0 for i in range(len(rho_l))]
-    #mom_r_p = [0.0 for i in range(len(rho_l))]
-    #erg_l_p = [0.0 for i in range(len(rho_l))]
-    #erg_r_p = [0.0 for i in range(len(rho_l))]
+    #rho_l_p = [0.0 for i in xrange(len(rho_l))]
+    #rho_r_p = [0.0 for i in xrange(len(rho_l))]
+    #mom_l_p = [0.0 for i in xrange(len(rho_l))]
+    #mom_r_p = [0.0 for i in xrange(len(rho_l))]
+    #erg_l_p = [0.0 for i in xrange(len(rho_l))]
+    #erg_r_p = [0.0 for i in xrange(len(rho_l))]
 
     ##Advance in time each edge variable
-    #for i in range(len(rho_l)):
+    #for i in xrange(len(rho_l)):
 
     #    #rho
     #    rho_l_p[i] = advCons(rho_l[i],dx,0.5*dt,rhoFlux(states_l[i]),rhoFlux(states_r[i])) 
@@ -65,12 +65,12 @@ def hydroPredictor(mesh, states_old, slopes, dt):
     #    erg_r_p[i] = advCons(erg_r[i],dx,0.5*dt,ergFlux(states_l[i]),ergFlux(states_r[i])) 
 
     ##Advance the primitive variables at the edges
-    #for i in range(len(rho_l)):
+    #for i in xrange(len(rho_l)):
     #    states_l[i].updateState(rho_l_p[i], mom_l_p[i], erg_l_p[i])
     #    states_r[i].updateState(rho_r_p[i], mom_r_p[i], erg_r_p[i])
 
     ##Return the new averages
-    #for i in range(len(states)):
+    #for i in xrange(len(states)):
     #    states[i].updateState(0.5*(rho_l_p[i]+rho_r_p[i]),
     #                       0.5*(mom_l_p[i]+mom_r_p[i]),
     #                       0.5*(erg_l_p[i]+erg_r_p[i]))
@@ -154,7 +154,7 @@ def hydroCorrectorJosh(mesh, states_old, states_half, slopes_old, dt, bc):
     erg_F = np.zeros(n+1)
 
     # solve Riemann problem at each interface
-    for i in range(0,n+1):
+    for i in xrange(0,n+1):
 
         # get left and right states for Riemann problem at interface
         if i == 0: # left boundary edge
@@ -196,7 +196,7 @@ def hydroCorrectorJosh(mesh, states_old, states_half, slopes_old, dt, bc):
     erg = [s.rho*(0.5*s.u**2. + s.e) for s in states_old]
     
     #Advance conserved values at centers based on edge fluxes
-    for i in range(len(rho)):
+    for i in xrange(len(rho)):
 
         dx = mesh.getElement(i).dx
 
@@ -218,7 +218,7 @@ def hydroCorrectorJosh(mesh, states_old, states_half, slopes_old, dt, bc):
 
     #Advance primitive variables
     states_new = [deepcopy(i) for i in states_old] 
-    for i in range(len(states_new)):
+    for i in xrange(len(states_new)):
         states_new[i].updateState(rho[i],mom[i],erg[i])
 
     return states_new, bound_F_left, bound_F_right
@@ -236,7 +236,7 @@ def hydroCorrectorSimon(mesh, states_old, states_half, slopes_old, dt, bc):
     # Create edge states
     states_L = deepcopy(states_half) 
     states_R = deepcopy(states_half)
-    for i in range(len(rho_half_L)):
+    for i in xrange(len(rho_half_L)):
         states_L[i].updateState(rho_half_L[i], mom_half_L[i], erg_half_L[i])
         states_R[i].updateState(rho_half_R[i], mom_half_R[i], erg_half_R[i])
 
@@ -273,7 +273,7 @@ def hydroCorrectorSimon(mesh, states_old, states_half, slopes_old, dt, bc):
         erg_F[-1] = riem_solver(erg_BC_R, erg_half_R[-1], state_BC_R, states_R[-1], ergFlux)
 
     #Do the interior cells
-    for i in range(0,n-1):
+    for i in xrange(0,n-1):
 
         rho_F[i+1] = riem_solver(rho_half_R[i], rho_half_L[i+1], states_R[i],
                 states_L[i+1], rhoFlux)
@@ -298,7 +298,7 @@ def hydroCorrectorSimon(mesh, states_old, states_half, slopes_old, dt, bc):
     erg = [s.rho*(0.5*s.u**2. + s.e) for s in states_old]
     
     #Advance conserved values at centers based on edge fluxes
-    for i in range(len(rho)):
+    for i in xrange(len(rho)):
 
         dx = mesh.getElement(i).dx
 
@@ -310,7 +310,7 @@ def hydroCorrectorSimon(mesh, states_old, states_half, slopes_old, dt, bc):
 
     #Advance primitive variables
     states_new = [deepcopy(i) for i in states_old] 
-    for i in range(len(states_new)):
+    for i in xrange(len(states_new)):
         states_new[i].updateState(rho[i],mom[i],erg[i])
 
     return states_new, bound_F_left, bound_F_right
@@ -465,7 +465,7 @@ def slopeReconstruction(u):
     u_l = [0.0 for i in u]
     u_r = [0.0 for i in u]
 
-    for i in range(len(u)):
+    for i in xrange(len(u)):
         
         if i==0:
             del_i = u[i+1]-u[i]

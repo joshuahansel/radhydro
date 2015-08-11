@@ -83,7 +83,7 @@ class TestTRTOnly(unittest.TestCase):
       rad_IC    = Radiation([psi_right for i in range(n_elems*4)])
 
       # time-stepper
-      time_stepper = "TRBDF2"
+      time_stepper = "BE"
 
       # if run standalone, then be verbose
       if __name__ == '__main__':

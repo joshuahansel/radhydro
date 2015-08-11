@@ -8,7 +8,7 @@ from takeRadiationStep import takeRadiationStep
 from utilityFunctions import computeL2RelDiff, computeEffectiveOpacities,\
    updateCrossSections, computeHydroInternalEnergies
 from hydroSource import updateVelocity, updateInternalEnergy, QEHandler
-from radSlopesHandler import RadSlopes
+from radSlopesHandler import computeTotalEnergySlopes
 
 
 ## Performs nonlinear solve
@@ -16,11 +16,11 @@ from radSlopesHandler import RadSlopes
 #  @return new hydro and rad solutions
 #
 def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
-   cx_old, hydro_old, hydro_star, rad_old, slopes_old, e_slopes_old,
+   cx_old, hydro_old, hydro_star, rad_old, slopes_old, e_rad_old,
    Qpsi_new, Qmom_new, Qerg_new, Qpsi_old, Qmom_old, Qerg_old, Qpsi_older,
    Qmom_older, Qerg_older,
    rad_older=None, cx_older=None, hydro_older=None, slopes_older=None,
-   e_slopes_older=None, tol=1.0e-9, verbose=False):
+   e_rad_older=None, tol=1.0e-9, verbose=False):
 
    # assert that that older arguments were passed if using BDF2
    if time_stepper == 'BDF2':
@@ -28,7 +28,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
       assert(hydro_older    != None)
       assert(cx_older       != None)
       assert(slopes_older   != None)
-      assert(e_slopes_older.size != 0)
+      assert(e_rad_older.size != 0)
 
    # initialize iterates to the old quantities
    hydro_new  = deepcopy(hydro_star)
@@ -36,13 +36,12 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
    rad_prev   = deepcopy(rad_old)
    cx_prev    = deepcopy(cx_old)
 
+   #Guess that e_rad previous is erad_old
+   e_rad_prev = deepcopy(e_rad_old)
+
    # initialize convergence flag and iteration counter
    converged = False
    k = 0
-
-   #Rad slopes handler
-   rad_slopes = RadSlopes(hydro_star, slopes_old)
-   print rad_slopes
 
    # perform nonlinear iterations:
    while not converged:
@@ -72,15 +71,16 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
              Qmom_older   = Qmom_older)
 
        # Compute E_slopes for use by E_star state
-       # For now it is hardcoded with E_star slopes
-       e_slopes = []
-       e_avg = []
+       # For now it is hardcoded with E_star edge internal energies
+       e_star = []
        for i in xrange(len(hydro_star)):
-          e_star = computeHydroInternalEnergies(i,hydro_star[i],slopes_old)
-          e_slopes.append(e_star[1] - e_star[0])
-          e_avg.append(0.5*(e_star[1]+e_star[0]))
+          e_star_i = computeHydroInternalEnergies(i,hydro_star[i],slopes_old)
+          e_star.append(e_star_i)
+
        # Compute E_slopes
-       E_slopes_old = rad_slopes.getTotalEnergySlopes(e_avg,e_slopes)
+       E_slopes_old = computeTotalEnergySlopes(hydro_star, slopes_old, e_star)
+       print "THESE DO NOT STORE THE RIGHT SLOPES, THEY NEED TO BE RECOMPUTED BASED ON e_rad_old's and odler"
+       E_slopes_star = deepcopy(E_slopes_old)
        E_slopes_older = deepcopy(E_slopes_old)
 
        # compute QE
@@ -97,10 +97,11 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
           hydro_older = hydro_older,
           slopes_old  = slopes_old,
           slopes_older = slopes_older,
+          E_slopes_star = E_slopes_star,
           E_slopes_old = E_slopes_old,
           E_slopes_older = E_slopes_older,
-          e_slopes_old = e_slopes_old,
-          e_slopes_older = e_slopes_older,
+          e_rad_old = e_rad_old,
+          e_rad_older = e_rad_older,
           Qerg_new     = Qerg_new,
           Qerg_old     = Qerg_old,
           Qerg_older   = Qerg_older)
@@ -112,7 +113,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
           cx_prev      = cx_prev,
           hydro_prev   = hydro_prev,
           slopes_old   = slopes_old,
-          e_slopes_old = e_slopes_old)
+          e_rad_prev = e_rad_prev)
 
        # perform radiation solve
        rad_new = takeRadiationStep(
@@ -137,16 +138,18 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
            QE            = QE,
            slopes_old    = slopes_old,
            slopes_older  = slopes_older,
+           E_slopes_star = E_slopes_star,
            E_slopes_old  = E_slopes_old,
            E_slopes_older = E_slopes_older,
-           e_slopes_old = e_slopes_old,
-           e_slopes_older = e_slopes_older,
+           e_rad_prev = e_rad_prev, #Current guess for $C)vT^*$
+           e_rad_old = e_rad_old,
+           e_rad_older = e_rad_older,
            Qpsi_new      = Qpsi_new,
            Qpsi_old      = Qpsi_old,
            Qpsi_older    = Qpsi_older)
 
        # update internal energy
-       e_slopes_new = updateInternalEnergy(
+       e_rad_new = updateInternalEnergy(
           time_stepper = time_stepper,
           dt           = dt,
           QE           = QE,
@@ -157,7 +160,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
           hydro_star   = hydro_star,
           slopes_old   = slopes_old,
           E_slopes_old = E_slopes_old,
-          e_slopes_old = e_slopes_old)
+          e_rad_prev   = e_rad_prev)
 
        # check nonlinear convergence
        # TODO: compute diff of rad solution as well to add to convergence criteria
@@ -172,9 +175,10 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
        # reset previous iteration quantities if needed
        hydro_prev = deepcopy(hydro_new)
        rad_prev   = deepcopy(rad_new)
-       updateCrossSections(cx_prev,hydro_new,slopes_old,e_slopes_old)      
+       e_rad_prev = deepcopy(e_rad_new)
+       updateCrossSections(cx_prev,hydro_new,slopes_old,e_rad_new)      
 
    # return new hydro and radiation
-   return hydro_new, rad_new, cx_prev, e_slopes_new
+   return hydro_new, rad_new, cx_prev, e_rad_new
 
 

@@ -329,7 +329,7 @@ def getNu(T, sig_a, rho, spec_heat, dt, scale):
 #
 #
 def computeEffectiveOpacities(time_stepper, dt, cx_prev, hydro_prev,
-    slopes_old, e_slopes_old):
+    slopes_old, e_rad_prev):
 
     # get coefficient corresponding to time-stepper
     scales = {"CN":0.5, "BE":1., "BDF2":2./3.}
@@ -338,7 +338,7 @@ def computeEffectiveOpacities(time_stepper, dt, cx_prev, hydro_prev,
     cx_effective = list()
 
     # loop over cells:
-    for i in range(len(cx_prev)):
+    for i in xrange(len(cx_prev)):
 
         cx_i = list()
 
@@ -348,7 +348,7 @@ def computeEffectiveOpacities(time_stepper, dt, cx_prev, hydro_prev,
 
         # get density and temperature at edges
         rho = computeEdgeDensities(i, state, slopes_old)
-        T   = computeEdgeTemperatures(state, e_slopes_old[i])
+        T   = computeEdgeTemperatures(state.spec_heat, e_rad_prev[i])
 
         # loop over edges
         for x in range(2): 
@@ -407,21 +407,18 @@ def computeEdgeVelocities(i, state, slopes):
    return (momL / rhoL, momR / rhoR)
 
 
-## Computes edge temperatures for a cell given hydro state and internal energy slope
+## Computes edge temperatures for a cell given cv and edge internal energies
 #
-#  @param[in] state    average hydro state for cell \f$i\f$
-#  @param[in] e_slope  internal energy slope
+#  @param[in] cv           average hydro state for cell \f$i\f$
+#  @param[in] e_values      internal energy at edge values
 #
 #  @return \f$(T_{i,L},T_{i,R})\f$
 #
-def computeEdgeTemperatures(state, e_slope):
+def computeEdgeTemperatures(cv, e_values):
 
    # compute internal energies at left and right edges
-   eL = state.e - 0.5*e_slope
-   eR = state.e + 0.5*e_slope
-
-   # get specific heat
-   cv = state.spec_heat
+   eL = e_values[0]
+   eR = e_values[1]
 
    # compute edge temperature using internal energy slope
    return (eL / cv, eR / cv)
@@ -460,40 +457,22 @@ def computeHydroInternalEnergies(i, state, slopes):
    # compute edge temperature using internal energy slope
    return (e_L, e_R)
 
-## Computes edge internal energies for a cell given hydro state and internal energy slope
-#
-#  @param[in] state    average hydro state for cell \f$i\f$
-#  @param[in] e_slope  internal energy slope
-#
-#  @return \f$(e_{i,L},e_{i,R})\f$
-#
-def computeEdgeInternalEnergies(state, e_slope):
-
-   # compute internal energies at left and right edges
-   eL = state.e - 0.5*e_slope
-   eR = state.e + 0.5*e_slope
-
-   # compute edge temperature using internal energy slope
-   return (eL, eR)
-
-
 ## Updates all cross sections.
 #
-def updateCrossSections(cx,hydro,slopes,e_slopes):
+def updateCrossSections(cx,hydro,slopes,e_rad):
 
    # loop over cells
-   for i in range(len(hydro)):
+   for i in xrange(len(cx)):
 
-      # get cell average state, specific heat, gamma, and internal energy slope
+      # get edge stuff
       state_avg = hydro[i]
       spec_heat = state_avg.spec_heat
       gamma = state_avg.gamma
-      de = e_slopes[i]
 
       # compute edge quantities
       rho = computeEdgeDensities(i, state_avg, slopes)
       u = computeEdgeVelocities(i, state_avg, slopes)
-      e = computeEdgeInternalEnergies(state_avg, e_slopes[i])
+      e = e_rad[i]
 
       # loop over edges and create state for each edge
       for edge in [0,1]:
@@ -525,7 +504,7 @@ def computeRadiationVector(f_minus, f_plus, mesh, t):
    y = np.zeros(mesh.n_elems*4)
 
    # loop over elements
-   for i in range(mesh.n_elems):
+   for i in xrange(mesh.n_elems):
 
       # get left and right x points on element
       xL = mesh.getElement(i).xl

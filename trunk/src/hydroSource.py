@@ -8,7 +8,7 @@ import globalConstants as GC
 import numpy as np
 import utilityFunctions as UT
 from utilityFunctions import getNu, computeEdgeVelocities, computeEdgeTemperatures,\
-   computeEdgeDensities, computeEdgeInternalEnergies, computeHydroInternalEnergies
+   computeEdgeDensities, computeHydroInternalEnergies
 
 #--------------------------------------------------------------------------------
 ## Updates cell-average velocities \f$u_i\f$.
@@ -40,7 +40,7 @@ def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
 #    which contains new velocities \f$u_i^{k+1}\f$
 #
 def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
-    hydro_prev, hydro_star, slopes_old, e_slopes_old, E_slopes_old=None):
+    hydro_prev, hydro_star, slopes_old, e_rad_prev=None, E_slopes_old=None):
  
     # constants
     a = GC.RAD_CONSTANT
@@ -51,7 +51,7 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
     scale = scales[time_stepper]
 
     # initialize new internal energy slopes
-    e_slopes_new = np.zeros(len(hydro_new))
+    e_rad_new = np.empty((len(hydro_new),2))
 
     # loop over cells
     for i in xrange(len(hydro_new)):
@@ -69,10 +69,10 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         print " THe new velocity is", u_new
 
         # compute edge temperatures
-        T_prev = computeEdgeTemperatures(state_prev, e_slopes_old[i])
+        T_prev = computeEdgeTemperatures(state_prev.spec_heat, e_rad_prev[i])
 
         # compute edge internal energies
-        e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
+        e_prev = e_rad_prev[i]
 
         #Compute the total energy at left and right
         E_star = [hydro_star[i].E() - 0.5*E_slopes_old[i],
@@ -123,10 +123,12 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         hydro_new[i].updateStateDensityInternalEnergy(state_star.rho, e_new_avg)
 
         # compute new internal energy slope
-        e_slopes_new[i] = e_new[1] - e_new[0]
+        for x in range(2):
+            e_rad_new[i][x] = e_new[x]
+
 
     # return new internal energy slopes
-    return e_slopes_new
+    return e_rad_new
 
 
 #-----------------------------------------------------------------------------------
@@ -226,12 +228,12 @@ class QEHandler(TransientSourceTerm):
     #--------------------------------------------------------------------------------
     ## Evaluate old term. This includes Planckian, as well as energy exchange term
     # 
-    def evalOld(self, i, rad_old, hydro_old, cx_old, slopes_old, e_slopes_old,
-       Qerg_old, **kwargs):
+    def evalOld(self, i, rad_old, hydro_old, cx_old, slopes_old, e_rad_old=None,
+       Qerg_old=None, **kwargs):
 
         Q_local = np.array(evalEnergyAbsorption(i, rad=rad_old, cx=cx_old))\
            - np.array(evalPlanckianOld(i, hydro_old=hydro_old, cx_old=cx_old,
-                      e_slopes_old=e_slopes_old))\
+                      e_rad_old=e_rad_old))\
            + np.array(evalEnergyExchange(i, rad=rad_old, hydro=hydro_old, cx=cx_old,
                       slopes=slopes_old))\
            + np.array(Qerg_old[i])
@@ -241,10 +243,10 @@ class QEHandler(TransientSourceTerm):
     ## Evaluate older term. Just call the evalOld function as in other source terms
     #
     def evalOlder(self, i, rad_older, hydro_older, cx_older, slopes_older,
-       e_slopes_older, Qerg_older, **kwargs):
+       e_rad_older=None, Qerg_older=None, **kwargs):
 
         return self.evalOld(i, rad_old=rad_older, hydro_old=hydro_older,
-           cx_old=cx_older, slopes_old=slopes_older, e_slopes_old=e_slopes_older,
+           cx_old=cx_older, slopes_old=slopes_older, e_rad_old=e_rad_older,
            Qerg_old=Qerg_older)
 
 
