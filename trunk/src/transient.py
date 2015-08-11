@@ -23,7 +23,7 @@ from plotUtilities import plotHydroSolutions
 #
 def runLinearTransient(mesh, time_stepper,
    psi_left, psi_right, cross_sects, rad_IC, psim_src, psip_src,
-   dt_option='constant', dt_constant=None, t_start=0.0, t_end=1.0, verbose=False):
+   dt_option='constant', dt_constant=None, t_start=0.0, t_end=1.0, verbosity=2):
 
    # check input arguments
    if dt_option == 'constant':
@@ -66,7 +66,7 @@ def runLinearTransient(mesh, time_stepper,
           t += dt
 
        # print each time step
-       if verbose:
+       if verbosity > 0:
           print("Time step %d: t = %f -> %f:" % (time_index,t-dt,t))
 
        # compute new extraneous source
@@ -122,7 +122,7 @@ def runNonlinearTransient(mesh, problem_type,
    psim_src=None, psip_src=None, mom_src=None, E_src=None,
    time_stepper='BE', dt_option='constant', dt_constant=None, CFL=0.5,
    slope_limiter="vanleer", t_start=0.0, t_end=1.0, use_2_cycles=False,
-   verbose=False, check_balance=False):
+   verbosity=2, check_balance=False):
 
    # check input arguments
    if dt_option == 'constant':
@@ -337,7 +337,7 @@ def runNonlinearTransient(mesh, problem_type,
                 Qpsi_older   = Qpsi_older,
                 Qmom_older   = Qmom_older,
                 Qerg_older   = Qerg_older,
-                verbose      = verbose)
+                verbosity    = verbosity)
 
              print("  Cycle 2:")
 
@@ -374,7 +374,7 @@ def runNonlinearTransient(mesh, problem_type,
                 Qpsi_older   = Qpsi_old,
                 Qmom_older   = Qmom_old,
                 Qerg_older   = Qerg_old,
-                verbose      = verbose)
+                verbosity    = verbosity)
 
              # add up source totals for each cycle to total for whole time step
              src_totals = dict()
@@ -422,7 +422,7 @@ def runNonlinearTransient(mesh, problem_type,
                 Qpsi_older   = Qpsi_older,
                 Qmom_older   = Qmom_older,
                 Qerg_older   = Qerg_older,
-                verbose      = verbose)
+                verbosity    = verbosity)
 
        # compute balance
        if check_balance:
@@ -527,7 +527,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
    hydro_BC, slope_limiter, slopes_older, e_rad_old, e_rad_older,
    psim_src, psip_src, mom_src, E_src, t_old,
    Qpsi_old, Qmom_old, Qerg_old, Qpsi_older, Qmom_older, Qerg_older,
-   time_stepper_predictor='CN', time_stepper_corrector='BDF2',verbose=False):
+   time_stepper_predictor='CN', time_stepper_corrector='BDF2',verbosity=2):
 
        debug_mode = False
 
@@ -535,7 +535,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        assert time_stepper_predictor != 'BDF2', 'BDF2 cannot be used in\
           the predictor step.'
 
-       if verbose:
+       if verbosity > 1:
           print "    Predictor step:"
 
        # update hydro BC
@@ -583,23 +583,23 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           Qpsi_older   = Qpsi_older, # this is a dummy argument
           Qmom_older   = Qmom_older, # this is a dummy argument
           Qerg_older   = Qerg_older, # this is a dummy argument
-          verbose      = verbose)
+          verbosity    = verbosity)
 
        if debug_mode:
           print "hydro_half:"
           for i in hydro_half:
              print i
 
-       if verbose:
+       if verbosity > 1:
           print "    Corrector step:"
 
        # update hydro BC
        hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=True)
-    #   hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=False)
+       #hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=False)
 
        # perform corrector step of MUSCL-Hancock
        hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorSimon(
-    #   hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorJosh(
+       #hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorJosh(
           mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
 
        if debug_mode:
@@ -639,7 +639,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
           Qpsi_older   = Qpsi_older,
           Qmom_older   = Qmom_older,
           Qerg_older   = Qerg_older,
-          verbose      = verbose)
+          verbosity    = verbosity)
 
        # add up sources for entire time step for balance checker
        src_totals = {}
@@ -647,7 +647,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        src_totals["mom"] = sum([vol*dt*i for i in Qmom_new])
        src_totals["erg"] = sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
 
-       if verbose:
+       if verbosity > 1:
           print ""
 
        if debug_mode:

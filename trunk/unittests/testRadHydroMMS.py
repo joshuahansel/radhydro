@@ -131,7 +131,9 @@ class TestRadHydroMMS(unittest.TestCase):
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
-         verbose = True
+         verbosity = 2
+      else:
+         verbosity = 0
       
       # run the rad-hydro transient
       rad_new, hydro_new = runNonlinearTransient(
@@ -155,7 +157,7 @@ class TestRadHydroMMS(unittest.TestCase):
          E_src        = E_src,
          psim_src     = psim_src,
          psip_src     = psip_src,
-         verbose      = verbose,
+         verbosity    = verbosity,
          check_balance = True)
 
 

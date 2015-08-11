@@ -273,24 +273,24 @@ class VelocityUpdateSourceHandler(TransientSourceTerm):
         return Q
 
     #--------------------------------------------------------------------------------
-    def evalImplicit(self, i, rad_prev, hydro_prev, cx_prev, Qmom_new, **kwargs):
+    def evalImplicit(self, i, rad_prev, hydro_prev, cx_prev, slopes_old, Qmom_new, **kwargs):
 
         Q_local = evalMomentumExchangeAverage(i, rad=rad_prev, hydro=hydro_prev,
-           cx=cx_prev) + Qmom_new[i]
+           cx=cx_prev, slopes=slopes_old) + Qmom_new[i]
         return Q_local
 
     #--------------------------------------------------------------------------------
-    def evalOld(self, i, rad_old, hydro_old, cx_old, Qmom_old, **kwargs):
+    def evalOld(self, i, rad_old, hydro_old, cx_old, slopes_old, Qmom_old, **kwargs):
 
         Q_local = evalMomentumExchangeAverage(i, rad=rad_old, hydro=hydro_old,
-           cx=cx_old) + Qmom_old[i]
+           cx=cx_old, slopes=slopes_old) + Qmom_old[i]
         return Q_local
 
     #--------------------------------------------------------------------------------
-    def evalOlder(self, i, rad_older, hydro_older, cx_older, Qmom_older, **kwargs):
+    def evalOlder(self, i, rad_older, hydro_older, cx_older, slopes_older, Qmom_older, **kwargs):
 
         Q_local = evalMomentumExchangeAverage(i, rad=rad_older, hydro=hydro_older,
-           cx=cx_older) + Qmom_older[i]
+           cx=cx_older, slopes=slopes_older) + Qmom_older[i]
         return Q_local
 
 
@@ -300,16 +300,30 @@ class VelocityUpdateSourceHandler(TransientSourceTerm):
 #      Q = \frac{\sigma_t}{c} \left(F - \frac{4}{3}E u\right)
 #  \f$.
 #
-def evalMomentumExchangeAverage(i, rad, hydro, cx):
+def evalMomentumExchangeAverage(i, rad, hydro, cx, slopes):
 
-    # compute average cross section
-    sig_t = 0.5*cx[i][0].sig_t + 0.5*cx[i][1].sig_t
+#    # compute average cross section
+#    sig_t = 0.5*cx[i][0].sig_t + 0.5*cx[i][1].sig_t
+#
+#    # compute average radiation quantities
+#    E = 0.5*rad.E[i][0] + 0.5*rad.E[i][1]
+#    F = 0.5*rad.F[i][0] + 0.5*rad.F[i][1]
+#
+#    # compute momentum exchange term
+#    Q = sig_t/GC.SPD_OF_LGT*(F - 4.0/3.0*E*hydro[i].u)
 
-    # compute average radiation quantities
-    E = 0.5*rad.E[i][0] + 0.5*rad.E[i][1]
-    F = 0.5*rad.F[i][0] + 0.5*rad.F[i][1]
+    # speed of light
+    c = GC.SPD_OF_LGT
 
-    return sig_t/GC.SPD_OF_LGT*(F - 4.0/3.0*E*hydro[i].u)
+    # compute edge velocities
+    uL, uR = computeEdgeVelocities(i, hydro[i], slopes)
+
+    # compute momentum exchange term at edges and then average
+    QL = cx[i][0].sig_t/c*(rad.F[i][0] - 4.0/3.0*rad.E[i][0]*uL)
+    QR = cx[i][1].sig_t/c*(rad.F[i][1] - 4.0/3.0*rad.E[i][1]*uR)
+    Q = 0.5*(QL + QR)
+
+    return Q
 
 
 ## Computes an extraneous source vector for the momentum equation,

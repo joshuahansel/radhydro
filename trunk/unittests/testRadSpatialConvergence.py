@@ -112,9 +112,9 @@ class TestRadSpatialConvergence(unittest.TestCase):
   
          # if run standalone, then be verbose
          if __name__ == '__main__':
-            verbose = True
+            verbosity = 2
          else:
-            verbose = False
+            verbosity = 0
   
          # run transient
          rad_new = runLinearTransient(
@@ -130,7 +130,7 @@ class TestRadSpatialConvergence(unittest.TestCase):
             rad_IC       = rad_IC,
             psim_src     = psim_src,
             psip_src     = psip_src,
-            verbose      = verbose)
+            verbosity    = verbosity)
 
          # compute L1 error
          L1_error.append(\

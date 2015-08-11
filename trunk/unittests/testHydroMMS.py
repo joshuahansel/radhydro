@@ -107,9 +107,6 @@ class TestHydroMMS(unittest.TestCase):
       max_dx = list()
       err = list()
 
-      # list of variables for which to check convergence
-      #var_list = ['e','u']
-
       # loop over refinement cycles
       for cycle in xrange(n_cycles):
 
@@ -143,10 +140,13 @@ class TestHydroMMS(unittest.TestCase):
          slope_limiter = "vanleer"
    
          # if run standalone, then be verbose
-         if __name__ == '__main__' and n_cycles == 1:
-            verbose = True
+         if __name__ == '__main__':
+            if n_cycles == 1:
+               verbosity = 2
+            else:
+               verbosity = 1
          else:
-            verbose = False
+            verbosity = 0
          
          # run the rad-hydro transient
          rad_new, hydro_new = runNonlinearTransient(
@@ -168,7 +168,7 @@ class TestHydroMMS(unittest.TestCase):
             E_src        = E_src,
             psim_src     = psim_src,
             psip_src     = psip_src,
-            verbose      = verbose,
+            verbosity    = verbosity,
             check_balance = True)
    
          # compute exact hydro solution
@@ -176,24 +176,21 @@ class TestHydroMMS(unittest.TestCase):
             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
    
          # compute error
-         #err.append(computeHydroError(hydro_new, hydro_exact))
          err.append(computeHydroL2Error(hydro_new, hydro_exact))
 
          # double number of elements for next cycle
          n_elems *= 2
 
       # compute convergence rates
-      #rates = computeConvergenceRates(max_dx,err)
       rates = computeHydroConvergenceRates(max_dx,err)
 
       # print convergence table and plot
       if __name__ == '__main__':
 
          # print convergence table
-         printHydroConvergenceTable(max_dx,err,rates=rates,
-            dx_desc='dx',err_desc='L2')
-         #printConvergenceTable(max_dx,err,rates=rates,
-         #   dx_desc='dx',err_desc='L1')
+         if n_cycles > 1:
+            printHydroConvergenceTable(max_dx,err,rates=rates,
+               dx_desc='dx',err_desc='L2')
 
          # plot hydro solution
          plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),

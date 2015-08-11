@@ -100,7 +100,9 @@ class TestRadHydroShock(unittest.TestCase):
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
-         verbose = True
+         verbosity = 2
+      else:
+         verbosity = 0
       
       # run the rad-hydro transient
       rad_new, hydro_new = runNonlinearTransient(
@@ -117,7 +119,7 @@ class TestRadHydroShock(unittest.TestCase):
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
-         verbose      = verbose)
+         verbosity    = verbosity)
 
       # plot
       if __name__ == '__main__':

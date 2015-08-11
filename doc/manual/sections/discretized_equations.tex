@@ -7,20 +7,6 @@
 %-------------------------------------------------------------------------------
 \subsection{Fluid Momentum Source Update Equation}
 %-------------------------------------------------------------------------------
-The momentum source update equations are cell-centered and thus
-radiation quantities must be evaluated at cell centers, which
-since the radiation solution has a linear representation, simply
-amounts to averaging the quantities at the left and right edges:
-\begin{equation}
-  \F_i = \half\F\iL + \half\F\iR
-\end{equation}
-\begin{equation}
-  \E_i = \half\E\iL + \half\E\iR
-\end{equation}
-\begin{equation}
-  \sigma_{t,i} = \half\sigma_{t,i,L} + \half\sigma_{t,i,R} 
-\end{equation}
-
 The Crank-Nicolson discretization of the velocity update equation is the
 following:
 
@@ -30,6 +16,16 @@ The BDF2 discretization of the velocity update equation is the
 following:
 
 \momentumUpdateBDFTwo{n-1}{n}{}{_i}{\lequ{hydromBDF2full}}
+
+The momentum source terms in these equations are computed by averaging the
+momentum source expression evaluated at the edges:
+
+\begin{multline}
+   \left[\frac{\sigma_t}{c}\left(\F - \frac{4}{3}\E u\right)\right]_i =
+   \half\left[\frac{\sigma_{t,i,L}}{c}\left(\F\iL - \frac{4}{3}\E\iL u\iL\right)\right]\\
+   + \half\left[\frac{\sigma_{t,i,R}}{c}\left(\F\iR - \frac{4}{3}\E\iR u\iR\right)\right]
+   \pep
+\end{multline}
 
 %-------------------------------------------------------------------------------
 \subsection{Fluid Energy Source Update Equation}
@@ -99,7 +95,14 @@ unknowns are the left and right values $\Psi_{i,L}^\pm$ and
 $\Psi_{i,R}^\pm$ for each cell $i$. The spatially
 discretized equations result from integrating each half cell
 $(x_i-\frac{h_i}{2},x_i)$ and $(x_i,x_i+\frac{h_i}{2})$,
-where $x_i$ is the cell center, and $h_i$ is the cell width.
+where $x_i$ is the cell center, $h_i$ is the cell width,
+and the cell average and edge fluxes are defined as
+\begin{equation}
+  \Psi_i^\pm=\half\fn{\Psi_{i,L}^\pm + \Psi_{i,R}^\pm} \pec
+\end{equation}
+\begin{equation}
+  \Psi_{i+\half}^+=\Psi_{i,R}^+ \pec\qquad \Psi_{i+\half}^-=\Psi_{i+1,L}^- \pep
+\end{equation}
 
 % "if" block for developer mode
 \iftoggle{DEVELOPERMODE}{
@@ -139,7 +142,7 @@ These equations can be solved by solving steady-state S$_2$ equations
 of the form of Equations \requ{S2trL} and \requ{S2trR} by making
 the following definitions:
 \begin{equation}
-  \alpha = \frac{1}{c\dt} \pec \quad \beta = \frac{1}{2}\pec
+  \tau = \frac{1}{c\dt} \pec \quad \alpha = \frac{1}{2}\pec
 \end{equation}
 \begin{multline}
   \tilde{\Q}_{i,L}^{\pm,k}
@@ -203,7 +206,7 @@ These equations can be solved by solving steady-state S$_2$ equations
 of the form of Equations \requ{S2trL} and \requ{S2trR} by making
 the following definitions:
 \begin{equation}
-  \alpha = \frac{1}{c\dt} \pec \quad \beta = \frac{2}{3} \pec
+  \tau = \frac{1}{c\dt} \pec \quad \alpha = \frac{2}{3} \pec
 \end{equation}
 \begin{multline}
   \tilde{\Q}_{i,L}^{\pm,k}

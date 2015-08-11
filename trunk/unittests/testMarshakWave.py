@@ -75,7 +75,9 @@ class TestTRTOnly(unittest.TestCase):
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
-         verbose = True
+         verbosity = 2
+      else:
+         verbosity = 0
 
       # run transient
       rad_new, hydro_new = runNonlinearTransient(
@@ -92,7 +94,7 @@ class TestTRTOnly(unittest.TestCase):
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
-         verbose      = verbose,
+         verbosity    = verbosity,
          check_balance= True)
 
       # plot solutions if run standalone

@@ -13,14 +13,7 @@ dropping the $\dydt{\Psi^\pm}$ term in Equation \requ{S2Q}, become
   \frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}
   +\sigma_{t,i,R}^k\Psi\iR^{\pm,k+1}
   -\frac{\sigma_{s,i,R}^k}{2}\phi\iR^{k+1}
-  =\Q_{i,R}^{\pm,k} \pec
-\end{equation}
-where the cell center and edge fluxes are defined as
-\begin{equation}
-  \Psi_i^\pm=\half\fn{\Psi_{i,L}^\pm + \Psi_{i,R}^\pm} \pec
-\end{equation}
-\begin{equation}
-  \Psi_{i+\half}^+=\Psi_{i,R}^+ \pec\qquad \Psi_{i+\half}^-=\Psi_{i+1,L}^- \pep
+  =\Q_{i,R}^{\pm,k} \pep
 \end{equation}
 
 Coefficients of the resulting linear system matrix are the following,
@@ -99,17 +92,17 @@ Transient S$_2$ solvers can employ a steady-state solver if
 the following generalization is made to Equations \requ{S2ssL}
 and \requ{S2ssR}:
 \begin{equation}\lequ{S2trL}
-  \beta\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_i - \Psi^{\pm,k+1}_{i-\half}}
-  +\fn{\beta\sigma_{t,i,L}^k + \alpha}\Psi\iL^{\pm,k+1}
-  -\beta\frac{\sigma_{s,i,L}^k}{2}\phi\iL^{k+1}
+  \alpha\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_i - \Psi^{\pm,k+1}_{i-\half}}
+  +\fn{\alpha\sigma_{t,i,L}^k + \tau}\Psi\iL^{\pm,k+1}
+  -\alpha\frac{\sigma_{s,i,L}^k}{2}\phi\iL^{k+1}
   =\tilde{\Q}_{i,L}^{\pm,k} \pec
 \end{equation}
 \begin{equation}\lequ{S2trR}
-  \beta\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}
-  +\fn{\beta\sigma_{t,i,R}^k + \alpha}\Psi\iR^{\pm,k+1}
-  -\beta\frac{\sigma_{s,i,R}^k}{2}\phi\iR^{k+1}
+  \alpha\frac{2\mu^\pm}{h_i}\fn{\Psi^{\pm,k+1}_{i+\half} - \Psi^{\pm,k+1}_i}
+  +\fn{\alpha\sigma_{t,i,R}^k + \tau}\Psi\iR^{\pm,k+1}
+  -\alpha\frac{\sigma_{s,i,R}^k}{2}\phi\iR^{k+1}
   =\tilde{\Q}_{i,R}^{\pm,k} \pec
 \end{equation}
-where $\alpha$, $\beta$, and $\tilde{\Q}^\pm$ depend on the time
+where $\alpha$, $\tau$, and $\tilde{\Q}^\pm$ depend on the time
 discretization used.
 
