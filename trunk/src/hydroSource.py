@@ -66,7 +66,6 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
 
         # compute edge velocities
         u_new  = computeEdgeVelocities(i, state_new,  slopes_old)
-        print " THe new velocity is", u_new
 
         # compute edge temperatures
         T_prev = computeEdgeTemperatures(state_prev.spec_heat, e_rad_prev[i])
@@ -81,8 +80,6 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         # Compute the total energy before and after
         E_l = E_star[0]
         E_r = E_star[1]
-        print "Old E_star avg: ", state_star.getConservativeVariables()[2]
-        print "New E_star avg: ", 0.5*(E_l + E_r)
 
         # loop over edges to compute new internal energies
         e_new = np.zeros(2)

@@ -781,7 +781,6 @@ class PlanckianTerm(TransientSourceTerm):
         # compute edge quantities
         rho = computeEdgeDensities(i, state_prev, slopes_old)
         T = computeEdgeTemperatures(spec_heat, e_rad_prev[i])
-        print "HERE IS THE OTHER SLOPE"
 
         # compute Planckian term for each edge on element
         planckian = [0.0,0.0]

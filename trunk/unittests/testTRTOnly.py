@@ -34,7 +34,7 @@ class TestTRTOnly(unittest.TestCase):
       # time step size and transient start and end times
       dt      = 0.001
       t_start = 0.
-      t_end   = 0.01
+      t_end   = 0.001
 
       # initialize temperature
       T_init = 0.05
@@ -83,7 +83,7 @@ class TestTRTOnly(unittest.TestCase):
       rad_IC    = Radiation([psi_right for i in range(n_elems*4)])
 
       # time-stepper
-      time_stepper = "BE"
+      time_stepper = "CN"
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
