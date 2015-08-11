@@ -1,4 +1,4 @@
-## @package testDiffusionProblem
+## @package unittests.testDiffusionProblem
 #  Runs a diffusion problem and compares to exact solution.
 
 # add source directory to module search path
@@ -85,8 +85,10 @@ class TestDiffusionProblem(unittest.TestCase):
       n_decimal_places = 3
       self.assertAlmostEqual(L1_relative_error,0.0,n_decimal_places)
 
-      bal = BalanceChecker(mesh, None, None)
-      bal.computeSSRadBalance(0.0, 0.0, rad, sig_a, 0.5*Q)
+      # check balance
+      if __name__ == '__main__':
+         bal = BalanceChecker(mesh, problem_type='rad_only', timestepper=None, dt=None)
+         bal.computeSSRadBalance(0.0, 0.0, rad, sig_a, 0.5*Q)
 
 
 # run main function from unittest module

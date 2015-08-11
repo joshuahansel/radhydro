@@ -1,3 +1,6 @@
+## @package unittests.testAll
+#  Runs unit test suite.
+
 from unittest import TestSuite, defaultTestLoader, TextTestRunner
 
 ## Main function.
@@ -12,7 +15,9 @@ def main():
                    'testTransientSource',
                    'testRadTransient',
                    'testRadSpatialConvergence',
-                   'testCreateMMSSourceFunctions']
+                   'testCreateMMSSourceFunctions',
+                   'testHydroUniformIC',
+                   'testUpdateVelocity']
 
    # add all tests modules to suite
    suite = TestSuite()

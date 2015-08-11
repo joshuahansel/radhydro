@@ -51,11 +51,12 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
 
        # update velocity
        if problem_type != 'rad_mat':
-          updateVelocity(mesh,
-                 time_stepper,
-                           dt,
-                   hydro_star,
-                    hydro_new,
+          updateVelocity(
+             mesh         = mesh,
+             time_stepper = time_stepper,
+             dt           = dt,
+             hydro_star   = hydro_star,
+             hydro_new    = hydro_new,
              cx_older     = cx_older,
              cx_old       = cx_old,
              cx_prev      = cx_prev,
@@ -112,7 +113,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
           slopes_old   = slopes_old,
           e_slopes_old = e_slopes_old)
 
-       # evaluate transient source, including linearized planckian
+       # perform radiation solve
        rad_new = takeRadiationStep(
            mesh          = mesh,
            time_stepper  = time_stepper,
@@ -127,7 +128,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
            rad_prev      = rad_prev,
            rad_old       = rad_old,
            rad_older     = rad_older,
-           hydro_new     = hydro_new, #needed for planckian
+           hydro_new     = hydro_new,
            hydro_prev    = hydro_prev,
            hydro_star    = hydro_star,
            hydro_old     = hydro_old,

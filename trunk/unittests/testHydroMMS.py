@@ -1,4 +1,4 @@
-## @package testHydroMMS
+## @package unittests.testHydroMMS
 #  Contains unittest class to test an MMS problem with only hydrodynamics
 
 # add source directory to module search path
@@ -22,7 +22,7 @@ from hydroState import HydroState
 from radiation import Radiation
 from plotUtilities import plotHydroSolutions, plotAngularFlux
 from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolution,\
-   computeHydroError, computeConvergenceRates, printConvergenceTable
+   computeHydroL2Error, computeHydroConvergenceRates, printHydroConvergenceTable
 from crossXInterface import ConstantCrossSection
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
@@ -37,7 +37,7 @@ class TestHydroMMS(unittest.TestCase):
    def test_HydroMMS(self):
       
       # number of elements in first cycle
-      n_elems = 50
+      n_elems = 20
 
       # number of refinement cycles
       n_cycles = 1
@@ -55,9 +55,9 @@ class TestHydroMMS(unittest.TestCase):
       #rho = exp(x+t)
       #u   = exp(-x)*sin(t) - 1
       #E   = 10*exp(x+t)
-    #  rho = 1 + sin(pi*x)
-    #  u   = 1/(1 + sin(pi*x))
-    #  E   = 10 + sin(pi*x)
+      #rho = 1 + sin(pi*x)
+      #u   = 1/(1 + sin(pi*x))
+      #E   = 10 + sin(pi*x)
       
       # create solution for radiation field
       psim = sympify('0')
@@ -98,7 +98,6 @@ class TestHydroMMS(unittest.TestCase):
       width = 1.0
       t_start  = 0.0
       t_end = 0.05
-      t_end = 0.009085
 
       # compute radiation BC; assumes BC is independent of time
       psi_left  = psip_f(x=0.0,   t=0.0)
@@ -107,6 +106,9 @@ class TestHydroMMS(unittest.TestCase):
       # initialize lists for mesh size and L1 error for each cycle
       max_dx = list()
       err = list()
+
+      # list of variables for which to check convergence
+      #var_list = ['e','u']
 
       # loop over refinement cycles
       for cycle in xrange(n_cycles):
@@ -138,7 +140,7 @@ class TestHydroMMS(unittest.TestCase):
                          for i in xrange(mesh.n_elems)]
    
          # slope limiter option
-         slope_limiter = "minmod"
+         slope_limiter = "vanleer"
    
          # if run standalone, then be verbose
          if __name__ == '__main__' and n_cycles == 1:
@@ -151,7 +153,7 @@ class TestHydroMMS(unittest.TestCase):
             mesh         = mesh,
             problem_type = 'rad_hydro',
             dt_option    = 'CFL',
-            CFL          = 0.5,
+            CFL          = 0.9,
             slope_limiter = slope_limiter,
             use_2_cycles = False,
             t_start      = t_start,
@@ -166,27 +168,32 @@ class TestHydroMMS(unittest.TestCase):
             E_src        = E_src,
             psim_src     = psim_src,
             psip_src     = psip_src,
-            verbose      = verbose)
+            verbose      = verbose,
+            check_balance = False)
    
          # compute exact hydro solution
          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,
             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
    
          # compute error
-         err.append(computeHydroError(hydro_new, hydro_exact))
+         #err.append(computeHydroError(hydro_new, hydro_exact))
+         err.append(computeHydroL2Error(hydro_new, hydro_exact))
 
          # double number of elements for next cycle
          n_elems *= 2
 
       # compute convergence rates
-      rates = computeConvergenceRates(max_dx,err)
+      #rates = computeConvergenceRates(max_dx,err)
+      rates = computeHydroConvergenceRates(max_dx,err)
 
       # print convergence table and plot
       if __name__ == '__main__':
 
          # print convergence table
-         printConvergenceTable(max_dx,err,rates=rates,
-            dx_desc='dx',err_desc='L1')
+         printHydroConvergenceTable(max_dx,err,rates=rates,
+            dx_desc='dx',err_desc='L2')
+         #printConvergenceTable(max_dx,err,rates=rates,
+         #   dx_desc='dx',err_desc='L1')
 
          # plot hydro solution
          plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),

@@ -1,4 +1,4 @@
-## @package testIntegrationUtilities
+## @package unittests.testIntegrationUtilities
 #  Tests integration utilities
 
 # add source directory to module search path

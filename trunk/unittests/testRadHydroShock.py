@@ -1,4 +1,4 @@
-## @package testRadHydroShock
+## @package unittests.testRadHydroShock
 #  Contains unittest class to test a radiation-hydrodyamics shock problem.
 
 # add source directory to module search path

@@ -74,6 +74,37 @@ def computeConvergenceRates(dx,err):
    return rates
 
 #-----------------------------------------------------------------------------------
+## Computes convergence rates for hydro quantities.
+#
+#  @param[in] dx   list of mesh sizes or time step sizes for each cycle
+#  @param[in] err  list of dictionaries of errors for each cycle and quantity
+#
+#  @return  list of dictionaries of convergence rates for each quantity.
+#     The size of this list will be the number of cycles minus one.
+#
+def computeHydroConvergenceRates(dx,err):
+
+   # determine number of refinement cycles from length of lists
+   n_cycles = len(dx)
+
+   # initialize list of rates
+   rates = list()
+
+   # loop over cycles
+   for cycle in xrange(n_cycles):
+      # compute convergence rate
+      if cycle > 0:
+         # loop over keys of dictionary to compute rate for each quantity
+         rate_dict = dict()
+         for key in err[cycle]:
+            rate_dict[key] = log(err[cycle][key]/err[cycle-1][key]) / \
+               log(dx[cycle]/dx[cycle-1])
+         # add rate dictionary to list
+         rates.append(rate_dict)
+
+   return rates
+
+#-----------------------------------------------------------------------------------
 ## Prints convergence table and convergence rates
 #
 #  @param[in] dx        list of mesh sizes or time step sizes for each cycle
@@ -85,7 +116,8 @@ def computeConvergenceRates(dx,err):
 #                       'dx' or 'dt'
 #  @param[in] err_desc  string description for the error, e.g., 'L1' or 'L2'
 #
-def printConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err'):
+def printConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err',
+   quantity_desc=''):
 
    # compute rates if they were not provided
    if rates is None:
@@ -94,8 +126,16 @@ def printConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err'):
    # determine number of refinement cycles from length of lists
    n_cycles = len(dx)
 
+   # create title
+   if quantity_desc == '':
+      title = '\nConvergence:'
+   else:
+      title = '\n' + quantity_desc + ' Convergence:'
+
    # print header
-   print('\n%11s %11s    Rate' % (dx_desc,err_desc))
+   print(title)
+   print('-------------------------------')
+   print('%11s %11s    Rate' % (dx_desc,err_desc))
    print('-------------------------------')
 
    # loop over cycles
@@ -108,7 +148,46 @@ def printConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err'):
 
       # print line to convergence table
       print('%11.3e %11.3e %7s' % (dx[cycle],err[cycle],rate_string))
+   print('-------------------------------')
    print('\n')
+
+
+## Prints convergence table and convergence rates for each hydro quantity
+#
+#  @param[in] dx        list of mesh sizes or time step sizes for each cycle
+#  @param[in] err       list of dictionaries of errors for each cycle and
+#                       each quantity
+#  @param[in] rates     list of dictionaries of convergence rates for each
+#                       quantity. The size of this list will
+#                       be the number of cycles minus one. If this argument
+#                       is not provided, rates are computed in this function.
+#  @param[in] dx_desc   string description for the size quantity, e.g.,
+#                       'dx' or 'dt'
+#  @param[in] err_desc  string description for the error, e.g., 'L1' or 'L2'
+#
+def printHydroConvergenceTable(dx,err,rates=None,dx_desc='size',err_desc='err'):
+
+   # compute rates if they were not provided
+   if rates is None:
+      rates = computeHydroConvergenceRates(dx,err)
+
+   # loop over each quantity
+   for key in err[0]:
+
+      # extract an error list for the quantity
+      err_quantity = list()
+      for i in xrange(len(err)):
+         err_quantity.append(err[i][key])
+
+      # extract a rate list for the quantity
+      rates_quantity = list()
+      for i in xrange(len(rates)):
+         rates_quantity.append(rates[i][key])
+
+      # call convergence table function
+      printConvergenceTable(dx,err_quantity,rates_quantity,dx_desc,err_desc,
+         quantity_desc=key)
+
 
 ## Function to compute the discrete \f$L^1\f$ norm of an array \f$\mathbf{y}\f$
 #  of 2-tuples: \f$\|\mathbf{y}\|_1 = \sum\limits_i |y_{i,L}| + |y_{i,R}|\f$
@@ -135,18 +214,26 @@ def computeDiscreteL1Norm(values):
 ## Function to compute the error for the hydro solution.
 #
 def computeHydroError(hydro, hydro_exact):
-
-#   # number of elements
-#   n = len(hydro)
-#
-#   # initialize error to zero
-#   err = 0.0
-#
-#   # loop over tuples
-#   for i in xrange(n):
-#      err += abs(hydro[i].e - hydro_exact[i].e)
-
    err = computeL2RelDiff(hydro, hydro_exact, aux_func=lambda x: x.e)
+   return err
+
+## Function to compute the L-2 error for the hydro solution
+#  for a number of different quantities.
+#
+def computeHydroL2Error(hydro, hydro_exact):
+
+   # dictionary of quantities to their function
+   funcs = {'rho':   lambda state: state.rho,
+            'rho u': lambda state: state.getConservativeVariables()[1],
+            'E':     lambda state: state.getConservativeVariables()[2],
+            'u':     lambda state: state.u,
+            'p':     lambda state: state.p,
+            'e':     lambda state: state.e}
+
+   # compute error for each entry in dictionary
+   err = dict()
+   for key in funcs:
+      err[key] = computeL2RelDiff(hydro, hydro_exact, aux_func=funcs[key])
 
    return err
 
@@ -262,7 +349,6 @@ def computeEffectiveOpacities(time_stepper, dt, cx_prev, hydro_prev,
         # get density and temperature at edges
         rho = computeEdgeDensities(i, state, slopes_old)
         T   = computeEdgeTemperatures(state, e_slopes_old[i])
-        print "NOT SURE T USES THE RIGHT STUFF"
 
         # loop over edges
         for x in range(2): 
@@ -340,8 +426,10 @@ def computeEdgeTemperatures(state, e_slope):
    # compute edge temperature using internal energy slope
    return (eL / cv, eR / cv)
 
-## Computes edge internal energies for a cell given hydro state and total
-#  energy slope.  This is done in a matter so that 0.5*(E_L+E_R)=E_i, preserving
+## Computes edge internal energies for a cell, given hydro state and total
+#  energy slope.
+#
+#  This is done in a matter so that 0.5*(E_L+E_R)=E_i, preserving
 #  total energy conservation
 #
 #  @param[in] state    average hydro state for cell \f$i\f$
@@ -351,26 +439,26 @@ def computeEdgeTemperatures(state, e_slope):
 #
 def computeHydroInternalEnergies(i, state, slopes):
 
-   #Use conserved variables to construct e_l and e_r
+   #Use conserved variables to construct e_L and e_R
    rho, mom, erg = state.getConservativeVariables()
 
    #Need all values at edges
-   rho_l = rho - 0.5*slopes.rho_slopes[i]
-   rho_r = rho + 0.5*slopes.rho_slopes[i]
-   mom_l = mom - 0.5*slopes.mom_slopes[i]
-   mom_r = mom + 0.5*slopes.mom_slopes[i]
-   erg_l = erg - 0.5*slopes.erg_slopes[i]
-   erg_r = erg + 0.5*slopes.erg_slopes[i]
+   rho_L = rho - 0.5*slopes.rho_slopes[i]
+   rho_R = rho + 0.5*slopes.rho_slopes[i]
+   mom_L = mom - 0.5*slopes.mom_slopes[i]
+   mom_R = mom + 0.5*slopes.mom_slopes[i]
+   erg_L = erg - 0.5*slopes.erg_slopes[i]
+   erg_R = erg + 0.5*slopes.erg_slopes[i]
 
    # compute internal energies at left and right edges
-   u_l = mom_l/rho_l
-   u_r = mom_r/rho_r
+   u_L = mom_L/rho_L
+   u_R = mom_R/rho_R
 
-   e_l = erg_l/rho_l - 0.5*u_l*u_l
-   e_r = erg_r/rho_r - 0.5*u_r*u_r
+   e_L = erg_L/rho_L - 0.5*u_L**2
+   e_R = erg_R/rho_R - 0.5*u_R**2
 
    # compute edge temperature using internal energy slope
-   return (e_l, e_r)
+   return (e_L, e_R)
 
 ## Computes edge internal energies for a cell given hydro state and internal energy slope
 #

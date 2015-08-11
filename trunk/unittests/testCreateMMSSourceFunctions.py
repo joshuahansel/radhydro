@@ -1,4 +1,4 @@
-## @package testCreateMMSSourceFunctions
+## @package unittests.testCreateMMSSourceFunctions
 #  Contains unittest class to test the MMS source creator functions
 
 # add source directory to module search path
@@ -76,7 +76,7 @@ class TestCreateMMSSourceFunctions(unittest.TestCase):
 
       # assert that the correct value is produced
       test_value = E_f(0.1,0.6)
-      actual_value = 17.262777986691507
+      actual_value = 17.262778973653464
       self.assertAlmostEqual(test_value, actual_value, 12)
 
 # run main function from unittest module

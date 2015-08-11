@@ -1,4 +1,4 @@
-## @package testPureAbsorberProblem
+## @package unittests.testPureAbsorberProblem
 #  Runs a pure absorber problem and compares to exact solution.
 
 # add source directory to module search path

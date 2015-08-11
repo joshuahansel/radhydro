@@ -1,3 +1,5 @@
+## @package src.hydroSource
+#  Contains classes to compute sources for hydrodynamics updates.
 
 from crossXInterface import CrossXInterface
 from transientSource import TransientSourceTerm, evalPlanckianOld
@@ -9,9 +11,13 @@ from utilityFunctions import getNu, computeEdgeVelocities, computeEdgeTemperatur
    computeEdgeDensities, computeEdgeInternalEnergies, computeHydroInternalEnergies
 
 #--------------------------------------------------------------------------------
-## Updates velocities.
+## Updates cell-average velocities \f$u_i\f$.
 #
-#  param[in,out] hydro_new
+#  @param[in]     mesh        mesh object
+#  @param[in]     hydro_star  star hydro cell-average states,
+#     \f$\mathbf{H}^*_i\f$
+#  @param[in,out] hydro_new   new hydro cell-average states,
+#     \f$\mathbf{H}^{k+1}_i\f$
 #
 def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
  
@@ -23,14 +29,15 @@ def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
     for i in range(mesh.n_elems):
 
         # update velocity
-        u_new = hydro_star[i].u + dt/hydro_new[i].rho*Q[i]
+        u_new = hydro_star[i].u + dt/hydro_star[i].rho*Q[i]
         hydro_new[i].updateVelocity(u_new)
 
 
 #--------------------------------------------------------------------------------
-## Updates internal energy.
+## Updates internal energy slopes \f$\delta e_i\f$.
 #
-#  param[in,out] hydro_new  contains new velocities
+#  @param[in,out] hydro_new  new hydro unknowns \f$\mathbf{H}^{k+1}\f$,
+#    which contains new velocities \f$u_i^{k+1}\f$
 #
 def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
     hydro_prev, hydro_star, slopes_old, e_slopes_old, E_slopes_old=None):
@@ -66,8 +73,7 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
 
         # compute edge internal energies
         e_prev = computeEdgeInternalEnergies(state_prev, e_slopes_old[i])
-
-        print "CHANGING SLOPES IN UPDATEINTERNAL ENERGY"
+        #e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
         e_star = computeHydroInternalEnergies(i, state_star, slopes_old)
        # e_star = computeEdgeInternalEnergies(state_star, e_slopes_old[i])
         print "old e_star_avg: ", state_star.e
@@ -112,18 +118,12 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
 
         #Compute a new total energy at each edge, that is what we are really
         #conserving and this will ensure regular hydro is unchanged
-        print "The old way of e_avg", e_new_avg
-        print "Hacking in a new internal energy computation"
+        #print "The old way of e_avg", e_new_avg
+        #print "Hacking in a new internal energy computation"
         E_new = [rho[x]*(0.5*u_new[x]**2 + e_new[x]) for x in range(2)]
         E_new_avg = 0.5*(E_new[0] + E_new[1])
         e_new_avg = E_new_avg/state_new.rho - 0.5*(state_new.u)**2
-        print "The new way of computing e_new_avg", e_new_avg
-
-#       The following is a handy check that must be passed for a pure hydro, no
-#       sources, problem
- #       if (abs(e_new_avg - state_star.e) > 0.0000001):
-  #          raw_input()
-
+        #print "The new way of computing e_new_avg", e_new_avg
 
         # put new internal energy in the new hydro state
         hydro_new[i].updateStateDensityInternalEnergy(state_star.rho, e_new_avg)
@@ -158,7 +158,7 @@ def evalEnergyExchange(i, rad, hydro, cx, slopes):
 ## Compute estimated momentum exchange \f$Q\f$ due to the coupling to radiation,
 #  used the in the velocity update equation:
 #  \f[
-#      Q = \frac{\sigma_t}{c} \left(F - \frac{4}{3}E u\right)
+#      Q = \frac{\sigma_t}{c} \left(\mathcal{F} - \frac{4}{3}\mathcal{E} u\right)
 #  \f]
 #
 def evalMomentumExchange(i, rad, hydro, cx, slopes):
@@ -178,10 +178,10 @@ def evalEnergyAbsorption(i, rad, cx):
     return [rad.phi[i][x]*cx[i][x].sig_a for x in xrange(2)]
 
 
-#=====================================================================================
-## Class to simplify evaluating the Q_E^k term in linearization. It is similar to 
-#  other terms but with the implicit Planckian removed and angularly integrated
-#  quantities.
+## Class to evaluate the \f$Q_E^k\f$ term in linearization.
+#
+#  It is similar to other terms but with the implicit Planckian removed and
+#  angularly integrated quantities.
 #
 # It utilizes the TransientSource term class to build terms mostly just for
 # simplicity of having access to the time stepping algorithms. The ultimate
@@ -216,8 +216,9 @@ class QEHandler(TransientSourceTerm):
         return Q
 
     #--------------------------------------------------------------------------------
-    ## Computes implicit terms in QE^k. Only an energy exchange term, there is 
-    #  no planckian 
+    ## Computes implicit terms in \f$Q_E^k\f$.
+    #
+    #  There is only an energy exchange term, no Planckian term.
     #
     def evalImplicit(self, i, rad_prev, hydro_prev, cx_prev, slopes_old,
        Qerg_new, **kwargs):
@@ -255,7 +256,6 @@ class QEHandler(TransientSourceTerm):
 
 ## Handles velocity update source term.
 #
-#
 class VelocityUpdateSourceHandler(TransientSourceTerm):
 
     #-------------------------------------------------------------------------------
@@ -284,30 +284,28 @@ class VelocityUpdateSourceHandler(TransientSourceTerm):
 
         Q_local = evalMomentumExchangeAverage(i, rad=rad_prev, hydro=hydro_prev,
            cx=cx_prev) + Qmom_new[i]
-
         return Q_local
 
     #--------------------------------------------------------------------------------
     def evalOld(self, i, rad_old, hydro_old, cx_old, Qmom_old, **kwargs):
 
-        Qreturn = self.evalImplicit(i, rad_prev=rad_old, hydro_prev=hydro_old,
-           cx_prev=cx_old, Qmom_new=Qmom_old)
-
-        return Qreturn
+        Q_local = evalMomentumExchangeAverage(i, rad=rad_old, hydro=hydro_old,
+           cx=cx_old) + Qmom_old[i]
+        return Q_local
 
     #--------------------------------------------------------------------------------
     def evalOlder(self, i, rad_older, hydro_older, cx_older, Qmom_older, **kwargs):
 
-        return self.evalImplicit(i, rad_prev=rad_older, hydro_prev=hydro_older,
-           cx_prev=cx_older, Qmom_new=Qmom_older)
+        Q_local = evalMomentumExchangeAverage(i, rad=rad_older, hydro=hydro_older,
+           cx=cx_older) + Qmom_older[i]
+        return Q_local
 
 
 #------------------------------------------------------------------------------------
-## Compute estimated momentum exchange \f$Q\f$ due to the coupling to radiation,
-#  used the in the velocity update equation:
-#  \f[
+## Compute the momentum exchange term in the momentum equation,
+#  \f$
 #      Q = \frac{\sigma_t}{c} \left(F - \frac{4}{3}E u\right)
-#  \f]
+#  \f$.
 #
 def evalMomentumExchangeAverage(i, rad, hydro, cx):
 
@@ -321,14 +319,15 @@ def evalMomentumExchangeAverage(i, rad, hydro, cx):
     return sig_t/GC.SPD_OF_LGT*(F - 4.0/3.0*E*hydro[i].u)
 
 
-## Computes an extraneous source vector for the momentum equation
+## Computes an extraneous source vector for the momentum equation,
+#  \f$Q^{ext,\rho u}\f$, evaluated at each cell center.
 #
 #  @param[in] mom_src  function handle for the momentum extraneous source
 #  @param[in] mesh     mesh
 #  @param[in] t        time at which to evaluate the function
 #
 #  @return list of the momentum extraneous source function evaluated
-#          at each cell center
+#          at each cell center, \f$Q^{ext,\rho u}_i\f$
 #
 def computeMomentumExtraneousSource(mom_src, mesh, t):
 
@@ -336,14 +335,15 @@ def computeMomentumExtraneousSource(mom_src, mesh, t):
    return [mom_src(mesh.getElement(i).x_cent,t) for i in xrange(mesh.n_elems)]
 
 
-## Computes an extraneous source vector for the energy equation
+## Computes an extraneous source vector for the energy equation,
+#  \f$Q^{ext,E}\f$, evaluated at each cell edge.
 #
 #  @param[in] erg_src  function handle for the energy extraneous source
 #  @param[in] mesh     mesh
 #  @param[in] t        time at which to evaluate the function
 #
 #  @return list of tuples of the energy extraneous source function evaluated
-#          at each edge on each cell
+#          at each edge on each cell, \f$(Q^{ext,E}_{i,L},Q^{ext,E}_{i,R})\f$
 #
 def computeEnergyExtraneousSource(erg_src, mesh, t):
 
