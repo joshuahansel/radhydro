@@ -37,7 +37,7 @@ class TestHydroMMS(unittest.TestCase):
    def test_HydroMMS(self):
       
       # number of elements in first cycle
-      n_elems = 20
+      n_elems = 50
 
       # number of refinement cycles
       n_cycles = 1
@@ -169,7 +169,7 @@ class TestHydroMMS(unittest.TestCase):
             psim_src     = psim_src,
             psip_src     = psip_src,
             verbose      = verbose,
-            check_balance = False)
+            check_balance = True)
    
          # compute exact hydro solution
          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,

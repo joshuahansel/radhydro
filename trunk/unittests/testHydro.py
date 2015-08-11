@@ -103,7 +103,8 @@ class TestHydro(unittest.TestCase):
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
-         verbose      = verbose)
+         verbose      = verbose,
+         check_balance= True)
 
 
 

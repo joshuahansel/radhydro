@@ -240,7 +240,6 @@ def hydroCorrectorSimon(mesh, states_old, states_half, slopes_old, dt, bc):
         states_L[i].updateState(rho_half_L[i], mom_half_L[i], erg_half_L[i])
         states_R[i].updateState(rho_half_R[i], mom_half_R[i], erg_half_R[i])
 
->>>>>>> 7944dc158784f7076f074f910cbe68b23cd2d1f2
     # get boundary values and states
     rho_BC_L, rho_BC_R, mom_BC_L, mom_BC_R, erg_BC_L, erg_BC_R =\
        bc.getBoundaryValues()

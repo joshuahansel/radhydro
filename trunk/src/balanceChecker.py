@@ -148,7 +148,6 @@ class BalanceChecker:
                     erg_bal/max(em_new+Er_new+src_totals["erg"],1.E-65))
             print "=====================================================\n"
 
-
             
 
 
