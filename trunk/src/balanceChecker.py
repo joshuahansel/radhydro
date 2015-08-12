@@ -70,7 +70,8 @@ class BalanceChecker:
     #
     def computeBalance(self, psi_left, psi_right, hydro_old,
             hydro_new, rad_old, rad_new, hydro_F_left=None, hydro_F_right=None, 
-            src_totals={"rad":0.0,"mass":0.0,"erg":0.0,"mom":0.0}, write=True):
+            src_totals={"rad":0.0,"mass":0.0,"erg":0.0,"mom":0.0}, 
+            cx_new=None, write=True):
 
         #assume uniform volume
         vol = self.mesh.getElement(0).dx
@@ -113,10 +114,27 @@ class BalanceChecker:
         #KE_new = sum([vol*(0.5*i.rho*i.u**2) for i in hydro_new])
         #KE_old = sum([vol*(0.5*i.rho*i.u**2) for i in hydro_old])
 
+        #Compute momentum deposited to material in a rad_mat only problem,
+        #This must still be added, hardcoded as BE for now
+        mom_deposition = 0.0
+        if self.prob == 'rad_mat':
+
+            if self.time_stepper == 'BE':
+                for i in xrange(len(rad_new.F)):
+                    mom_l = cx_new[i][0].sig_t*rad_new.F[i][0]*vol/c
+                    mom_r = cx_new[i][1].sig_t*rad_new.F[i][1]*vol/c
+                    mom_deposition += 0.5*(mom_l + mom_r)
+            else:
+
+               print "WARNING: Momentum balance in TRT problems only implemented"\
+                    " correctly for BE. All others missing deposition term"
+
+
+
         # compute hydro net inflows
         if (self.prob == 'rad_mat'):
            mass_netflow_hydro = 0.0
-           mom_netflow_hydro  = 0.0
+           mom_netflow_hydro  = -1.*mom_deposition
            erg_netflow_hydro  = 0.0
         elif (self.prob == 'rad_hydro'):
            mass_netflow_hydro = hydro_F_left["rho"] - hydro_F_right["rho"] 
@@ -124,12 +142,12 @@ class BalanceChecker:
            erg_netflow_hydro  = hydro_F_left["erg"] - hydro_F_right["erg"] 
 
         # compute radiation momentum net inflow
-        mom_inflow_new_rad  = (psi_left - psi_right)/(3.0*c)
-        mom_inflow_old_rad  = (psi_left - psi_right)/(3.0*c)
-        mom_outflow_new_rad = (rad_new.psip[-1][1] - rad_new.psim[0][0])/(3.0*c)
-        mom_outflow_old_rad = (rad_old.psip[-1][1] - rad_old.psim[0][0])/(3.0*c)
-        mom_netflow_new_rad = mom_inflow_new_rad - mom_outflow_new_rad
-        mom_netflow_old_rad = mom_inflow_old_rad - mom_outflow_old_rad
+        mom_left_new_rad  = (psi_left + rad_new.psim[0][0])/(3.0*c)
+        mom_left_old_rad  = (psi_left + rad_old.psim[0][0])/(3.0*c)
+        mom_right_new_rad = (rad_new.psip[-1][1] + psi_right)/(3.0*c)
+        mom_right_old_rad = (rad_old.psip[-1][1] + psi_right)/(3.0*c)
+        mom_netflow_new_rad = mom_left_new_rad - mom_right_new_rad
+        mom_netflow_old_rad = mom_left_old_rad - mom_right_old_rad
 
         # compute radiation energy net inflow
         mu = RU.mu["+"]

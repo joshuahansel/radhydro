@@ -429,7 +429,8 @@ def runNonlinearTransient(mesh, problem_type,
           bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
           bal.computeBalance(psi_left, psi_right, hydro_old,
                  hydro_new, rad_old, rad_new, hydro_F_right=hydro_F_right,
-                 hydro_F_left=hydro_F_left, src_totals=src_totals, write=True)
+                 hydro_F_left=hydro_F_left, src_totals=src_totals, 
+                 cx_new=cx_new,write=True)
 
        # save older solutions
        cx_older  = deepcopy(cx_old)
