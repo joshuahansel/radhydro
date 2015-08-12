@@ -160,7 +160,6 @@ class TestRadHydroMMS(unittest.TestCase):
          verbosity    = verbosity,
          check_balance = True)
 
-
       # plot
       if __name__ == '__main__':
 

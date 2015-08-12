@@ -51,10 +51,10 @@ class TestHydroMMS(unittest.TestCase):
       #E   = sympify('10')
       rho = 1+x-t
       u   = sympify('1')
-      E   = 5 + 50*x+t+50*(x-0.5)**2
-      #rho = exp(x+t)
-      #u   = exp(-x)*sin(t) - 1
-      #E   = 10*exp(x+t)
+      E   = 5 + 50*x+t+50*(x-0.75)**2
+      rho = exp(x+t)
+      u   = exp(-x)*sin(t) - 1
+      E   = 10*exp(x+t)
       #rho = 1 + sin(pi*x)
       #u   = 1/(1 + sin(pi*x))
       #E   = 10 + sin(pi*x)
@@ -78,7 +78,7 @@ class TestHydroMMS(unittest.TestCase):
          gamma_value   = gamma_value,
          cv_value      = cv_value,
          alpha_value   = alpha_value,
-         display_equations = False)
+         display_equations = True)
 
       # create functions for exact solutions
       substitutions = dict()
@@ -97,7 +97,7 @@ class TestHydroMMS(unittest.TestCase):
       # spatial and temporal domains
       width = 1.0
       t_start  = 0.0
-      t_end = 0.05
+      t_end = 0.005
 
       # compute radiation BC; assumes BC is independent of time
       psi_left  = psip_f(x=0.0,   t=0.0)

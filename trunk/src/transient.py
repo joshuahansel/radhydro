@@ -539,6 +539,11 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
        if verbosity > 1:
           print "    Predictor step:"
 
+       # Force everything to BE
+       print "FORCING BE EVERYWHERE DEBUG"
+       time_stepper_predictor = 'BE'
+       time_stepper_corrector = 'BE'
+
        # update hydro BC
        hydro_BC.update(states=hydro_old, t=t_old)
 

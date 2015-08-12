@@ -119,7 +119,8 @@ class TestRadHydroShock(unittest.TestCase):
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
-         verbosity    = verbosity)
+         verbosity    = verbosity,
+         check_balance=True)
 
       # plot
       if __name__ == '__main__':
