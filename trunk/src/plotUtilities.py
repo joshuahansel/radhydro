@@ -173,10 +173,13 @@ def plotRadErg(mesh, Er_edge, save=False, filename='Radiation.pdf',
  
        exact_Er = [0.0 for i in Er]
 
-   y1 = min( min(exact_Er), min(Er))
-   y2 = max( max(exact_Er), max(Er))
+ #  exact_Er = list(exact_Er)
+ #  Er = list(Er)
+ #  y1 = min( min(exact_Er), min(Er))
+ #  y2 = max( max(exact_Er), max(Er))
 
-   plt.axis([0.0, 1.0,0.99*float(y1),1.01*float(y2)])
+    
+ #  plt.axis([0.0, 1.0,0.99*float(y1),1.01*float(y2)])
 
 
    plt.legend(loc='best')

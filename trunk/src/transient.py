@@ -342,7 +342,7 @@ def runNonlinearTransient(mesh, problem_type,
                 rho_f = rho_f, u_f = u_f, E_f = E_f,
                 gamma_value = gamma_value,
                 cv_value=cv_value
-            )
+             )
 
              print("  Cycle 2:")
 
@@ -560,9 +560,9 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
       print "    Predictor step:"
 
    # Force everything to BE
-   print "FORCING BE EVERYWHERE DEBUG"
-   time_stepper_predictor = 'BE'
-   time_stepper_corrector = 'BE'
+#   print "FORCING BE EVERYWHERE DEBUG"
+#   time_stepper_predictor = 'BE'
+#   time_stepper_corrector = 'BE'
 
    # update hydro BC
    hydro_BC.update(states=hydro_old, t=t_old)

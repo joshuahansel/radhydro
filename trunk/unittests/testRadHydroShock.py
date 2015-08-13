@@ -120,7 +120,7 @@ class TestRadHydroShock(unittest.TestCase):
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
          verbosity    = verbosity,
-         slope_limiter = 'none',
+         slope_limiter = 'vanleer',
          check_balance=True)
 
       # plot

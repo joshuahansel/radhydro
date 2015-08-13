@@ -52,11 +52,11 @@ class TestRadHydroMMS(unittest.TestCase):
       E   = 10*exp(x+t)
       
       # create solution for radiation field
-      #rad_scale = 1
-      #psim = rad_scale*2*t*sin(pi*(1-x))*0.+50*c
-      #psip = rad_scale*t*sin(pi*x)*0.+20*c
-      psim = 50*c
-      psip = 50*c
+      rad_scale = 50*c
+      psim = rad_scale*2*t*sin(pi*(1-x))+10*c
+      psip = rad_scale*t*sin(pi*x)+10*c
+      #psim = 50*c
+      #psip = 50*c
       #psim = sympify('0')
       #psip = sympify('0')
       
@@ -148,7 +148,7 @@ class TestRadHydroMMS(unittest.TestCase):
          #dt_constant  = t_end,
          #use_2_cycles = True,
          slope_limiter = limiter,
-         use_2_cycles = False,
+         use_2_cycles = True,
          t_start      = t_start,
          t_end        = t_end,
          psi_left     = psi_left,

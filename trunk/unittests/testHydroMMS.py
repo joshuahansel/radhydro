@@ -137,7 +137,7 @@ class TestHydroMMS(unittest.TestCase):
                          for i in xrange(mesh.n_elems)]
    
          # slope limiter option
-         slope_limiter = "minmod"
+         slope_limiter = "none"
    
          # if run standalone, then be verbose
          if __name__ == '__main__':
@@ -155,7 +155,7 @@ class TestHydroMMS(unittest.TestCase):
             dt_option    = 'CFL',
             CFL          = 0.9,
             slope_limiter = slope_limiter,
-            use_2_cycles = False,
+            use_2_cycles = True,
             t_start      = t_start,
             t_end        = t_end,
             psi_left     = psi_left,
