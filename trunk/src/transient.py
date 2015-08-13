@@ -6,7 +6,7 @@ import numpy as np
 from math import sqrt
 
 from nonlinearSolve import nonlinearSolve
-from utilityFunctions import computeL2RelDiff
+from utilityFunctions import computeL2RelDiff, computeAnalyticHydroSolution
 from transientSource import computeRadiationExtraneousSource
 from hydroSource import computeMomentumExtraneousSource,\
    computeEnergyExtraneousSource
@@ -122,6 +122,7 @@ def runNonlinearTransient(mesh, problem_type,
    psim_src=None, psip_src=None, mom_src=None, E_src=None,
    time_stepper='BE', dt_option='constant', dt_constant=None, CFL=0.5,
    slope_limiter="vanleer", t_start=0.0, t_end=1.0, use_2_cycles=False,
+   rho_f=None,u_f=None,E_f=None,gamma_value=None,cv_value=None,
    verbosity=2, check_balance=False):
 
    # check input arguments
@@ -337,7 +338,11 @@ def runNonlinearTransient(mesh, problem_type,
                 Qpsi_older   = Qpsi_older,
                 Qmom_older   = Qmom_older,
                 Qerg_older   = Qerg_older,
-                verbosity    = verbosity)
+                verbosity    = verbosity,
+                rho_f = rho_f, u_f = u_f, E_f = E_f,
+                gamma_value = gamma_value,
+                cv_value=cv_value
+            )
 
              print("  Cycle 2:")
 
@@ -374,7 +379,10 @@ def runNonlinearTransient(mesh, problem_type,
                 Qpsi_older   = Qpsi_old,
                 Qmom_older   = Qmom_old,
                 Qerg_older   = Qerg_old,
-                verbosity    = verbosity)
+                verbosity    = verbosity,
+                rho_f = rho_f, u_f = u_f, E_f = E_f,
+                gamma_value = gamma_value,
+                cv_value=cv_value)
 
              # add up source totals for each cycle to total for whole time step
              src_totals = dict()
@@ -422,7 +430,10 @@ def runNonlinearTransient(mesh, problem_type,
                 Qpsi_older   = Qpsi_older,
                 Qmom_older   = Qmom_older,
                 Qerg_older   = Qerg_older,
-                verbosity    = verbosity)
+                verbosity    = verbosity,
+                rho_f = rho_f, u_f = u_f, E_f = E_f,
+                gamma_value = gamma_value,
+                cv_value=cv_value)
 
        # compute balance
        if check_balance:
@@ -528,142 +539,172 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
    hydro_BC, slope_limiter, slopes_older, e_rad_old, e_rad_older,
    psim_src, psip_src, mom_src, E_src, t_old,
    Qpsi_old, Qmom_old, Qerg_old, Qpsi_older, Qmom_older, Qerg_older,
-   time_stepper_predictor='CN', time_stepper_corrector='BDF2',verbosity=2):
+   time_stepper_predictor='CN', time_stepper_corrector='BDF2',verbosity=2,
+   rho_f=None,u_f=None,E_f=None,gamma_value=None,cv_value=None):
 
-       debug_mode = False
+   debug_mode = False
 
-       # assert that BDF2 was not chosen for the predictor time-stepper
-       assert time_stepper_predictor != 'BDF2', 'BDF2 cannot be used in\
-          the predictor step.'
+   # assert that BDF2 was not chosen for the predictor time-stepper
+   assert time_stepper_predictor != 'BDF2', 'BDF2 cannot be used in\
+      the predictor step.'
 
-       if verbosity > 1:
-          print "    Predictor step:"
+   if debug_mode:
 
-       # Force everything to BE
-       print "FORCING BE EVERYWHERE DEBUG"
-       time_stepper_predictor = 'BE'
-       time_stepper_corrector = 'BE'
+      hydro_exact = computeAnalyticHydroSolution(mesh, t=t_old,
+            rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
-       # update hydro BC
-       hydro_BC.update(states=hydro_old, t=t_old)
+      plotHydroSolutions(mesh, hydro_old, x_exact=mesh.getCellCenters(),
+          exact=hydro_exact)
+    
+   if verbosity > 1:
+      print "    Predictor step:"
 
-       # compute slopes
-       slopes_old = HydroSlopes(hydro_old, bc=hydro_BC, limiter=slope_limiter)
+   # Force everything to BE
+   print "FORCING BE EVERYWHERE DEBUG"
+   time_stepper_predictor = 'BE'
+   time_stepper_corrector = 'BE'
 
-       # perform predictor step of MUSCL-Hancock
-       hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
+   # update hydro BC
+   hydro_BC.update(states=hydro_old, t=t_old)
 
-       if debug_mode:
-          print "hydro_old:"
-          for i in hydro_old:
-             print i
+   # compute slopes
+   slopes_old = HydroSlopes(hydro_old, bc=hydro_BC, limiter=slope_limiter)
 
-          print "hydro_star predictor:"
-          for i in hydro_star:
-             print i
+   # perform predictor step of MUSCL-Hancock
+   hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
 
-       # compute new extraneous sources
-       Qpsi_half, Qmom_half, Qerg_half = computeExtraneousSources(
-          psim_src, psip_src, mom_src, E_src, mesh, t_old+0.5*dt)
 
-       # perform nonlinear solve
-       hydro_half, rad_half, cx_half, e_rad_half = nonlinearSolve(
-          mesh         = mesh,
-          time_stepper = time_stepper_predictor,
-          problem_type = 'rad_hydro',
-          dt           = 0.5*dt,
-          psi_left     = psi_left,
-          psi_right    = psi_right,
-          cx_old       = cx_old,
-          hydro_old    = hydro_old,
-          hydro_star   = hydro_star,
-          rad_old      = rad_old,
-          slopes_old   = slopes_old,
-          e_rad_old    = e_rad_old,
-          Qpsi_new     = Qpsi_half,
-          Qmom_new     = Qmom_half,
-          Qerg_new     = Qerg_half,
-          Qpsi_old     = Qpsi_old,
-          Qmom_old     = Qmom_old,
-          Qerg_old     = Qerg_old,
-          Qpsi_older   = Qpsi_older, # this is a dummy argument
-          Qmom_older   = Qmom_older, # this is a dummy argument
-          Qerg_older   = Qerg_older, # this is a dummy argument
-          verbosity    = verbosity)
+   if debug_mode:
+    #  print "hydro_old:"
+   #   for i in hydro_old:
+   #      print i
 
-       if debug_mode:
-          print "hydro_half:"
-          for i in hydro_half:
-             print i
+      print "hydro_star predictor:"
+  #    for i in hydro_star:
+ #        print i
+      plotHydroSolutions(mesh, hydro_star, x_exact=mesh.getCellCenters(),
+                exact=None)
 
-       if verbosity > 1:
-          print "    Corrector step:"
+   # compute new extraneous sources
+   Qpsi_half, Qmom_half, Qerg_half = computeExtraneousSources(
+      psim_src, psip_src, mom_src, E_src, mesh, t_old+0.5*dt)
 
-       # update hydro BC
-       hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=True)
-       #hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=False)
+   # perform nonlinear solve
+   hydro_half, rad_half, cx_half, e_rad_half = nonlinearSolve(
+      mesh         = mesh,
+      time_stepper = time_stepper_predictor,
+      problem_type = 'rad_hydro',
+      dt           = 0.5*dt,
+      psi_left     = psi_left,
+      psi_right    = psi_right,
+      cx_old       = cx_old,
+      hydro_old    = hydro_old,
+      hydro_star   = hydro_star,
+      rad_old      = rad_old,
+      slopes_old   = slopes_old,
+      e_rad_old    = e_rad_old,
+      Qpsi_new     = Qpsi_half,
+      Qmom_new     = Qmom_half,
+      Qerg_new     = Qerg_half,
+      Qpsi_old     = Qpsi_old,
+      Qmom_old     = Qmom_old,
+      Qerg_old     = Qerg_old,
+      Qpsi_older   = Qpsi_older, # this is a dummy argument
+      Qmom_older   = Qmom_older, # this is a dummy argument
+      Qerg_older   = Qerg_older, # this is a dummy argument
+      verbosity    = verbosity)
 
-       # perform corrector step of MUSCL-Hancock
-       hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorSimon(
-       #hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorJosh(
-          mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
 
-       if debug_mode:
-          print "hydro_star corrector:"
-          for i in hydro_star:
-             print i
 
-       # compute new extraneous sources
-       Qpsi_new, Qmom_new, Qerg_new = computeExtraneousSources(
-          psim_src, psip_src, mom_src, E_src, mesh, t_old+dt)
+   if debug_mode:
+      print "hydro_half:"
+#      for i in hydro_half:
+#         print i
+      hydro_exact = computeAnalyticHydroSolution(mesh, t=t_old+0.5*dt,
+            rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
-       # perform nonlinear solve
-       hydro_new, rad_new, cx_new, e_rad_new = nonlinearSolve(
-          mesh         = mesh,
-          time_stepper = time_stepper_corrector,
-          problem_type = 'rad_hydro',
-          dt           = dt,
-          psi_left     = psi_left,
-          psi_right    = psi_right,
-          cx_old       = cx_old,
-          cx_older     = cx_older,
-          hydro_old    = hydro_old,
-          hydro_older  = hydro_older,
-          hydro_star   = hydro_star,
-          rad_old      = rad_old,
-          rad_older    = rad_older,
-          slopes_old   = slopes_old,
-          slopes_older = slopes_older,
-          e_rad_old = e_rad_old,
-          e_rad_older = e_rad_older,
-          Qpsi_new     = Qpsi_new,
-          Qmom_new     = Qmom_new,
-          Qerg_new     = Qerg_new,
-          Qpsi_old     = Qpsi_old,
-          Qmom_old     = Qmom_old,
-          Qerg_old     = Qerg_old,
-          Qpsi_older   = Qpsi_older,
-          Qmom_older   = Qmom_older,
-          Qerg_older   = Qerg_older,
-          verbosity    = verbosity)
+      plotHydroSolutions(mesh, hydro_half, x_exact=mesh.getCellCenters(),
+        exact=hydro_exact)
 
-       # add up sources for entire time step for balance checker
-       src_totals = {}
-       vol = mesh.getElement(0).dx
-       src_totals["mom"] = sum([vol*dt*i for i in Qmom_new])
-       src_totals["erg"] = sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
+   if verbosity > 1:
+      print "    Corrector step:"
 
-       if verbosity > 1:
-          print ""
+   # update hydro BC
+   hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=True)
+   #hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=False)
 
-       if debug_mode:
-          print "hydro_new:"
-          for i in hydro_new:
-             print i
+   # perform corrector step of MUSCL-Hancock
+   hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorSimon(
+   #hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorJosh(
+      mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
 
-       return hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
-          Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
-          src_totals
+   if debug_mode:
+      print "hydro_star corrector:"
+ #     for i in hydro_star:
+ #        print i
+
+      plotHydroSolutions(mesh, hydro_star, x_exact=mesh.getCellCenters(),
+                exact=None)
+
+   # compute new extraneous sources
+   Qpsi_new, Qmom_new, Qerg_new = computeExtraneousSources(
+      psim_src, psip_src, mom_src, E_src, mesh, t_old+dt)
+
+   # perform nonlinear solve
+   hydro_new, rad_new, cx_new, e_rad_new = nonlinearSolve(
+      mesh         = mesh,
+      time_stepper = time_stepper_corrector,
+      problem_type = 'rad_hydro',
+      dt           = dt,
+      psi_left     = psi_left,
+      psi_right    = psi_right,
+      cx_old       = cx_old,
+      cx_older     = cx_older,
+      hydro_old    = hydro_old,
+      hydro_older  = hydro_older,
+      hydro_star   = hydro_star,
+      rad_old      = rad_old,
+      rad_older    = rad_older,
+      slopes_old   = slopes_old,
+      slopes_older = slopes_older,
+      e_rad_old = e_rad_old,
+      e_rad_older = e_rad_older,
+      Qpsi_new     = Qpsi_new,
+      Qmom_new     = Qmom_new,
+      Qerg_new     = Qerg_new,
+      Qpsi_old     = Qpsi_old,
+      Qmom_old     = Qmom_old,
+      Qerg_old     = Qerg_old,
+      Qpsi_older   = Qpsi_older,
+      Qmom_older   = Qmom_older,
+      Qerg_older   = Qerg_older,
+      verbosity    = verbosity)
+
+   if debug_mode:
+       hydro_exact = computeAnalyticHydroSolution(mesh, t=t_old+dt,
+            rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
+
+    
+       plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),
+            exact=hydro_exact)
+
+   # add up sources for entire time step for balance checker
+   src_totals = {}
+   vol = mesh.getElement(0).dx
+   src_totals["mom"] = sum([vol*dt*i for i in Qmom_new])
+   src_totals["erg"] = sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
+
+   if verbosity > 1:
+      print ""
+
+   if debug_mode:
+      print "hydro_new:"
+      for i in hydro_new:
+         print i
+
+   return hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
+      Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
+      src_totals
 
 
 ## Computes all extraneous sources at time \f$t\f$

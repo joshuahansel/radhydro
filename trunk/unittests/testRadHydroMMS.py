@@ -134,6 +134,9 @@ class TestRadHydroMMS(unittest.TestCase):
          verbosity = 2
       else:
          verbosity = 0
+
+      #slope limiter
+      limiter = 'none'
       
       # run the rad-hydro transient
       rad_new, hydro_new = runNonlinearTransient(
@@ -144,6 +147,7 @@ class TestRadHydroMMS(unittest.TestCase):
          CFL          = 0.5,
          #dt_constant  = t_end,
          #use_2_cycles = True,
+         slope_limiter = limiter,
          use_2_cycles = False,
          t_start      = t_start,
          t_end        = t_end,

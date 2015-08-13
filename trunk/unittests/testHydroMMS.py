@@ -54,7 +54,7 @@ class TestHydroMMS(unittest.TestCase):
       E   = 5 + 50*x+t+50*(x-0.75)**2
       rho = exp(x+t)
       u   = exp(-x)*sin(t) - 1
-      E   = 10*exp(x+t)
+#      E   = 10*exp(x+t)
       #rho = 1 + sin(pi*x)
       #u   = 1/(1 + sin(pi*x))
       #E   = 10 + sin(pi*x)
@@ -97,7 +97,7 @@ class TestHydroMMS(unittest.TestCase):
       # spatial and temporal domains
       width = 1.0
       t_start  = 0.0
-      t_end = 0.005
+      t_end = 0.4
 
       # compute radiation BC; assumes BC is independent of time
       psi_left  = psip_f(x=0.0,   t=0.0)
@@ -130,14 +130,14 @@ class TestHydroMMS(unittest.TestCase):
          # create hydro BC
          hydro_BC = HydroBC(bc_type='dirichlet', mesh=mesh, rho_BC=rho_f,
             mom_BC=mom_f, erg_BC=E_f)
-     
+
          # create cross sections
          cross_sects = [(ConstantCrossSection(sig_s, sig_s+sig_a),
                          ConstantCrossSection(sig_s, sig_s+sig_a))
                          for i in xrange(mesh.n_elems)]
    
          # slope limiter option
-         slope_limiter = "vanleer"
+         slope_limiter = "minmod"
    
          # if run standalone, then be verbose
          if __name__ == '__main__':
@@ -169,7 +169,12 @@ class TestHydroMMS(unittest.TestCase):
             psim_src     = psim_src,
             psip_src     = psip_src,
             verbosity    = verbosity,
-            check_balance = True)
+            check_balance = True,
+            rho_f =rho_f,
+            u_f = u_f,
+            E_f = E_f,
+            gamma_value = gamma_value,
+            cv_value = cv_value  )
    
          # compute exact hydro solution
          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,

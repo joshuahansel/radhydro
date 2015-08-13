@@ -338,16 +338,22 @@ def plotHydroSolutions(mesh, states, slopes=None, x_exact=None, exact=None,
        p   = np.zeros(n)
        rho = np.zeros(n)
        e   = np.zeros(n)
+       E   = np.zeros(n)
+       mom = np.zeros(n)
        for i in xrange(n):
           u[i]   = states[i].u
           p[i]   = states[i].p
           rho[i] = states[i].rho
           e[i]   = states[i].e
+          E[i]   = states[i].E()
+          mom[i] = u[i]*rho[i]
     else:
        u   = np.zeros(2*n)
        p   = np.zeros(2*n)
        rho = np.zeros(2*n)
        e   = np.zeros(2*n)
+       E   = np.zeros(2*n)
+       mom = np.zeros(2*n)
        rho_l, rho_r, mom_l, mom_r, erg_l, erg_r =\
           slopes.createLinearRepresentation(states)
        gam = states[0].gamma
@@ -360,6 +366,10 @@ def plotHydroSolutions(mesh, states, slopes=None, x_exact=None, exact=None,
           p[2*i+1]   = computePressure(rho=rho_r[i], mom=mom_r[i], erg=erg_r[i], gam=gam)
           e[2*i]     = computeIntEnergy(rho=rho_l[i], mom=mom_l[i], erg=erg_l[i])
           e[2*i+1]   = computeIntEnergy(rho=rho_r[i], mom=mom_r[i], erg=erg_r[i])
+          E[2*i]     = erg_l[i]
+          E[2*i+1]   = erg_r[i]
+          mom[2*i]   = u[2*i]*rho[2*i]
+          mom[2*i+1] = u[2*i+1]*rho[2*i+1]
  
     # create lists for each exact quantity to be plotted
     if exact == None:
@@ -367,22 +377,31 @@ def plotHydroSolutions(mesh, states, slopes=None, x_exact=None, exact=None,
        p_exact = None
        rho_exact = None
        e_exact = None
+       E_exact = None
+       mom_exact = None
     else:
        u_exact   = list()
        p_exact   = list()
        rho_exact = list() 
        e_exact   = list()
+       E_exact   = list()
+       mom_exact = list()
        for i in exact:
            u_exact.append(i.u)
            p_exact.append(i.p)
            rho_exact.append(i.rho)
            e_exact.append(i.e)
+           E_exact.append(i.e*i.rho + 0.5*i.u*i.u*i.rho)
+           mom_exact.append(i.u*i.rho)
 
     # plot each quantity
     plotSingle(x_num=x_num, x_exact=x_exact, y=u,   y_label=r"$u$",    exact=u_exact)
     plotSingle(x_num=x_num, x_exact=x_exact, y=rho, y_label=r"$\rho$", exact=rho_exact) 
     plotSingle(x_num=x_num, x_exact=x_exact, y=p,   y_label=r"$p$",    exact=p_exact)
     plotSingle(x_num=x_num, x_exact=x_exact, y=e,   y_label=r"$e$",    exact=e_exact)
+    plotSingle(x_num=x_num, x_exact=x_exact, y=E,   y_label=r"$E$",    exact=E_exact)
+    plotSingle(x_num=x_num, x_exact=x_exact, y=mom, y_label=r"$(\rho u)$", exact=mom_exact)
+
 
     # save figure
     if save_plot:
@@ -401,8 +420,10 @@ def plotSingle(x_num, x_exact, y, y_label, exact=None):
 
     # static variable counter
     plotSingle.fig_num += 1
+    
+    plt.figsize=(15,10)
 
-    plt.subplot(2,2,plotSingle.fig_num)
+    plt.subplot(3,2,plotSingle.fig_num)
 
     plt.xlabel('$x$')
     plt.ylabel(y_label)

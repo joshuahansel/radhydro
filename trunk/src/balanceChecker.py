@@ -207,9 +207,9 @@ class BalanceChecker:
             print "    Mass Excess (Relative):  %.6e (%.6e)" % (mass_bal,
                     mass_bal/max(mass_new,1.E-65))
             print "Momentum Excess (Relative):  %.6e (%.6e)" % (mom_bal, 
-                    mom_bal/max(mom_new+src_totals["mom"],1.E-65))
+                    mom_bal/max(abs(mom_new)+abs(src_totals["mom"]),1.E-65))
             print "  Energy Excess (Relative):  %.6e (%.6e)" % (erg_bal,
-                    erg_bal/max(erg_new+src_totals["erg"],1.E-65))
+                    erg_bal/max(erg_new+abs(src_totals["erg"]),1.E-65))
             print "=====================================================\n"
 
             

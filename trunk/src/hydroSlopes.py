@@ -32,7 +32,6 @@ class HydroSlopes:
        self.mom_slopes = self.computeSlopes(mom, mom_L, mom_R)
        self.erg_slopes = self.computeSlopes(erg, erg_L, erg_R)
 
-
     ## Computes edge values for each conservative variable:
     #  \f$\rho_{i,L},\rho_{i,R},(\rho u)_{i,L},(\rho u)_{i,R},E_{i,L},E_{i,R}\f$.
     #
