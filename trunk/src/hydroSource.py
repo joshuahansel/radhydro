@@ -29,7 +29,7 @@ def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
     for i in range(mesh.n_elems):
 
         # update velocity
-        u_new = hydro_star[i].u + dt/hydro_star[i].rho*Q[i]
+        u_new = hydro_star[i].u + dt/hydro_new[i].rho*Q[i]
         hydro_new[i].updateVelocity(u_new)
 
 
