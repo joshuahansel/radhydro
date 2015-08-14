@@ -49,9 +49,10 @@ class TestHydroMMS(unittest.TestCase):
       #rho = sympify('1')
       #u   = sympify('1')
       #E   = sympify('10')
-      rho = 1+x-t
-      u   = sympify('1')
-      E   = 5 + 50*x+t+50*(x-0.75)**2
+#      rho = 1+x-t
+#      u   = sympify('1')
+      E   = 5 + 50*x+t+50*(x-0.5)**2
+#      E   = 5 +t+50*(x-0.75)**2
       rho = exp(x+t)
       u   = exp(-x)*sin(t) - 1
 #      E   = 10*exp(x+t)
@@ -98,7 +99,7 @@ class TestHydroMMS(unittest.TestCase):
       width = 1.0
       t_start  = 0.0
       t_end = 0.4
-
+      t_end = 0.009085
       # compute radiation BC; assumes BC is independent of time
       psi_left  = psip_f(x=0.0,   t=0.0)
       psi_right = psim_f(x=width, t=0.0)
@@ -137,7 +138,7 @@ class TestHydroMMS(unittest.TestCase):
                          for i in xrange(mesh.n_elems)]
    
          # slope limiter option
-         slope_limiter = "none"
+         slope_limiter = "minmod"
    
          # if run standalone, then be verbose
          if __name__ == '__main__':
@@ -153,9 +154,9 @@ class TestHydroMMS(unittest.TestCase):
             mesh         = mesh,
             problem_type = 'rad_hydro',
             dt_option    = 'CFL',
-            CFL          = 0.9,
+            CFL          = 0.5,
             slope_limiter = slope_limiter,
-            use_2_cycles = True,
+            use_2_cycles = False,
             t_start      = t_start,
             t_end        = t_end,
             psi_left     = psi_left,

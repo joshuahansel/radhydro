@@ -107,12 +107,12 @@ class BalanceChecker:
         erg_old = erg_old_hydro + erg_old_rad
 
         # compute internal energy in domain
-        #em_new = sum([i.e*vol*i.rho for i in hydro_new])
-        #em_old = sum([i.e*vol*i.rho for i in hydro_old])
+        em_new = sum([i.e*vol*i.rho for i in hydro_new])
+        em_old = sum([i.e*vol*i.rho for i in hydro_old])
 
         # compute kinetic energy in domain
-        #KE_new = sum([vol*(0.5*i.rho*i.u**2) for i in hydro_new])
-        #KE_old = sum([vol*(0.5*i.rho*i.u**2) for i in hydro_old])
+        KE_new = sum([vol*(0.5*i.rho*i.u**2) for i in hydro_new])
+        KE_old = sum([vol*(0.5*i.rho*i.u**2) for i in hydro_old])
 
         #Compute momentum deposited to material in a rad_mat only problem,
         #This must still be added, hardcoded as BE for now
@@ -166,6 +166,8 @@ class BalanceChecker:
               + mom_netflow_new_rad) - src_totals["mom"]
            erg_bal  = erg_new  - erg_old  - dt*(erg_netflow_hydro
               + erg_netflow_new_rad) - src_totals["erg"]
+           print erg_new
+
 
         elif self.time_stepper == 'CN':
 
@@ -190,10 +192,10 @@ class BalanceChecker:
             print "Current in:            %.6e" % (dt*erg_inflow_new_rad)
             print "Current out:           %.6e" % (dt*erg_outflow_new_rad)
             print "-----------------------------------------------------"
-            #print "New energy material:   %.6e" % em_new
-            #print "Old energy material:   %.6e" % em_old
-            #print "New kinetic energy:    %.6e" % (KE_new)
-            #print "Old kinetic energy:    %.6e" % (KE_old) 
+            print "New energy material:   %.6e" % em_new
+            print "Old energy material:   %.6e" % em_old
+            print "New kinetic energy:    %.6e" % (KE_new)
+            print "Old kinetic energy:    %.6e" % (KE_old) 
             print "mass     flux left:    %.6e" % (hydro_F_left["rho"]*dt) 
             print "momentum flux left:    %.6e" % (hydro_F_left["mom"]*dt) 
             print "energy   flux left:    %.6e" % (hydro_F_left["erg"]*dt) 

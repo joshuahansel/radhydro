@@ -148,7 +148,7 @@ class TestRadHydroMMS(unittest.TestCase):
          #dt_constant  = t_end,
          #use_2_cycles = True,
          slope_limiter = limiter,
-         use_2_cycles = True,
+         use_2_cycles = False,
          t_start      = t_start,
          t_end        = t_end,
          psi_left     = psi_left,

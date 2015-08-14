@@ -339,7 +339,7 @@ def evalMomentumExchangeAverage(i, rad, hydro, cx, slopes):
 def computeMomentumExtraneousSource(mom_src, mesh, t):
 
    # Compute average of momentum source
-   return [0.5*(mom_src(mesh.getElement(i).xl,t) + mom_src(mesh.getElement(i).xr,t))  for i in xrange(mesh.n_elems)]
+   return [mom_src(mesh.getElement(i).x_cent,t)  for i in xrange(mesh.n_elems)]
 
 
 ## Computes an extraneous source vector for the energy equation,
