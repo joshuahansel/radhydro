@@ -6,7 +6,7 @@ import numpy as np
 from math import sqrt
 
 from nonlinearSolve import nonlinearSolve
-from utilityFunctions import computeL2RelDiff, computeAnalyticHydroSolution
+from utilityFunctions import computeL2RelDiff, computeAnalyticHydroSolution, getIndex
 from transientSource import computeRadiationExtraneousSource
 from hydroSource import computeMomentumExtraneousSource,\
    computeEnergyExtraneousSource
@@ -397,6 +397,11 @@ def runNonlinearTransient(mesh, problem_type,
              else:
                 time_stepper_corrector = 'BDF2'
 
+             time_stepper_predictor = 'BE'
+             print "DEBUG: forcing predictor to match ", time_stepper, time_stepper_predictor
+             time_stepper_corrector = time_stepper
+             print "TIME STEPPER", time_stepper_corrector
+
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
              Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
@@ -417,7 +422,7 @@ def runNonlinearTransient(mesh, problem_type,
                 slopes_older   = slopes_older,
                 e_rad_old   = e_rad_old,
                 e_rad_older = e_rad_older,
-                time_stepper_predictor='CN',
+                time_stepper_predictor=time_stepper_predictor,
                 time_stepper_corrector=time_stepper_corrector,
                 psim_src     = psim_src,
                 psip_src     = psip_src,
@@ -524,7 +529,9 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
        src_totals = {}
        vol = mesh.getElement(0).dx
        src_totals["mom"] = sum([vol*dt*i for i in Qmom_new])
-       src_totals["erg"] = sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
+       src_totals["erg"] = 0.5*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
+       src_totals["erg"] += 0.5*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_old])
+       src_totals["rad"] = computeRadSrcTotal(mesh,dt,time_stepper, Qpsi_new,Qpsi_old,Qpsi_older)
 
        return hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
           Qpsi_new, Qmom_new, Qerg_new, src_totals
@@ -558,11 +565,6 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
     
    if verbosity > 1:
       print "    Predictor step:"
-
-   # Force everything to BE
-#   print "FORCING BE EVERYWHERE DEBUG"
-#   time_stepper_predictor = 'BE'
-#   time_stepper_corrector = 'BE'
 
    # update hydro BC
    hydro_BC.update(states=hydro_old, t=t_old)
@@ -689,10 +691,14 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
             exact=hydro_exact)
 
    # add up sources for entire time step for balance checker
+#   src_totals = 
    src_totals = {}
    vol = mesh.getElement(0).dx
    src_totals["mom"] = sum([vol*dt*i for i in Qmom_new])
    src_totals["erg"] = sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
+   src_totals["erg"] = 0.5*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
+   src_totals["erg"] += 0.5*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_old])
+   src_totals["rad"] = computeRadSrcTotal(mesh,dt,time_stepper_corrector,Qpsi_new,Qpsi_old,Qpsi_older)
 
    if verbosity > 1:
       print ""
@@ -742,3 +748,17 @@ def computeExtraneousSources(psim_src, psip_src, mom_src, E_src, mesh, t):
    return Qpsi, Qmom, Qerg
 
 
+def computeRadSrcTotal(mesh, dt, time_stepper, Qpsi_new, Qpsi_old, Qpsi_older):
+    
+   vol = mesh.getElement(0).dx
+   # add up sources for radiation
+   src = 0.0
+
+   if time_stepper == 'BE':
+
+      #source needs to be integrated over angle and volume
+      #If you work out the math, its just the sum *0.5
+      src = 0.5*vol*sum(Qpsi_new)*dt
+
+   return src
+      

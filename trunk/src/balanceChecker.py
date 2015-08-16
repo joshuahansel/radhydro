@@ -116,6 +116,8 @@ class BalanceChecker:
 
         #Compute momentum deposited to material in a rad_mat only problem,
         #This must still be added, hardcoded as BE for now
+        print "I AM THIS TIME STEPPER: ", self.time_stepper
+
         mom_deposition = 0.0
         if self.prob == 'rad_mat':
 
@@ -165,17 +167,28 @@ class BalanceChecker:
            mom_bal  = mom_new  - mom_old  - dt*(mom_netflow_hydro
               + mom_netflow_new_rad) - src_totals["mom"]
            erg_bal  = erg_new  - erg_old  - dt*(erg_netflow_hydro
-              + erg_netflow_new_rad) - src_totals["erg"]
-           print erg_new
-
+              + erg_netflow_new_rad) - src_totals["erg"] - src_totals["rad"]
 
         elif self.time_stepper == 'CN':
 
            mass_bal = mass_new - mass_old - dt*(mass_netflow_hydro)
            mom_bal  = mom_new  - mom_old  - dt*(mom_netflow_hydro
-              + 0.5*mom_netflow_old_rad + 0.5*mom_netflow_new_rad)
+              + 0.5*mom_netflow_old_rad + 0.5*mom_netflow_new_rad) \
+              - src_totals["mom"]
            erg_bal  = erg_new  - erg_old  - dt*(erg_netflow_hydro
-              + 0.5*erg_netflow_old_rad + 0.5*erg_netflow_new_rad)
+              + 0.5*erg_netflow_old_rad + 0.5*erg_netflow_new_rad) \
+              - src_totals["erg"]
+
+#        elif self.time_stepper == 'BDF2':
+#
+#           mass_bal = mass_new - mass_old - dt*(mass_netflow_hydro)
+#           mom_bal  = mom_new  - mom_old  - dt*(mom_netflow_hydro
+#              + 1./3.*mom_netflow_old_rad + 0.5*mom_netflow_new_rad) \
+#              - src_totals["mom"]
+#           erg_bal  = erg_new  - erg_old  - dt*(erg_netflow_hydro
+#              + 0.5*erg_netflow_old_rad + 0.5*erg_netflow_new_rad) \
+#              - src_totals["erg"]
+                     
 
         else:
 
@@ -196,6 +209,8 @@ class BalanceChecker:
             print "Old energy material:   %.6e" % em_old
             print "New kinetic energy:    %.6e" % (KE_new)
             print "Old kinetic energy:    %.6e" % (KE_old) 
+            print "New total mat energy:  %.16e" % (erg_new)
+            print "Old total mat energy:  %.16e" % (erg_old)
             print "mass     flux left:    %.6e" % (hydro_F_left["rho"]*dt) 
             print "momentum flux left:    %.6e" % (hydro_F_left["mom"]*dt) 
             print "energy   flux left:    %.6e" % (hydro_F_left["erg"]*dt) 
@@ -205,6 +220,7 @@ class BalanceChecker:
             print "-----------------------------------------------------"
             print "Momentum source total: %.6e" % (src_totals["mom"])
             print "Energy   source total: %.6e" % (src_totals["erg"])
+            print "    Rad. source total: %.6e" % (src_totals["rad"])
             print "-----------------------------------------------------"
             print "    Mass Excess (Relative):  %.6e (%.6e)" % (mass_bal,
                     mass_bal/max(mass_new,1.E-65))

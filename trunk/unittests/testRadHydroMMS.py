@@ -41,15 +41,15 @@ class TestRadHydroMMS(unittest.TestCase):
       x, t, alpha, c = symbols('x t alpha c')
       
       # create solution for thermodynamic state and flow field
-      #rho = sympify('1')
-      #u   = sympify('1')
-      #E   = sympify('10')
-      #rho = 1 + x - t
-      #u   = sympify('1')
-      #E   = 5 + 5*(x - 0.5)**2
-      rho = exp(x+t)
-      u   = exp(-x)*sin(t) - 1
-      E   = 10*exp(x+t)
+     # rho = sympify('1')
+     # u   = sympify('1')
+     # E   = sympify('10')
+      rho = 1 + x - t
+      u   = sympify('1')
+      E   = 5 + 5*(x - 0.5)**2
+     # rho = exp(x+t)
+     # u   = exp(-x)*sin(t) - 1
+     # E   = 10*exp(x+t)
       
       # create solution for radiation field
       rad_scale = 50*c
@@ -148,6 +148,7 @@ class TestRadHydroMMS(unittest.TestCase):
          #dt_constant  = t_end,
          #use_2_cycles = True,
          slope_limiter = limiter,
+         time_stepper = 'BE',
          use_2_cycles = False,
          t_start      = t_start,
          t_end        = t_end,

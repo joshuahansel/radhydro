@@ -104,17 +104,11 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
                + (1.0-nu)*E_star[x]/rho[x] + nu*e_prev[x]\
                - 0.5*(1.0-nu)*(u_new[x]**2)
 
-        # compute new average internal energy
-        e_new_avg = 0.5*e_new[0] + 0.5*e_new[1]
-
         #Compute a new total energy at each edge, that is what we are really
         #conserving and this will ensure regular hydro is unchanged
-        #print "The old way of e_avg", e_new_avg
-        #print "Hacking in a new internal energy computation"
         E_new = [rho[x]*(0.5*u_new[x]**2 + e_new[x]) for x in range(2)]
         E_new_avg = 0.5*(E_new[0] + E_new[1])
         e_new_avg = E_new_avg/state_new.rho - 0.5*(state_new.u)**2
-        #print "The new way of computing e_new_avg", e_new_avg
 
         # put new internal energy in the new hydro state
         hydro_new[i].updateStateDensityInternalEnergy(state_star.rho, e_new_avg)

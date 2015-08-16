@@ -46,13 +46,13 @@ class TestHydroMMS(unittest.TestCase):
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-      #rho = sympify('1')
-      #u   = sympify('1')
-      #E   = sympify('10')
+#      rho = sympify('1')
+#      u   = sympify('1')
+#      E   = sympify('10')
 #      rho = 1+x-t
 #      u   = sympify('1')
-      E   = 5 + 50*x+t+50*(x-0.5)**2
-#      E   = 5 +t+50*(x-0.75)**2
+#      E   = 5 + 50*x+t+50*(x-0.5)**2
+      E   = 5 +t+50*(x-0.75)**2
       rho = exp(x+t)
       u   = exp(-x)*sin(t) - 1
 #      E   = 10*exp(x+t)
@@ -138,7 +138,7 @@ class TestHydroMMS(unittest.TestCase):
                          for i in xrange(mesh.n_elems)]
    
          # slope limiter option
-         slope_limiter = "minmod"
+         slope_limiter = "none"
    
          # if run standalone, then be verbose
          if __name__ == '__main__':
@@ -156,6 +156,7 @@ class TestHydroMMS(unittest.TestCase):
             dt_option    = 'CFL',
             CFL          = 0.5,
             slope_limiter = slope_limiter,
+            time_stepper = 'CN',
             use_2_cycles = False,
             t_start      = t_start,
             t_end        = t_end,

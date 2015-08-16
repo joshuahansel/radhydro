@@ -29,7 +29,7 @@ class TestRadHydroShock(unittest.TestCase):
    def test_RadHydroShock(self):
       
       # create uniform mesh
-      n_elems = 100
+      n_elems = 4
       width = 0.02
       x_start = -0.01
       mesh_center = x_start + 0.5*width
@@ -121,7 +121,7 @@ class TestRadHydroShock(unittest.TestCase):
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
          verbosity    = verbosity,
-         slope_limiter = 'vanleer',
+         slope_limiter = 'none',
          check_balance=True)
 
       # plot

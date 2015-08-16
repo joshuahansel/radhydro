@@ -49,6 +49,8 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
        # increment iteration counter
        k += 1
 
+       print "THIS IS THE TIME STEPPER REALLY", time_stepper
+
        # update velocity
        if problem_type != 'rad_mat':
           updateVelocity(

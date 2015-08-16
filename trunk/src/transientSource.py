@@ -114,6 +114,7 @@ def computeRadiationSource(mesh, time_stepper, problem_type,
    # compute the transient source
    n = mesh.n_elems * 4
    Q_tr = np.zeros(n)
+   print "CREATE SOURCE CALLED"
    for term in terms:
        # compute source contribution for this term
        Q_term = term.computeTerm(**kwargs)
@@ -607,10 +608,10 @@ class DriftTerm(TransientSourceTerm):
         
         # return local Q values
         Q_local = np.zeros(4)
-        Q_local[Lm] = -cxtL*u[0]/c*F0L
-        Q_local[Lp] = -cxtL*u[0]/c*F0L
-        Q_local[Rm] = -cxtR*u[1]/c*F0R
-        Q_local[Rp] = -cxtR*u[1]/c*F0R
+        Q_local[Lm] = -cxtL*u[0]/c*F0L*0.5 #0.5 because it is isotropic
+        Q_local[Lp] = -cxtL*u[0]/c*F0L*0.5
+        Q_local[Rm] = -cxtR*u[1]/c*F0R*0.5
+        Q_local[Rp] = -cxtR*u[1]/c*F0R*0.5
 
         return Q_local
 
