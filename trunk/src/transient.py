@@ -15,6 +15,8 @@ from hydroSlopes import HydroSlopes
 from musclHancock import hydroPredictor, hydroCorrectorSimon, hydroCorrectorJosh
 from balanceChecker import BalanceChecker
 from plotUtilities import plotHydroSolutions
+from radUtilities import mu
+import globalConstants as GC
 
 ## Runs transient for a radiation-only problem.
 #
@@ -397,10 +399,7 @@ def runNonlinearTransient(mesh, problem_type,
              else:
                 time_stepper_corrector = 'BDF2'
 
-             time_stepper_predictor = 'BE'
-             print "DEBUG: forcing predictor to match ", time_stepper, time_stepper_predictor
              time_stepper_corrector = time_stepper
-             print "TIME STEPPER", time_stepper_corrector
 
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
@@ -422,7 +421,7 @@ def runNonlinearTransient(mesh, problem_type,
                 slopes_older   = slopes_older,
                 e_rad_old   = e_rad_old,
                 e_rad_older = e_rad_older,
-                time_stepper_predictor=time_stepper_predictor,
+                time_stepper_predictor='CN',
                 time_stepper_corrector=time_stepper_corrector,
                 psim_src     = psim_src,
                 psip_src     = psip_src,
@@ -440,13 +439,14 @@ def runNonlinearTransient(mesh, problem_type,
                 gamma_value = gamma_value,
                 cv_value=cv_value)
 
-       # compute balance
-       if check_balance:
-          bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
-          bal.computeBalance(psi_left, psi_right, hydro_old,
-                 hydro_new, rad_old, rad_new, hydro_F_right=hydro_F_right,
-                 hydro_F_left=hydro_F_left, src_totals=src_totals, 
-                 cx_new=cx_new,write=True)
+             # compute balance
+             if check_balance and (time_stepper != 'BDF2' or time_index>1):
+                bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
+                bal.computeBalance(psi_left=psi_left, psi_right=psi_right, hydro_old=hydro_old,
+                   hydro_new=hydro_new, rad_old=rad_old, rad_new=rad_new,
+                   hydro_older=hydro_older, rad_older=rad_older,
+                   hydro_F_right=hydro_F_right, hydro_F_left=hydro_F_left, 
+                   src_totals=src_totals, cx_new=cx_new,write=True)
 
        # save older solutions
        cx_older  = deepcopy(cx_old)
@@ -526,12 +526,10 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
           Qerg_older   = Qerg_older)
 
        # add up sources for entire time step for balance checker
-       src_totals = {}
-       vol = mesh.getElement(0).dx
-       src_totals["mom"] = sum([vol*dt*i for i in Qmom_new])
-       src_totals["erg"] = 0.5*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
-       src_totals["erg"] += 0.5*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_old])
-       src_totals["rad"] = computeRadSrcTotal(mesh,dt,time_stepper, Qpsi_new,Qpsi_old,Qpsi_older)
+       src_totals =  computeMMSSrcTotal(mesh,dt,time_stepper,
+         Qmom_new=Qmom_new,Qmom_old=Qmom_old,Qmom_older=Qmom_older,
+         Qpsi_new=Qpsi_new,Qpsi_old=Qpsi_old,Qpsi_older=Qpsi_older,
+         Qerg_new=Qerg_new,Qerg_old=Qerg_old,Qerg_older=Qerg_older)
 
        return hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
           Qpsi_new, Qmom_new, Qerg_new, src_totals
@@ -691,14 +689,10 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
             exact=hydro_exact)
 
    # add up sources for entire time step for balance checker
-#   src_totals = 
-   src_totals = {}
-   vol = mesh.getElement(0).dx
-   src_totals["mom"] = sum([vol*dt*i for i in Qmom_new])
-   src_totals["erg"] = sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
-   src_totals["erg"] = 0.5*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
-   src_totals["erg"] += 0.5*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_old])
-   src_totals["rad"] = computeRadSrcTotal(mesh,dt,time_stepper_corrector,Qpsi_new,Qpsi_old,Qpsi_older)
+   src_totals =  computeMMSSrcTotal(mesh,dt,time_stepper_corrector,
+         Qmom_new=Qmom_new,Qmom_old=Qmom_old,Qmom_older=Qmom_older,
+         Qpsi_new=Qpsi_new,Qpsi_old=Qpsi_old,Qpsi_older=Qpsi_older,
+         Qerg_new=Qerg_new,Qerg_old=Qerg_old,Qerg_older=Qerg_older)
 
    if verbosity > 1:
       print ""
@@ -747,18 +741,84 @@ def computeExtraneousSources(psim_src, psip_src, mom_src, E_src, mesh, t):
 
    return Qpsi, Qmom, Qerg
 
+#--------------------------------------------------------------------------------
+## Function to compute the src totals for MMS sources
+#
+def computeMMSSrcTotal(mesh, dt, time_stepper, Qpsi_new=None, Qpsi_old=None,
+        Qpsi_older=None, Qrho=None, Qmom_new=None, Qmom_old=None, Qmom_older=None,
+        Qerg_new=None,Qerg_old=None,Qerg_older=None):
 
-def computeRadSrcTotal(mesh, dt, time_stepper, Qpsi_new, Qpsi_old, Qpsi_older):
-    
    vol = mesh.getElement(0).dx
-   # add up sources for radiation
-   src = 0.0
+   # add up sources for each equation, depending on time stepper
+   #TODO This will be much easier once MMS sources are accurate with quadrature
+   srcs = {}
+
+   #Rho is always time averaged, straight forward
+   if Qrho != None:
+       srcs["rho"] = sum([vol*dt*i for i in Qrho])
 
    if time_stepper == 'BE':
 
-      #source needs to be integrated over angle and volume
+      #Rad source is vector passed to  needs to be integrated over angle and volume
       #If you work out the math, its just the sum *0.5
-      src = 0.5*vol*sum(Qpsi_new)*dt
+      vol = mesh.getElement(0).dx
+      srcs["rad"] = 0.5*vol*sum(Qpsi_new)*dt
+      srcs["mom"] = sum([vol*dt*i for i in Qmom_new])
+      print "BEFORE", srcs["mom"]
+      derp = srcs["mom"]
+      srcs["mom"] += sumRadMomQ(vol,dt,Qpsi_new) #add in momentum from radiation
+      print "AFTER", srcs["mom"], srcs["mom"]-derp
+      srcs["erg"] = sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
 
-   return src
+   elif time_stepper == 'CN':
+
+      #Rad source is vector passed to  needs to be integrated over angle and volume
+      #If you work out the math, its just the sum *0.5
+      vol = mesh.getElement(0).dx
+      srcs["rad"] = 0.5*(0.5*vol*sum(Qpsi_new)*dt)
+      srcs["rad"] += 0.5*(0.5*vol*dt*sum(Qpsi_old)*dt)
+      srcs["mom"] = 0.5*(sum([vol*dt*i for i in Qmom_new]))
+      srcs["mom"] += 0.5*(sum([vol*dt*i for i in Qmom_old]))
+      srcs["mom"] += 0.5*(sumRadMomQ(vol,dt,Qpsi_new)+sumRadMomQ(vol,dt,Qpsi_old))
+      srcs["erg"] = 0.5*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
+      srcs["erg"] += 0.5*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_old])
       
+   elif time_stepper == 'BDF2':
+
+      #Rad source is vector passed to  needs to be integrated over angle and volume
+      #If you work out the math, its just the sum *0.5
+      vol = mesh.getElement(0).dx
+      srcs["rad"] = 2./3.*(0.5*vol*sum(Qpsi_new)*dt)
+      srcs["rad"] += 1./3.*(0.5*vol*dt*sum(Qpsi_old)*dt)
+      srcs["rad"] += 1./3.*(0.5*vol*dt*sum(Qpsi_older)*dt)
+      srcs["mom"] = 2./3*(sum([vol*dt*i for i in Qmom_new]))
+      srcs["mom"] += 1/3.*(sum([vol*dt*i for i in Qmom_old]))
+      srcs["mom"] += 1/3.*(sum([vol*dt*i for i in Qmom_older]))
+      srcs["mom"] += 2./3*sumRadMomQ(vol,dt,Qpsi_new)+1./3.*sumRadMomQ(vol,dt,Qpsi_old) \
+                    +1./3.*(sumRadMomQ(vol,dt,Qpsi_older))
+      srcs["erg"] = 2./3.*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
+      srcs["erg"] += 1./3*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_old])
+      srcs["erg"] += 1./3*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_older])
+
+   return srcs
+
+
+def sumRadMomQ(vol, dt,Qpsi):
+
+   #Add in the momentum source from radiation by computing moments
+   MomRad = 0.0
+   c = GC.SPD_OF_LGT
+   for i in range(len(Qpsi)/4):
+
+      # get indices
+      Lm = getIndex(i,"L","-") # dof L,-
+      Lp = getIndex(i,"L","+") # dof L,+
+      Rm = getIndex(i,"R","-") # dof R,-
+      Rp = getIndex(i,"R","+") # dof R,+
+
+      QL = 1./c*(mu['+']*Qpsi[Lp] + mu['-']*Qpsi[Lm])
+      QR = 1./c*(mu['+']*Qpsi[Rp] + mu['-']*Qpsi[Rm])
+
+      MomRad += 0.5*(QL + QR)*vol*dt
+
+   return MomRad

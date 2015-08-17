@@ -20,7 +20,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
    Qpsi_new, Qmom_new, Qerg_new, Qpsi_old, Qmom_old, Qerg_old, Qpsi_older,
    Qmom_older, Qerg_older, Qrho=None,
    rad_older=None, cx_older=None, hydro_older=None, slopes_older=None,
-   e_rad_older=None, tol=1.0e-9, verbosity=2):
+   e_rad_older=None, tol=1.0e-6, verbosity=2):
 
    # assert that that older arguments were passed if using BDF2
    if time_stepper == 'BDF2':
@@ -49,7 +49,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
        # increment iteration counter
        k += 1
 
-       print "THIS IS THE TIME STEPPER REALLY", time_stepper
+       print "This is the time stepper non-linear solve recieved", time_stepper
 
        # If MMS, may need to update rho
        if Qrho != None:
@@ -88,9 +88,9 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
           e_star.append(e_star_i)
 
        # Compute E_slopes
-       E_slopes_old = computeTotalEnergySlopes(hydro_star, slopes_old, e_star)
+       E_slopes_star = computeTotalEnergySlopes(hydro_star, slopes_old, e_star)
        print "THESE DO NOT STORE THE RIGHT SLOPES, THEY NEED TO BE RECOMPUTED BASED ON e_rad_old's and odler"
-       E_slopes_star = deepcopy(E_slopes_old)
+       E_slopes_old  = deepcopy(E_slopes_star)
        E_slopes_older = deepcopy(E_slopes_old)
 
        # compute QE

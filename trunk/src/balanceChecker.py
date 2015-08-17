@@ -68,9 +68,10 @@ class BalanceChecker:
     #----------------------------------------------------------------------------
     ## Compute balance for a coupled rad-hydro problem
     #
-    def computeBalance(self, psi_left, psi_right, hydro_old,
-            hydro_new, rad_old, rad_new, hydro_F_left=None, hydro_F_right=None, 
+    def computeBalance(self, psi_left=None, psi_right=None, hydro_new=None,
+            hydro_old=None, rad_old=None, rad_new=None, hydro_F_left=None, hydro_F_right=None, 
             src_totals={"rad":0.0,"mass":0.0,"erg":0.0,"mom":0.0}, 
+            hydro_older=None,rad_older=None,
             cx_new=None, write=True):
 
         #assume uniform volume
@@ -116,7 +117,7 @@ class BalanceChecker:
 
         #Compute momentum deposited to material in a rad_mat only problem,
         #This must still be added, hardcoded as BE for now
-        print "I AM THIS TIME STEPPER: ", self.time_stepper
+        print "BALANCE THINKS THIS TIME STEPPER: ", self.time_stepper
 
         mom_deposition = 0.0
         if self.prob == 'rad_mat':
@@ -126,12 +127,25 @@ class BalanceChecker:
                     mom_l = cx_new[i][0].sig_t*rad_new.F[i][0]*vol/c
                     mom_r = cx_new[i][1].sig_t*rad_new.F[i][1]*vol/c
                     mom_deposition += 0.5*(mom_l + mom_r)
-            else:
+            elif self.time_stepper == 'CN':
+                for i in xrange(len(rad_new.F)):
+                    mom_l = 0.5*(cx_new[i][0].sig_t*rad_new.F[i][0]*vol/c
+                            +  cx_new[i][0].sig_t*rad_old.F[i][0]*vol/c)
+                    mom_r = 0.5*(cx_new[i][1].sig_t*rad_new.F[i][1]*vol/c
+                            + cx_new[i][1].sig_t*rad_old.F[i][1]*vol/c)
+                    mom_deposition += 0.5*(mom_l + mom_r)
+            elif self.time_stepper == 'BDF2':
+                for i in xrange(len(rad_new.F)):
+                    mom_l = 2./3.*cx_new[i][0].sig_t*rad_new.F[i][0]*vol/c \
+                            + 1./3*cx_new[i][0].sig_t*rad_old.F[i][0]*vol/c \
+                            + 1./3*cx_new[i][0].sig_t*rad_older.F[i][0]*vol/c
+                    mom_r = 2./3.*cx_new[i][1].sig_t*rad_new.F[i][1]*vol/c \
+                            + 1./3*cx_new[i][1].sig_t*rad_old.F[i][1]*vol/c \
+                            + 1./3*cx_new[i][1].sig_t*rad_older.F[i][1]*vol/c
+                    mom_deposition += 0.5*(mom_l + mom_r)
 
-               print "WARNING: Momentum balance in TRT problems only implemented"\
-                    " correctly for BE. All others missing deposition term"
-
-
+            print "WARNING: Momentum balance in TRT problems only works for"\
+                     " constant cross section problems because crossX terms are wrong"
 
         # compute hydro net inflows
         if (self.prob == 'rad_mat'):
@@ -143,13 +157,20 @@ class BalanceChecker:
            mom_netflow_hydro  = hydro_F_left["mom"] - hydro_F_right["mom"] 
            erg_netflow_hydro  = hydro_F_left["erg"] - hydro_F_right["erg"] 
 
-        # compute radiation momentum net inflow
+        # compute radiation momentum net inflow. Note that at Old and Older
+        # we use the same upwinding, so this is correct
         mom_left_new_rad  = (psi_left + rad_new.psim[0][0])/(3.0*c)
-        mom_left_old_rad  = (psi_left + rad_old.psim[0][0])/(3.0*c)
+        mom_left_old_rad  = (psi_left + rad_old.psim[0][0])/(3.0*c) 
         mom_right_new_rad = (rad_new.psip[-1][1] + psi_right)/(3.0*c)
         mom_right_old_rad = (rad_old.psip[-1][1] + psi_right)/(3.0*c)
         mom_netflow_new_rad = mom_left_new_rad - mom_right_new_rad
         mom_netflow_old_rad = mom_left_old_rad - mom_right_old_rad
+
+        if self.time_stepper == 'BDF2':
+
+            mom_left_older_rad= (psi_left + rad_older.psim[0][0])/(3.0*c)
+            mom_right_older_rad = (rad_older.psip[-1][1] + psi_right)/(3.0*c)
+            mom_netflow_older_rad = mom_left_older_rad - mom_right_older_rad
 
         # compute radiation energy net inflow
         mu = RU.mu["+"]
@@ -160,7 +181,13 @@ class BalanceChecker:
         erg_netflow_new_rad = erg_inflow_new_rad - erg_outflow_new_rad
         erg_netflow_old_rad = erg_inflow_old_rad - erg_outflow_old_rad
 
-        # compute balance
+        if self.time_stepper == 'BDF2':
+
+            erg_inflow_older_rad  = psi_left*mu + psi_right*mu
+            erg_outflow_older_rad = rad_older.psim[0][0]*mu + rad_older.psip[-1][1]*mu
+            erg_netflow_older_rad = erg_inflow_older_rad - erg_outflow_older_rad
+
+        # compute balance, src_totals["mom"] includes MMS rad momentum
         if self.time_stepper == 'BE':
 
            mass_bal = mass_new - mass_old - dt*(mass_netflow_hydro)
@@ -177,17 +204,19 @@ class BalanceChecker:
               - src_totals["mom"]
            erg_bal  = erg_new  - erg_old  - dt*(erg_netflow_hydro
               + 0.5*erg_netflow_old_rad + 0.5*erg_netflow_new_rad) \
-              - src_totals["erg"]
+              - src_totals["erg"] - src_totals["rad"]
 
-#        elif self.time_stepper == 'BDF2':
-#
-#           mass_bal = mass_new - mass_old - dt*(mass_netflow_hydro)
-#           mom_bal  = mom_new  - mom_old  - dt*(mom_netflow_hydro
-#              + 1./3.*mom_netflow_old_rad + 0.5*mom_netflow_new_rad) \
-#              - src_totals["mom"]
-#           erg_bal  = erg_new  - erg_old  - dt*(erg_netflow_hydro
-#              + 0.5*erg_netflow_old_rad + 0.5*erg_netflow_new_rad) \
-#              - src_totals["erg"]
+        elif self.time_stepper == 'BDF2':
+
+           mass_bal = mass_new - mass_old - dt*(mass_netflow_hydro)
+           mom_bal  = mom_new  - mom_old  - dt*(mom_netflow_hydro
+              + 2./3.*mom_netflow_new_rad + 1./6.*mom_netflow_old_rad
+              + 1./6.*mom_netflow_older_rad) \
+              - src_totals["mom"]
+           erg_bal  = erg_new  - erg_old  - dt*(erg_netflow_hydro
+              + 1./6.*erg_netflow_old_rad + 1./6.*erg_netflow_older_rad \
+              + 2./3.*erg_netflow_new_rad) \
+              - src_totals["erg"] - src_totals["rad"]
                      
 
         else:
@@ -211,7 +240,8 @@ class BalanceChecker:
             print "Old kinetic energy:    %.6e" % (KE_old) 
             print "New total mat energy:  %.6e" % (erg_new)
             print "Old total mat energy:  %.6e" % (erg_old)
-            print "New total momentum:    %.6e"  % (mom_new)
+            print "New total momentum:    %.6e" % (mom_new)
+            print "Old total momentum:    %.6e" % (mom_old)
             print "mass     flux left:    %.6e" % (hydro_F_left["rho"]*dt) 
             print "momentum flux left:    %.6e" % (hydro_F_left["mom"]*dt) 
             print "energy   flux left:    %.6e" % (hydro_F_left["erg"]*dt) 

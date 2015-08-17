@@ -52,4 +52,13 @@ a problem with no material motion (thermal radiative transfer only), then there 
 the extra momentum deposition terms that do not cancel out in the $S_2$ equations
 that must be accounted for.
 
+To include MMS sources, the hydro sources can be added directly.  The radiation
+sources must also be included in the momentum.  The moments are taken in the same way
+as they are for arriving at the radiation balance equation, e.g.,
+\begin{equation*}
+    \text{Term to be added to mom balance} = \frac{1}{2c}[\mu^+(Q_L^+ + Q_R^+) -
+    \mu^-(Q_L^- + Q_R^-)]
+\end{equation*}
+
+
 
