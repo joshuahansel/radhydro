@@ -156,7 +156,7 @@ class TestHydroMMS(unittest.TestCase):
             dt_option    = 'CFL',
             CFL          = 0.5,
             slope_limiter = slope_limiter,
-            time_stepper = 'CN',
+            time_stepper = 'BDF2',
             use_2_cycles = False,
             t_start      = t_start,
             t_end        = t_end,

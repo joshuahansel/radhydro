@@ -137,11 +137,11 @@ class BalanceChecker:
             elif self.time_stepper == 'BDF2':
                 for i in xrange(len(rad_new.F)):
                     mom_l = 2./3.*cx_new[i][0].sig_t*rad_new.F[i][0]*vol/c \
-                            + 1./3*cx_new[i][0].sig_t*rad_old.F[i][0]*vol/c \
-                            + 1./3*cx_new[i][0].sig_t*rad_older.F[i][0]*vol/c
+                            + 1./6*cx_new[i][0].sig_t*rad_old.F[i][0]*vol/c \
+                            + 1./6*cx_new[i][0].sig_t*rad_older.F[i][0]*vol/c
                     mom_r = 2./3.*cx_new[i][1].sig_t*rad_new.F[i][1]*vol/c \
-                            + 1./3*cx_new[i][1].sig_t*rad_old.F[i][1]*vol/c \
-                            + 1./3*cx_new[i][1].sig_t*rad_older.F[i][1]*vol/c
+                            + 1./6*cx_new[i][1].sig_t*rad_old.F[i][1]*vol/c \
+                            + 1./6*cx_new[i][1].sig_t*rad_older.F[i][1]*vol/c
                     mom_deposition += 0.5*(mom_l + mom_r)
 
             print "WARNING: Momentum balance in TRT problems only works for"\

@@ -394,12 +394,14 @@ def runNonlinearTransient(mesh, problem_type,
           else: # use only 1 cycle
 
              # for first step, can't use BDF2; use CN instead
-             if time_index == 1:
-                time_stepper_corrector = 'CN'
-             else:
-                time_stepper_corrector = 'BDF2'
-
              time_stepper_corrector = time_stepper
+
+             if time_stepper_corrector == 'BDF2':
+                if time_index == 1:
+                   time_stepper_corrector = 'CN'
+                else:
+                   time_stepper_corrector = 'BDF2'
+
 
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
@@ -439,14 +441,14 @@ def runNonlinearTransient(mesh, problem_type,
                 gamma_value = gamma_value,
                 cv_value=cv_value)
 
-             # compute balance
-             if check_balance and (time_stepper != 'BDF2' or time_index>1):
-                bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
-                bal.computeBalance(psi_left=psi_left, psi_right=psi_right, hydro_old=hydro_old,
-                   hydro_new=hydro_new, rad_old=rad_old, rad_new=rad_new,
-                   hydro_older=hydro_older, rad_older=rad_older,
-                   hydro_F_right=hydro_F_right, hydro_F_left=hydro_F_left, 
-                   src_totals=src_totals, cx_new=cx_new,write=True)
+       # compute balance
+       if check_balance and (time_stepper != 'BDF2' or time_index>1):
+          bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
+          bal.computeBalance(psi_left=psi_left, psi_right=psi_right, hydro_old=hydro_old,
+             hydro_new=hydro_new, rad_old=rad_old, rad_new=rad_new,
+             hydro_older=hydro_older, rad_older=rad_older,
+             hydro_F_right=hydro_F_right, hydro_F_left=hydro_F_left, 
+             src_totals=src_totals, cx_new=cx_new,write=True)
 
        # save older solutions
        cx_older  = deepcopy(cx_old)
@@ -776,7 +778,7 @@ def computeMMSSrcTotal(mesh, dt, time_stepper, Qpsi_new=None, Qpsi_old=None,
       #If you work out the math, its just the sum *0.5
       vol = mesh.getElement(0).dx
       srcs["rad"] = 0.5*(0.5*vol*sum(Qpsi_new)*dt)
-      srcs["rad"] += 0.5*(0.5*vol*dt*sum(Qpsi_old)*dt)
+      srcs["rad"] += 0.5*(0.5*vol*sum(Qpsi_old)*dt)
       srcs["mom"] = 0.5*(sum([vol*dt*i for i in Qmom_new]))
       srcs["mom"] += 0.5*(sum([vol*dt*i for i in Qmom_old]))
       srcs["mom"] += 0.5*(sumRadMomQ(vol,dt,Qpsi_new)+sumRadMomQ(vol,dt,Qpsi_old))
@@ -789,16 +791,16 @@ def computeMMSSrcTotal(mesh, dt, time_stepper, Qpsi_new=None, Qpsi_old=None,
       #If you work out the math, its just the sum *0.5
       vol = mesh.getElement(0).dx
       srcs["rad"] = 2./3.*(0.5*vol*sum(Qpsi_new)*dt)
-      srcs["rad"] += 1./3.*(0.5*vol*dt*sum(Qpsi_old)*dt)
-      srcs["rad"] += 1./3.*(0.5*vol*dt*sum(Qpsi_older)*dt)
+      srcs["rad"] += 1./6.*(0.5*vol*sum(Qpsi_old)*dt)
+      srcs["rad"] += 1./6.*(0.5*vol*sum(Qpsi_older)*dt)
       srcs["mom"] = 2./3*(sum([vol*dt*i for i in Qmom_new]))
-      srcs["mom"] += 1/3.*(sum([vol*dt*i for i in Qmom_old]))
-      srcs["mom"] += 1/3.*(sum([vol*dt*i for i in Qmom_older]))
-      srcs["mom"] += 2./3*sumRadMomQ(vol,dt,Qpsi_new)+1./3.*sumRadMomQ(vol,dt,Qpsi_old) \
-                    +1./3.*(sumRadMomQ(vol,dt,Qpsi_older))
+      srcs["mom"] += 1/6.*(sum([vol*dt*i for i in Qmom_old]))
+      srcs["mom"] += 1/6.*(sum([vol*dt*i for i in Qmom_older]))
+      srcs["mom"] += 2./3*sumRadMomQ(vol,dt,Qpsi_new)+1./6.*sumRadMomQ(vol,dt,Qpsi_old) \
+                    +1./6.*(sumRadMomQ(vol,dt,Qpsi_older))
       srcs["erg"] = 2./3.*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
-      srcs["erg"] += 1./3*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_old])
-      srcs["erg"] += 1./3*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_older])
+      srcs["erg"] += 1./6*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_old])
+      srcs["erg"] += 1./6*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_older])
 
    return srcs
 

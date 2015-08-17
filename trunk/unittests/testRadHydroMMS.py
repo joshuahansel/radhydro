@@ -147,7 +147,7 @@ class TestRadHydroMMS(unittest.TestCase):
          CFL          = 0.5,
          #dt_constant  = t_end,
          slope_limiter = limiter,
-         time_stepper = 'BE',
+         time_stepper = 'BDF2',
          use_2_cycles = False,
          t_start      = t_start,
          t_end        = t_end,

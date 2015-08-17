@@ -20,7 +20,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
    Qpsi_new, Qmom_new, Qerg_new, Qpsi_old, Qmom_old, Qerg_old, Qpsi_older,
    Qmom_older, Qerg_older, Qrho=None,
    rad_older=None, cx_older=None, hydro_older=None, slopes_older=None,
-   e_rad_older=None, tol=1.0e-6, verbosity=2):
+   e_rad_older=None, tol=1.0e-9, verbosity=2):
 
    # assert that that older arguments were passed if using BDF2
    if time_stepper == 'BDF2':

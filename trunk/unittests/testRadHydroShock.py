@@ -111,7 +111,7 @@ class TestRadHydroShock(unittest.TestCase):
          dt_option    = 'CFL',
          CFL          = 0.3,
          use_2_cycles = False,
-         time_stepper = 'BE',
+         time_stepper = 'BDF2',
          t_start      = t_start,
          t_end        = t_end,
          psi_left     = psi_left,
