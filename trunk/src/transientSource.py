@@ -114,7 +114,7 @@ def computeRadiationSource(mesh, time_stepper, problem_type,
    # compute the transient source
    n = mesh.n_elems * 4
    Q_tr = np.zeros(n)
-   print "CREATE SOURCE CALLED"
+
    for term in terms:
        # compute source contribution for this term
        Q_term = term.computeTerm(**kwargs)

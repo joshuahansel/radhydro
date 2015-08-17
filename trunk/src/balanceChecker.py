@@ -209,8 +209,9 @@ class BalanceChecker:
             print "Old energy material:   %.6e" % em_old
             print "New kinetic energy:    %.6e" % (KE_new)
             print "Old kinetic energy:    %.6e" % (KE_old) 
-            print "New total mat energy:  %.16e" % (erg_new)
-            print "Old total mat energy:  %.16e" % (erg_old)
+            print "New total mat energy:  %.6e" % (erg_new)
+            print "Old total mat energy:  %.6e" % (erg_old)
+            print "New total momentum:    %.6e"  % (mom_new)
             print "mass     flux left:    %.6e" % (hydro_F_left["rho"]*dt) 
             print "momentum flux left:    %.6e" % (hydro_F_left["mom"]*dt) 
             print "energy   flux left:    %.6e" % (hydro_F_left["erg"]*dt) 

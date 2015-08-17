@@ -18,7 +18,7 @@ from radSlopesHandler import computeTotalEnergySlopes
 def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
    cx_old, hydro_old, hydro_star, rad_old, slopes_old, e_rad_old,
    Qpsi_new, Qmom_new, Qerg_new, Qpsi_old, Qmom_old, Qerg_old, Qpsi_older,
-   Qmom_older, Qerg_older,
+   Qmom_older, Qerg_older, Qrho=None,
    rad_older=None, cx_older=None, hydro_older=None, slopes_older=None,
    e_rad_older=None, tol=1.0e-9, verbosity=2):
 
@@ -50,6 +50,12 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
        k += 1
 
        print "THIS IS THE TIME STEPPER REALLY", time_stepper
+
+       # If MMS, may need to update rho
+       if Qrho != None:
+
+          print "UPDATING DENSITY"
+
 
        # update velocity
        if problem_type != 'rad_mat':
