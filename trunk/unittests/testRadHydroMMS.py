@@ -44,11 +44,11 @@ class TestRadHydroMMS(unittest.TestCase):
      # rho = sympify('1')
      # u   = sympify('1')
      # E   = sympify('10')
-      rho = 1 + x - t
-      u   = sympify('1')
+    #  rho = 1 + x - t
+    #  u   = sympify('1')
       E   = 5 + 5*(x - 0.5)**2
-     # rho = exp(x+t)
-     # u   = exp(-x)*sin(t) - 1
+      rho = exp(x+t)
+      u   = exp(-x)*sin(t) - 1
      # E   = 10*exp(x+t)
       
       # create solution for radiation field
@@ -147,7 +147,7 @@ class TestRadHydroMMS(unittest.TestCase):
          CFL          = 0.5,
          #dt_constant  = t_end,
          slope_limiter = limiter,
-         time_stepper = 'BDF2',
+         time_stepper = 'BE',
          use_2_cycles = False,
          t_start      = t_start,
          t_end        = t_end,

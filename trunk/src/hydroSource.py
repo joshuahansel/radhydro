@@ -214,6 +214,9 @@ class QEHandler(TransientSourceTerm):
                            cx=cx_prev, slopes=slopes_old))\
            + np.array(Qerg_new[i])
 
+        print "THIS IS WHAT QE_hanlder thinks Q IS: ", i, 0.5*sum(Q_local -
+                np.array(Qerg_new[i]))
+
         return Q_local
 
     #--------------------------------------------------------------------------------
@@ -271,6 +274,8 @@ class VelocityUpdateSourceHandler(TransientSourceTerm):
 
         Q_local = evalMomentumExchangeAverage(i, rad=rad_prev, hydro=hydro_prev,
            cx=cx_prev, slopes=slopes_old) + Qmom_new[i]
+        print "THIS IS WHAT UPDATE VELOCITY THINKS Q IS", i
+        print (Q_local - Qmom_new[i])
         return Q_local
 
     #--------------------------------------------------------------------------------
@@ -311,6 +316,7 @@ def evalMomentumExchangeAverage(i, rad, hydro, cx, slopes):
 
     # compute edge velocities
     uL, uR = computeEdgeVelocities(i, hydro[i], slopes)
+    print "I USED THESE EDGE VELOCITIES", i, uL, uR
 
     # compute momentum exchange term at edges and then average
     QL = cx[i][0].sig_t/c*(rad.F[i][0] - 4.0/3.0*rad.E[i][0]*uL)
