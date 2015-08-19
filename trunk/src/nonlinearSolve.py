@@ -21,7 +21,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
    Qpsi_new, Qmom_new, Qerg_new, Qpsi_old, Qmom_old, Qerg_old, Qpsi_older,
    Qmom_older, Qerg_older, Qrho_new=None, Qrho_old=None, Qrho_older=None,
    rad_older=None, cx_older=None, hydro_older=None, slopes_older=None,
-   e_rad_older=None, tol=1.0e-9, verbosity=2):
+   e_rad_older=None, tol=1.0e-14, verbosity=2):
 
    # assert that that older arguments were passed if using BDF2
    if time_stepper == 'BDF2':
@@ -91,15 +91,23 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
        # Compute E_slopes for use by E_star state
        # For now it is hardcoded with E_star edge internal energies
        e_star = []
+       e_old  = []
+       e_older= []
        for i in xrange(len(hydro_star)):
           e_star_i = computeHydroInternalEnergies(i,hydro_star[i],slopes_old)
           e_star.append(e_star_i)
+          e_old_i = computeHydroInternalEnergies(i,hydro_old[i],slopes_old)
+          e_old.append(e_old_i)
+          if hydro_older != None:
+              e_older_i = computeHydroInternalEnergies(i,hydro_older[i],slopes_older)
+              e_older.append(e_older_i)
 
        # Compute E_slopes
        E_slopes_star = computeTotalEnergySlopes(hydro_star, slopes_old, e_star)
-       print "THESE DO NOT STORE THE RIGHT SLOPES, THEY NEED TO BE RECOMPUTED BASED ON e_rad_old's and odler"
-       E_slopes_old  = deepcopy(E_slopes_star)
-       E_slopes_older = deepcopy(E_slopes_old)
+       E_slopes_old  = computeTotalEnergySlopes(hydro_old,  slopes_old, e_old)
+       E_slopes_older = None
+       if hydro_older != None:
+          E_slopes_older = computeTotalEnergySlopes(hydro_older, slopes_older, e_older)
 
        # compute QE
        src_handler = QEHandler(mesh, time_stepper)
