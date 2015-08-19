@@ -53,7 +53,7 @@ class TestHydroMMS(unittest.TestCase):
 #      u   = sympify('1')
 #      E   = 5 + 50*x+t+50*(x-0.5)**2
       E   = 5 +t+50*(x-0.75)**2
-      rho = exp(x+t)
+      rho = exp(x+t)+5
       u   = exp(-x)*sin(t) - 1
 #      E   = 10*exp(x+t)
       #rho = 1 + sin(pi*x)
@@ -148,7 +148,7 @@ class TestHydroMMS(unittest.TestCase):
                verbosity = 1
          else:
             verbosity = 0
-         
+
          # run the rad-hydro transient
          rad_new, hydro_new = runNonlinearTransient(
             mesh         = mesh,
@@ -170,6 +170,7 @@ class TestHydroMMS(unittest.TestCase):
             E_src        = E_src,
             psim_src     = psim_src,
             psip_src     = psip_src,
+            rho_src      = rho_src,
             verbosity    = verbosity,
             check_balance = True,
             rho_f =rho_f,

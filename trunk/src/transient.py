@@ -121,7 +121,7 @@ def runLinearTransient(mesh, time_stepper,
 #
 def runNonlinearTransient(mesh, problem_type,
    psi_left, psi_right, cross_sects, rad_IC, hydro_IC, hydro_BC,
-   psim_src=None, psip_src=None, mom_src=None, E_src=None,
+   psim_src=None, psip_src=None, mom_src=None, E_src=None, rho_src=None,
    time_stepper='BE', dt_option='constant', dt_constant=None, CFL=0.5,
    slope_limiter="vanleer", t_start=0.0, t_end=1.0, use_2_cycles=False,
    rho_f=None,u_f=None,E_f=None,gamma_value=None,cv_value=None,
@@ -137,22 +137,22 @@ def runNonlinearTransient(mesh, problem_type,
    cx_old = deepcopy(cross_sects)
    rad_old = deepcopy(rad_IC)
    hydro_old = deepcopy(hydro_IC)
-   Qpsi_old, Qmom_old, Qerg_old = computeExtraneousSources(
-      psim_src, psip_src, mom_src, E_src, mesh, t_start)
+   Qpsi_old, Qmom_old, Qerg_old, Qrho_old = computeExtraneousSources(
+      psim_src, psip_src, mom_src, E_src, mesh, t_start, rho_src=rho_src)
 
    #Just guess e_rad old is hydro initial conditionsstuff
    e_rad_old = np.array([(i.e, i.e) for i in hydro_old])
    
-
    # set older quantities to nothing; these shouldn't exist yet
    cx_older       = None
    rad_older      = None
    hydro_older    = None
    slopes_older   = None
-   e_rad_older = None
+   e_rad_older    = None
    Qpsi_older     = None
    Qmom_older     = None
    Qerg_older     = None
+   Qrho_older     = None
    
    # transient loop
    time_index = 0
@@ -259,7 +259,8 @@ def runNonlinearTransient(mesh, problem_type,
                  Qerg_old     = Qerg_old,
                  Qpsi_older   = deepcopy(Qpsi_old),
                  Qmom_older   = deepcopy(Qmom_old),
-                 Qerg_older   = deepcopy(Qerg_old))
+                 Qerg_older   = deepcopy(Qerg_old),
+                 Qrho_older   = deepcopy(Qrho_old))
 
               # add up source totals for each cycle to total for whole time step
               src_totals = dict()
@@ -298,7 +299,8 @@ def runNonlinearTransient(mesh, problem_type,
                  Qerg_old     = Qerg_old,
                  Qpsi_older   = Qpsi_older,
                  Qmom_older   = Qmom_older,
-                 Qerg_older   = Qerg_older)
+                 Qerg_older   = Qerg_older,
+                 Qrho_older   = Qrho_older)
 
        else: # problem_type == 'rad_hydro'
 
@@ -309,7 +311,7 @@ def runNonlinearTransient(mesh, problem_type,
 
              # take time step with MUSCL-Hancock
              hydro_half, rad_half, cx_half, slopes_old, e_rad_half,\
-             Qpsi_half, Qmom_half, Qerg_half, hydro_F_left, hydro_F_right,\
+             Qpsi_half, Qmom_half, Qerg_half, Qrho_half, hydro_F_left, hydro_F_right,\
              src_totals_cycle1 =\
                 takeTimeStepMUSCLHancock(
                 mesh           = mesh,
@@ -333,13 +335,16 @@ def runNonlinearTransient(mesh, problem_type,
                 psip_src     = psip_src,
                 mom_src      = mom_src,
                 E_src        = E_src,
+                rho_src      = rho_src,
                 t_old        = t_old,
                 Qpsi_old     = Qpsi_old,
+                Qrho_old     = Qrho_old,
                 Qmom_old     = Qmom_old,
                 Qerg_old     = Qerg_old,
                 Qpsi_older   = Qpsi_older,
                 Qmom_older   = Qmom_older,
                 Qerg_older   = Qerg_older,
+                Qrho_older   = Qrho_older,
                 verbosity    = verbosity,
                 rho_f = rho_f, u_f = u_f, E_f = E_f,
                 gamma_value = gamma_value,
@@ -350,7 +355,7 @@ def runNonlinearTransient(mesh, problem_type,
 
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_half, e_rad_new,\
-             Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
+             Qpsi_new, Qmom_new, Qerg_new, Qrho_new, hydro_F_left, hydro_F_right,\
              src_totals_cycle2 =\
                 takeTimeStepMUSCLHancock(
                 mesh           = mesh,
@@ -374,13 +379,16 @@ def runNonlinearTransient(mesh, problem_type,
                 psip_src     = psip_src,
                 mom_src      = mom_src,
                 E_src        = E_src,
+                rho_src      = rho_src,
                 t_old        = t_old + 0.5*dt,
                 Qpsi_old     = Qpsi_half,
                 Qmom_old     = Qmom_half,
                 Qerg_old     = Qerg_half,
+                Qrho_old     = Qrho_half,
                 Qpsi_older   = Qpsi_old,
                 Qmom_older   = Qmom_old,
                 Qerg_older   = Qerg_old,
+                Qrho_older   = Qrho_old,
                 verbosity    = verbosity,
                 rho_f = rho_f, u_f = u_f, E_f = E_f,
                 gamma_value = gamma_value,
@@ -401,11 +409,10 @@ def runNonlinearTransient(mesh, problem_type,
                    time_stepper_corrector = 'CN'
                 else:
                    time_stepper_corrector = 'BDF2'
-
-
+            
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
-             Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
+             Qpsi_new, Qmom_new, Qerg_new, Qrho_new, hydro_F_left, hydro_F_right,\
              src_totals =\
                 takeTimeStepMUSCLHancock(
                 mesh           = mesh,
@@ -429,13 +436,16 @@ def runNonlinearTransient(mesh, problem_type,
                 psip_src     = psip_src,
                 mom_src      = mom_src,
                 E_src        = E_src,
+                rho_src      = rho_src,
                 t_old        = t_old,
                 Qpsi_old     = Qpsi_old,
                 Qmom_old     = Qmom_old,
                 Qerg_old     = Qerg_old,
+                Qrho_old     = Qrho_old,
                 Qpsi_older   = Qpsi_older,
                 Qmom_older   = Qmom_older,
                 Qerg_older   = Qerg_older,
+                Qrho_older   = Qrho_older,
                 verbosity    = verbosity,
                 rho_f = rho_f, u_f = u_f, E_f = E_f,
                 gamma_value = gamma_value,
@@ -459,6 +469,7 @@ def runNonlinearTransient(mesh, problem_type,
        Qpsi_older = deepcopy(Qpsi_old)
        Qmom_older = deepcopy(Qmom_old)
        Qerg_older = deepcopy(Qerg_old)
+       Qrho_older = deepcopy(Qrho_old)
 
        # save old solutions
        t_old = t_new
@@ -469,6 +480,7 @@ def runNonlinearTransient(mesh, problem_type,
        Qpsi_old = deepcopy(Qpsi_new)
        Qmom_old = deepcopy(Qmom_new)
        Qerg_old = deepcopy(Qerg_new)
+       Qrho_old = deepcopy(Qrho_new)
 
    # return final solutions
    return rad_new, hydro_new
@@ -485,8 +497,8 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
    Qpsi_older=None, Qmom_older=None, Qerg_older=None, slope_limiter=None):
 
        # compute new extraneous sources
-       Qpsi_new, Qmom_new, Qerg_new = computeExtraneousSources(
-          psim_src, psip_src, mom_src, E_src, mesh, t_old+dt)
+       Qpsi_new, Qmom_new, Qerg_new, Qrho_new = computeExtraneousSources(
+          psim_src, psip_src, mom_src, E_src, mesh, t_old+dt, rho_src=rho_src)
 
        # update hydro BC
        hydro_BC.update(states=hydro_old, t=t_old)
@@ -525,16 +537,18 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
           Qerg_old     = Qerg_old,
           Qpsi_older   = Qpsi_older,
           Qmom_older   = Qmom_older,
+          Qrho_older   = Qrho_older,
           Qerg_older   = Qerg_older)
 
        # add up sources for entire time step for balance checker
        src_totals =  computeMMSSrcTotal(mesh,dt,time_stepper,
          Qmom_new=Qmom_new,Qmom_old=Qmom_old,Qmom_older=Qmom_older,
          Qpsi_new=Qpsi_new,Qpsi_old=Qpsi_old,Qpsi_older=Qpsi_older,
-         Qerg_new=Qerg_new,Qerg_old=Qerg_old,Qerg_older=Qerg_older)
+         Qerg_new=Qerg_new,Qerg_old=Qerg_old,Qerg_older=Qerg_older,
+         Qrho_new=Qrho_new,Qrho_old=Qrho_old,Qrho_older=Qrho_older)
 
        return hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
-          Qpsi_new, Qmom_new, Qerg_new, src_totals
+          Qpsi_new, Qmom_new, Qerg_new, Qrho_new, src_totals
 
 
 ## Takes time step with MUSCL-Hancock.
@@ -544,8 +558,9 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, psi_left, psi_right,
 def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
    cx_old, cx_older, hydro_old, hydro_older, rad_old, rad_older,
    hydro_BC, slope_limiter, slopes_older, e_rad_old, e_rad_older,
-   psim_src, psip_src, mom_src, E_src, t_old,
+   psim_src, psip_src, mom_src, E_src, rho_src, t_old,
    Qpsi_old, Qmom_old, Qerg_old, Qpsi_older, Qmom_older, Qerg_older,
+   Qrho_old=None, Qrho_older=None,
    time_stepper_predictor='CN', time_stepper_corrector='BDF2',verbosity=2,
    rho_f=None,u_f=None,E_f=None,gamma_value=None,cv_value=None):
 
@@ -588,8 +603,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
                 exact=None)
 
    # compute new extraneous sources
-   Qpsi_half, Qmom_half, Qerg_half = computeExtraneousSources(
-      psim_src, psip_src, mom_src, E_src, mesh, t_old+0.5*dt)
+   Qpsi_half, Qmom_half, Qerg_half, Qrho_half = computeExtraneousSources(
+      psim_src, psip_src, mom_src, E_src, mesh, t_old+0.5*dt, rho_src=rho_src)
 
    # perform nonlinear solve
    hydro_half, rad_half, cx_half, e_rad_half = nonlinearSolve(
@@ -608,9 +623,11 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
       Qpsi_new     = Qpsi_half,
       Qmom_new     = Qmom_half,
       Qerg_new     = Qerg_half,
+      Qrho_new     = Qrho_half,
       Qpsi_old     = Qpsi_old,
       Qmom_old     = Qmom_old,
       Qerg_old     = Qerg_old,
+      Qrho_old     = Qrho_old,
       Qpsi_older   = Qpsi_older, # this is a dummy argument
       Qmom_older   = Qmom_older, # this is a dummy argument
       Qerg_older   = Qerg_older, # this is a dummy argument
@@ -649,8 +666,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
                 exact=None)
 
    # compute new extraneous sources
-   Qpsi_new, Qmom_new, Qerg_new = computeExtraneousSources(
-      psim_src, psip_src, mom_src, E_src, mesh, t_old+dt)
+   Qpsi_new, Qmom_new, Qerg_new, Qrho_new = computeExtraneousSources(
+      psim_src, psip_src, mom_src, E_src, mesh, t_old+dt, rho_src=rho_src)
 
    # perform nonlinear solve
    hydro_new, rad_new, cx_new, e_rad_new = nonlinearSolve(
@@ -674,10 +691,13 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
       Qpsi_new     = Qpsi_new,
       Qmom_new     = Qmom_new,
       Qerg_new     = Qerg_new,
+      Qrho_new     = Qrho_new,
       Qpsi_old     = Qpsi_old,
       Qmom_old     = Qmom_old,
       Qerg_old     = Qerg_old,
+      Qrho_old     = Qrho_old,
       Qpsi_older   = Qpsi_older,
+      Qrho_older   = Qrho_older,
       Qmom_older   = Qmom_older,
       Qerg_older   = Qerg_older,
       verbosity    = verbosity)
@@ -694,7 +714,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
    src_totals =  computeMMSSrcTotal(mesh,dt,time_stepper_corrector,
          Qmom_new=Qmom_new,Qmom_old=Qmom_old,Qmom_older=Qmom_older,
          Qpsi_new=Qpsi_new,Qpsi_old=Qpsi_old,Qpsi_older=Qpsi_older,
-         Qerg_new=Qerg_new,Qerg_old=Qerg_old,Qerg_older=Qerg_older)
+         Qerg_new=Qerg_new,Qerg_old=Qerg_old,Qerg_older=Qerg_older,
+         Qrho_new=Qrho_new,Qrho_old=Qrho_old,Qrho_older=Qrho_older)
 
    if verbosity > 1:
       print ""
@@ -705,7 +726,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
          print i
 
    return hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
-      Qpsi_new, Qmom_new, Qerg_new, hydro_F_left, hydro_F_right,\
+      Qpsi_new, Qmom_new, Qerg_new, Qrho_new, hydro_F_left, hydro_F_right,\
       src_totals
 
 
@@ -721,7 +742,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, psi_left, psi_right,
 #  @return extraneous source vectors evaluated at \f$t\f$:
 #    \f$Q^{ext,\pm}\f$, \f$Q^{ext,\rho u}\f$, \f$Q^{ext,E}\f$
 #
-def computeExtraneousSources(psim_src, psip_src, mom_src, E_src, mesh, t):
+def computeExtraneousSources(psim_src, psip_src, mom_src, E_src, mesh, t,
+        rho_src=None):
 
    # compute radiation extraneous source
    if psim_src != None and psip_src != None:
@@ -741,23 +763,25 @@ def computeExtraneousSources(psim_src, psip_src, mom_src, E_src, mesh, t):
    else:
       Qerg = [(0.0,0.0) for i in xrange(mesh.n_elems)]
 
-   return Qpsi, Qmom, Qerg
+   # compute rho extraneous source
+   if rho_src != None:
+      Qrho = computeMomentumExtraneousSource(rho_src, mesh, t)
+   else:
+      Qrho = np.zeros(mesh.n_elems)
+
+   return Qpsi, Qmom, Qerg, Qrho
 
 #--------------------------------------------------------------------------------
 ## Function to compute the src totals for MMS sources
 #
 def computeMMSSrcTotal(mesh, dt, time_stepper, Qpsi_new=None, Qpsi_old=None,
-        Qpsi_older=None, Qrho=None, Qmom_new=None, Qmom_old=None, Qmom_older=None,
+        Qpsi_older=None, Qrho_new=None, Qrho_old=None, Qrho_older=None,Qmom_new=None, Qmom_old=None, Qmom_older=None,
         Qerg_new=None,Qerg_old=None,Qerg_older=None):
 
    vol = mesh.getElement(0).dx
    # add up sources for each equation, depending on time stepper
    #TODO This will be much easier once MMS sources are accurate with quadrature
    srcs = {}
-
-   #Rho is always time averaged, straight forward
-   if Qrho != None:
-       srcs["rho"] = sum([vol*dt*i for i in Qrho])
 
    if time_stepper == 'BE':
 
@@ -766,11 +790,9 @@ def computeMMSSrcTotal(mesh, dt, time_stepper, Qpsi_new=None, Qpsi_old=None,
       vol = mesh.getElement(0).dx
       srcs["rad"] = 0.5*vol*sum(Qpsi_new)*dt
       srcs["mom"] = sum([vol*dt*i for i in Qmom_new])
-      print "BEFORE", srcs["mom"]
-      derp = srcs["mom"]
       srcs["mom"] += sumRadMomQ(vol,dt,Qpsi_new) #add in momentum from radiation
-      print "AFTER", srcs["mom"], srcs["mom"]-derp
       srcs["erg"] = sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
+      srcs["rho"] = sum([vol*dt*i for i in Qrho_new])
 
    elif time_stepper == 'CN':
 
@@ -784,6 +806,8 @@ def computeMMSSrcTotal(mesh, dt, time_stepper, Qpsi_new=None, Qpsi_old=None,
       srcs["mom"] += 0.5*(sumRadMomQ(vol,dt,Qpsi_new)+sumRadMomQ(vol,dt,Qpsi_old))
       srcs["erg"] = 0.5*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
       srcs["erg"] += 0.5*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_old])
+      srcs["rho"] = 0.5*(sum([vol*dt*i for i in Qrho_new]))
+      srcs["rho"] += 0.5*(sum([vol*dt*i for i in Qrho_old]))
       
    elif time_stepper == 'BDF2':
 
@@ -801,6 +825,9 @@ def computeMMSSrcTotal(mesh, dt, time_stepper, Qpsi_new=None, Qpsi_old=None,
       srcs["erg"] = 2./3.*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_new])
       srcs["erg"] += 1./6*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_old])
       srcs["erg"] += 1./6*sum([vol*dt*0.5*(i[0]+i[1]) for i in Qerg_older])
+      srcs["rho"] = 2./3*(sum([vol*dt*i for i in Qrho_new]))
+      srcs["rho"] += 1/6.*(sum([vol*dt*i for i in Qrho_old]))
+      srcs["rho"] += 1/6.*(sum([vol*dt*i for i in Qrho_older]))
 
    return srcs
 

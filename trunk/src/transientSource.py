@@ -4,7 +4,7 @@
 # Each source is responsible for implementing several functions to build the
 # source for each of the time stepping methods.  The derived classes will, in
 # general, only need to define each of several ``virtual functions''.  Each derived
-# class inherits a "computeTerm" function. This is the primary function, responsible
+# class inherits a "computeTerm" function. Thhs is the primary function, responsible
 # for building the entire right hand side for that term in the equation. 
 #
 # In general, each derived class is responsible for overriding the different
@@ -779,8 +779,8 @@ class PlanckianTerm(TransientSourceTerm):
         E_star = [state_star.E() - 0.5*E_slopes_star[i],
                   state_star.E() + 0.5*E_slopes_star[i]]
 
-        # compute edge quantities
-        rho = computeEdgeDensities(i, state_prev, slopes_old)
+        # compute edge quantities, use newest density
+        rho = computeEdgeDensities(i, hydro_new[i], slopes_old)
         T = computeEdgeTemperatures(spec_heat, e_rad_prev[i])
 
         # compute Planckian term for each edge on element

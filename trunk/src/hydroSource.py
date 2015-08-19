@@ -19,7 +19,7 @@ from utilityFunctions import getNu, computeEdgeVelocities, computeEdgeTemperatur
 #  @param[in,out] hydro_new   new hydro cell-average states,
 #     \f$\mathbf{H}^{k+1}_i\f$
 #
-def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
+def updateVelocity(mesh, time_stepper, dt, hydro_star=None, hydro_new=None, **kwargs):
  
     # compute source
     src_handler = VelocityUpdateSourceHandler(mesh, time_stepper)
@@ -29,9 +29,33 @@ def updateVelocity(mesh, time_stepper, dt, hydro_star, hydro_new, **kwargs):
     for i in range(mesh.n_elems):
 
         # update velocity
-        u_new = hydro_star[i].u + dt/hydro_new[i].rho*Q[i]
+        rho_new = hydro_new[i].rho
+        rho_star = hydro_star[i].rho
+        u_new = (rho_star*hydro_star[i].u + dt*Q[i]) / rho_new
         hydro_new[i].updateVelocity(u_new)
 
+#--------------------------------------------------------------------------------
+## Updates cell-average densities from ext source \f$Q_{rho}\f$.
+#
+#  @param[in]     mesh        mesh object
+#  @param[in]     hydro_star  star hydro cell-average states,
+#     \f$\mathbf{H}^*_i\f$
+#  @param[in,out] hydro_new   new hydro cell-average states,
+#     \f$\mathbf{H}^{k+1}_i\f$
+#
+def updateDensity(mesh, time_stepper, dt, hydro_star, hydro_new, hydro_prev, **kwargs):
+ 
+    # compute source
+    src_handler = DensityUpdateSourceHandler(mesh, time_stepper)
+    Q = src_handler.computeTerm(**kwargs)
+
+    # loop over cells
+    for i in range(mesh.n_elems):
+
+        # update density
+        rho_new = hydro_star[i].rho + dt*Q[i]
+        hydro_new[i].updateDensity(rho_new)
+        hydro_prev[i].updateDensity(rho_new) #must also update previous
 
 #--------------------------------------------------------------------------------
 ## Updates internal energy slopes \f$\delta e_i\f$.
@@ -62,7 +86,7 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         state_star = hydro_star[i]
 
         # compute edge densities
-        rho = computeEdgeDensities(i, state_star, slopes_old)
+        rho = computeEdgeDensities(i, state_new, slopes_old)
 
         # compute edge velocities
         u_new  = computeEdgeVelocities(i, state_new,  slopes_old)
@@ -111,7 +135,7 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         e_new_avg = E_new_avg/state_new.rho - 0.5*(state_new.u)**2
 
         # put new internal energy in the new hydro state
-        hydro_new[i].updateStateDensityInternalEnergy(state_star.rho, e_new_avg)
+        hydro_new[i].updateStateInternalEnergy(e_new_avg)
 
         # compute new internal energy slope
         for x in range(2):
@@ -214,9 +238,6 @@ class QEHandler(TransientSourceTerm):
                            cx=cx_prev, slopes=slopes_old))\
            + np.array(Qerg_new[i])
 
-        print "THIS IS WHAT QE_hanlder thinks Q IS: ", i, 0.5*sum(Q_local -
-                np.array(Qerg_new[i]))
-
         return Q_local
 
     #--------------------------------------------------------------------------------
@@ -243,6 +264,47 @@ class QEHandler(TransientSourceTerm):
            cx_old=cx_older, slopes_old=slopes_older, e_rad_old=e_rad_older,
            Qerg_old=Qerg_older)
 
+
+## Handles the density update source term
+#
+class DensityUpdateSourceHandler(TransientSourceTerm):
+
+    #-------------------------------------------------------------------------------
+    ## Constructor
+    #
+    def __init__(self, *args):
+
+        # call base class constructor
+        TransientSourceTerm.__init__(self, *args)
+
+    #----------------------------------------------------------------------------
+    def computeTerm(self, **kwargs):
+
+        # loop over all cells and build source 
+        Q = [0.0 for i in range(self.mesh.n_elems)]
+        for i in range(self.mesh.n_elems):
+            
+            # add the source from element i
+            Q_elem = self.func(i, **kwargs)
+            Q[i] += Q_elem
+
+        return Q
+
+    #--------------------------------------------------------------------------------
+    def evalImplicit(self, i, Qrho_new, **kwargs):
+
+        return Qrho_new[i]
+
+    #--------------------------------------------------------------------------------
+    def evalOld(self, i, Qrho_old=None, **kwargs):
+
+        return Qrho_old[i]
+
+    #--------------------------------------------------------------------------------
+    def evalOlder(self, i, Qrho_older=None, **kwargs):
+
+        return Qrho_older[i]
+    
 
 ## Handles velocity update source term.
 #
@@ -274,8 +336,6 @@ class VelocityUpdateSourceHandler(TransientSourceTerm):
 
         Q_local = evalMomentumExchangeAverage(i, rad=rad_prev, hydro=hydro_prev,
            cx=cx_prev, slopes=slopes_old) + Qmom_new[i]
-        print "THIS IS WHAT UPDATE VELOCITY THINKS Q IS", i
-        print (Q_local - Qmom_new[i])
         return Q_local
 
     #--------------------------------------------------------------------------------
@@ -316,7 +376,6 @@ def evalMomentumExchangeAverage(i, rad, hydro, cx, slopes):
 
     # compute edge velocities
     uL, uR = computeEdgeVelocities(i, hydro[i], slopes)
-    print "I USED THESE EDGE VELOCITIES", i, uL, uR
 
     # compute momentum exchange term at edges and then average
     QL = cx[i][0].sig_t/c*(rad.F[i][0] - 4.0/3.0*rad.E[i][0]*uL)
@@ -341,7 +400,6 @@ def computeMomentumExtraneousSource(mom_src, mesh, t):
    # Compute average of momentum source
    return [mom_src(mesh.getElement(i).x_cent,t)  for i in xrange(mesh.n_elems)]
 
-
 ## Computes an extraneous source vector for the energy equation,
 #  \f$Q^{ext,E}\f$, evaluated at each cell edge.
 #
@@ -357,5 +415,6 @@ def computeEnergyExtraneousSource(erg_src, mesh, t):
    # evaluate energy source function at each edge of each cell
    return [(erg_src(mesh.getElement(i).xl,t), erg_src(mesh.getElement(i).xr,t))
       for i in xrange(mesh.n_elems)]
+
 
 

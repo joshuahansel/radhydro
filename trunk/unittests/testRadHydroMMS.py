@@ -159,6 +159,7 @@ class TestRadHydroMMS(unittest.TestCase):
          hydro_BC     = hydro_BC,
          mom_src      = mom_src,
          E_src        = E_src,
+         rho_src      = rho_src,
          psim_src     = psim_src,
          psip_src     = psip_src,
          verbosity    = verbosity,

@@ -8,7 +8,7 @@ from math import sqrt
 
 ## Default dictionary to pass to balance checker
 #
-empty_srcs = {"rad":0.0, "mass":0.0, "erg":0.0, "mom":0.0}
+empty_srcs = {"rad":0.0, "rho":0.0, "erg":0.0, "mom":0.0}
 
 
 #================================================================================
@@ -70,7 +70,7 @@ class BalanceChecker:
     #
     def computeBalance(self, psi_left=None, psi_right=None, hydro_new=None,
             hydro_old=None, rad_old=None, rad_new=None, hydro_F_left=None, hydro_F_right=None, 
-            src_totals={"rad":0.0,"mass":0.0,"erg":0.0,"mom":0.0}, 
+            src_totals={"rad":0.0,"rho":0.0,"erg":0.0,"mom":0.0}, 
             hydro_older=None,rad_older=None,
             cx_new=None, write=True):
 
@@ -117,7 +117,7 @@ class BalanceChecker:
 
         #Compute momentum deposited to material in a rad_mat only problem,
         #This must still be added, hardcoded as BE for now
-        print "BALANCE THINKS THIS TIME STEPPER: ", self.time_stepper
+        print "Balance computed assuming this time stepper: ", self.time_stepper
 
         mom_deposition = 0.0
         if self.prob == 'rad_mat':
@@ -190,7 +190,7 @@ class BalanceChecker:
         # compute balance, src_totals["mom"] includes MMS rad momentum
         if self.time_stepper == 'BE':
 
-           mass_bal = mass_new - mass_old - dt*(mass_netflow_hydro)
+           mass_bal = mass_new - mass_old - dt*(mass_netflow_hydro) - src_totals["rho"]
            mom_bal  = mom_new  - mom_old  - dt*(mom_netflow_hydro
               + mom_netflow_new_rad) - src_totals["mom"]
            erg_bal  = erg_new  - erg_old  - dt*(erg_netflow_hydro
@@ -198,7 +198,7 @@ class BalanceChecker:
 
         elif self.time_stepper == 'CN':
 
-           mass_bal = mass_new - mass_old - dt*(mass_netflow_hydro)
+           mass_bal = mass_new - mass_old - dt*(mass_netflow_hydro) - src_totals["rho"]
            mom_bal  = mom_new  - mom_old  - dt*(mom_netflow_hydro
               + 0.5*mom_netflow_old_rad + 0.5*mom_netflow_new_rad) \
               - src_totals["mom"]
@@ -208,7 +208,7 @@ class BalanceChecker:
 
         elif self.time_stepper == 'BDF2':
 
-           mass_bal = mass_new - mass_old - dt*(mass_netflow_hydro)
+           mass_bal = mass_new - mass_old - dt*(mass_netflow_hydro) - src_totals["rho"]
            mom_bal  = mom_new  - mom_old  - dt*(mom_netflow_hydro
               + 2./3.*mom_netflow_new_rad + 1./6.*mom_netflow_old_rad
               + 1./6.*mom_netflow_older_rad) \
@@ -252,6 +252,7 @@ class BalanceChecker:
             print "Momentum source total: %.6e" % (src_totals["mom"])
             print "Energy   source total: %.6e" % (src_totals["erg"])
             print "    Rad. source total: %.6e" % (src_totals["rad"])
+            print "    Mass source total: %.6e" % (src_totals["rho"])
             print "-----------------------------------------------------"
             print "    Mass Excess (Relative):  %.6e (%.6e)" % (mass_bal,
                     mass_bal/max(mass_new,1.E-65))

@@ -7,7 +7,8 @@ from copy import deepcopy
 from takeRadiationStep import takeRadiationStep
 from utilityFunctions import computeL2RelDiff, computeEffectiveOpacities,\
    updateCrossSections, computeHydroInternalEnergies
-from hydroSource import updateVelocity, updateInternalEnergy, QEHandler
+from hydroSource import updateVelocity, updateInternalEnergy, QEHandler, \
+                        updateDensity
 from radSlopesHandler import computeTotalEnergySlopes
 
 
@@ -18,7 +19,7 @@ from radSlopesHandler import computeTotalEnergySlopes
 def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
    cx_old, hydro_old, hydro_star, rad_old, slopes_old, e_rad_old,
    Qpsi_new, Qmom_new, Qerg_new, Qpsi_old, Qmom_old, Qerg_old, Qpsi_older,
-   Qmom_older, Qerg_older, Qrho=None,
+   Qmom_older, Qerg_older, Qrho_new=None, Qrho_old=None, Qrho_older=None,
    rad_older=None, cx_older=None, hydro_older=None, slopes_older=None,
    e_rad_older=None, tol=1.0e-9, verbosity=2):
 
@@ -52,9 +53,16 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
        print "This is the time stepper non-linear solve recieved", time_stepper
 
        # If MMS, may need to update rho
-       if Qrho != None:
-
-          print "UPDATING DENSITY"
+       updateDensity(
+             mesh         = mesh,
+             time_stepper = time_stepper,
+             dt           = dt,
+             hydro_star   = hydro_star,
+             hydro_new    = hydro_new,
+             hydro_prev   = hydro_prev,
+             Qrho_new     = Qrho_new,
+             Qrho_old     = Qrho_old,
+             Qrho_older   = Qrho_older)
 
 
        # update velocity

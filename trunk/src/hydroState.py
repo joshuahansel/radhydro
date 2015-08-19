@@ -77,22 +77,28 @@ class HydroState:
     def updateVelocity(self, u):
        self.u = u
 
+    ## Updates density only
+    #
+    # @param[in] rho   new density \f$rho\f$
+    #
+    def updateDensity(self, rho):
+       self.rho = rho
+
     ## Updates state based on density and internal energy.
     #
     #  This function is used by the radiation-hydrodynamics scheme to update
     #  the hydro state with new internal energies when they are computed.
     #  It is assumed that the velocity has already been updated earlier in
-    #  the time step with the updateVelocity() function. At this point,
+    #  the time step with the updateVelocity() function and that the density
+    #  has already been updated as well. At this point,
     #  both the new velocity field and the new thermodynamic state of the
     #  fluid have been fully defined, so an update to all thermodynamic
     #  quantities is performed in this function.
     #
-    #  @param[in] rho  new density \f$\rho\f$
     #  @param[in] e    new internal energy \f$e\f$
     #
-    def updateStateDensityInternalEnergy(self, rho, e):
+    def updateStateInternalEnergy(self, e):
 
-       self.rho = rho
        self.e   = e
        self.p = getPressure(self.gamma, self.rho, self.e) 
 
