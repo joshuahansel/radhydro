@@ -8,7 +8,8 @@ import globalConstants as GC
 import numpy as np
 import utilityFunctions as UT
 from utilityFunctions import getNu, computeEdgeVelocities, computeEdgeTemperatures,\
-   computeEdgeDensities, computeHydroInternalEnergies
+   computeEdgeDensities, computeHydroInternalEnergies, evalEdgeSource, \
+   evalAverageSource
 
 #--------------------------------------------------------------------------------
 ## Updates cell-average velocities \f$u_i\f$.
@@ -398,7 +399,16 @@ def evalMomentumExchangeAverage(i, rad, hydro, cx, slopes):
 def computeMomentumExtraneousSource(mom_src, mesh, t):
 
    # Compute average of momentum source
-   return [mom_src(mesh.getElement(i).x_cent,t)  for i in xrange(mesh.n_elems)]
+   src = np.zeros(mesh.n_elems)
+   for i in xrange(mesh.n_elems):
+
+      el = mesh.getElement(i)
+      x_l = el.xl
+      x_r = el.xr
+
+      src[i] = evalAverageSource(mom_src, x_l, x_r, t) 
+
+   return src
 
 ## Computes an extraneous source vector for the energy equation,
 #  \f$Q^{ext,E}\f$, evaluated at each cell edge.
@@ -413,8 +423,19 @@ def computeMomentumExtraneousSource(mom_src, mesh, t):
 def computeEnergyExtraneousSource(erg_src, mesh, t):
 
    # evaluate energy source function at each edge of each cell
-   return [(erg_src(mesh.getElement(i).xl,t), erg_src(mesh.getElement(i).xr,t))
-      for i in xrange(mesh.n_elems)]
+   src = []
+   for i in xrange(mesh.n_elems):
+
+      el = mesh.getElement(i)
+      x_l = el.xl
+      x_r = el.xr
+
+      #Compute two basis moments of function
+      src.append(  evalEdgeSource(erg_src, x_l, x_r, t) )
+
+   return src
+
+
 
 
 

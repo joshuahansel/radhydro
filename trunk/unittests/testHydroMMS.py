@@ -46,8 +46,8 @@ class TestHydroMMS(unittest.TestCase):
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-#      rho = sympify('1')
-#      u   = sympify('1')
+#      rho = sympify('4')
+#      u   = sympify('1.3')
 #      E   = sympify('10')
 #      rho = 1+x-t
 #      u   = sympify('1')
@@ -99,7 +99,7 @@ class TestHydroMMS(unittest.TestCase):
       width = 1.0
       t_start  = 0.0
       t_end = 0.4
-      t_end = 0.009085
+      t_end = 0.1
       # compute radiation BC; assumes BC is independent of time
       psi_left  = psip_f(x=0.0,   t=0.0)
       psi_right = psim_f(x=width, t=0.0)

@@ -6,6 +6,9 @@ import numpy as np
 import globalConstants as GC
 from crossXInterface import CrossXInterface
 from hydroState import HydroState
+from scipy.integrate import quad
+
+QUAD_REL_TOL = 1.0E-8
 
 #-----------------------------------------------------------------------------------
 ## Converge f_L and f_R to f_a and f_x
@@ -510,17 +513,15 @@ def computeRadiationVector(f_minus, f_plus, mesh, t):
       xL = mesh.getElement(i).xl
       xR = mesh.getElement(i).xr
 
-      # get global indices
-      iLm = getIndex(i,"L","-") # dof i,L,-
-      iLp = getIndex(i,"L","+") # dof i,L,+
-      iRm = getIndex(i,"R","-") # dof i,R,-
-      iRp = getIndex(i,"R","+") # dof i,R,+
+      #Evalute the plus and minus
+      qLp, qRp = evalEdgeSource(f_plus, xL, xR, t)
+      qLm, qRm = evalEdgeSource(f_minus, xL, xR, t)
 
-      # compute source
-      y[iLm] = f_minus(xL, t)
-      y[iLp] = f_plus(xL, t)
-      y[iRm] = f_minus(xR, t)
-      y[iRp] = f_plus(xR, t)
+      # get global indices
+      y[getIndex(i,"L","-")] = qLm # dof i,L,-
+      y[getIndex(i,"L","+")] = qLp # dof i,L,+
+      y[getIndex(i,"R","-")] = qRm # dof i,R,-
+      y[getIndex(i,"R","+")] = qRp # dof i,R,+
 
    return y
 
@@ -567,4 +568,26 @@ def computeAnalyticHydroSolution(mesh,t,rho,u,E,cv,gamma):
 
    return hydro
 
+
+## Compute edge function for an element a certain time
+#
+def evalEdgeSource(func, x_l, x_r,t):
+
+    #wrap with left and right basis function multiplying and at time t
+    h = x_r - x_l
+    f_L = lambda x: 2./h*(x_r-x)/h*func(x,t)
+    f_R = lambda x: 2./h*(x-x_l)/h*func(x,t)
+   
+    Q_L = quad(f_L, x_l, x_r, epsrel=1.0e-11)[0]
+    Q_R = quad(f_R, x_l, x_r, epsrel=1.0e-11)[0]
+
+    return (Q_L, Q_R)
+
+## Compute average function for an element and certain time
+#
+def evalAverageSource(func, x_l, x_r, t):
+
+    h = x_r - x_l
+    Q_a = 1./h*quad(func, x_l, x_r, args=(t), epsrel=QUAD_REL_TOL)[0]
+    return Q_a
 
