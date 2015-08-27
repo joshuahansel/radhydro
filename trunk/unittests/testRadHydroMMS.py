@@ -47,7 +47,7 @@ class TestRadHydroMMS(unittest.TestCase):
     #  rho = 1 + x - t
     #  u   = sympify('1')
       E   = 5 + 5*(x - 0.5)**2
-      rho = exp(x+t)
+      rho = exp(x+t)+5
       u   = exp(-x)*sin(t) - 1
      # E   = 10*exp(x+t)
       

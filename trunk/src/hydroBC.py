@@ -67,6 +67,18 @@ class HydroBC(object):
          self.rho_L, self.mom_L, self.erg_L = state_L.getConservativeVariables()
          self.rho_R, self.mom_R, self.erg_R = state_R.getConservativeVariables()
 
+      elif self.bc_type == 'periodic':
+
+         print "PERIODIC"
+
+         #Get the opposite edge's state
+         state_L = states[self.n-1]
+         state_R = states[0]
+
+         # get conservative variables from states
+         self.rho_L, self.mom_L, self.erg_L = state_L.getConservativeVariables()
+         self.rho_R, self.mom_R, self.erg_R = state_R.getConservativeVariables()
+
       elif self.bc_type == 'dirichlet':
 
          # If updating for use in slopes different than if for use in Riemman solve
