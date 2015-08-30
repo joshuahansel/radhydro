@@ -110,6 +110,9 @@ class TestRadHydroMMS(unittest.TestCase):
       psi_left  = psip_f(x=0.0,   t=0.0)
       psi_right = psim_f(x=width, t=0.0)
 
+      # create rad BC object
+      rad_BC = RadBC(psip_
+
       # compute hydro IC
       hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
          rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
