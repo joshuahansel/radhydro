@@ -398,12 +398,12 @@ def plotHydroSolutions(mesh, states, slopes=None, x_exact=None, exact=None,
            mom_exact.append(i.u*i.rho)
 
     # plot each quantity
-    plotSingle(x_num=x_num, x_exact=x_exact, y=u,   y_label=r"$u$",    exact=u_exact)
     plotSingle(x_num=x_num, x_exact=x_exact, y=rho, y_label=r"$\rho$", exact=rho_exact) 
     plotSingle(x_num=x_num, x_exact=x_exact, y=p,   y_label=r"$p$",    exact=p_exact)
-    plotSingle(x_num=x_num, x_exact=x_exact, y=e,   y_label=r"$e$",    exact=e_exact)
-    plotSingle(x_num=x_num, x_exact=x_exact, y=E,   y_label=r"$E$",    exact=E_exact)
     plotSingle(x_num=x_num, x_exact=x_exact, y=mom, y_label=r"$(\rho u)$", exact=mom_exact)
+    plotSingle(x_num=x_num, x_exact=x_exact, y=u,   y_label=r"$u$",    exact=u_exact)
+    plotSingle(x_num=x_num, x_exact=x_exact, y=E,   y_label=r"$E$",    exact=E_exact)
+    plotSingle(x_num=x_num, x_exact=x_exact, y=e,   y_label=r"$e$",    exact=e_exact)
 
 
     # save figure

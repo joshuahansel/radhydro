@@ -7,7 +7,7 @@ import sys
 sys.path.append('../src')
 
 # symbolic math packages
-from sympy import symbols, exp, sin, pi, sympify
+from sympy import symbols, exp, sin, pi, sympify, cos
 from sympy.utilities.lambdify import lambdify
 
 # numpy
@@ -40,16 +40,22 @@ class TestRadHydroMMS(unittest.TestCase):
       # declare symbolic variables
       x, t, alpha, c = symbols('x t alpha c')
       
+      # numeric values
+      alpha_value = 0.01
+      cv_value    = 1.0
+      gamma_value = 1.4
+      sig_s = 1.0
+      sig_a = 0.1
+      
       # create solution for thermodynamic state and flow field
- #     rho = sympify('4.0')
- #     u   = sympify('1.2')
- #     E   = sympify('10.0')
-    #  rho = 1 + x - t
-    #  u   = sympify('1')
-      E   = 5 + 5*(x - 0.5)**2
-      rho = exp(x+t)+5
-      u   = exp(-x)*sin(t) - 1
-     # E   = 10*exp(x+t)
+   #   rho = sympify('4.0')
+   #   u   = sympify('1.0')
+  #    E   = sympify('10.0')
+      rho = 2. + sin(2*pi*x+t)
+      u   = 2. + cos(2*pi*x-t) 
+      p   = 2. + cos(2*pi*x+t) 
+      e = p/(rho*(gamma_value-1.))
+      E = 0.5*rho*u*u + rho*e
       
       # create solution for radiation field
       rad_scale = 50*c
@@ -59,13 +65,6 @@ class TestRadHydroMMS(unittest.TestCase):
       #psip = 50*c
       #psim = sympify('0')
       #psip = sympify('0')
-      
-      # numeric values
-      alpha_value = 0.01
-      cv_value    = 1.0
-      gamma_value = 1.4
-      sig_s = 1.0
-      sig_a = 1.0
       
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
@@ -79,7 +78,7 @@ class TestRadHydroMMS(unittest.TestCase):
          gamma_value   = gamma_value,
          cv_value      = cv_value,
          alpha_value   = alpha_value,
-         display_equations = False)
+         display_equations = True)
 
       # create functions for exact solutions
       substitutions = dict()
@@ -116,8 +115,7 @@ class TestRadHydroMMS(unittest.TestCase):
          rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
       # create hydro BC
-      hydro_BC = HydroBC(bc_type='dirichlet', mesh=mesh, rho_BC=rho_f,
-         mom_BC=mom_f, erg_BC=E_f)
+      hydro_BC = HydroBC(bc_type='periodic', mesh=mesh)
   
       # create cross sections
       cross_sects = [(ConstantCrossSection(sig_s, sig_s+sig_a),
@@ -127,7 +125,7 @@ class TestRadHydroMMS(unittest.TestCase):
       # transient options
       t_start  = 0.0
 #      t_end = 0.005
-      t_end = 0.1
+      t_end = 0.02
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -136,16 +134,16 @@ class TestRadHydroMMS(unittest.TestCase):
          verbosity = 0
 
       #slope limiter
-      limiter = 'vanleer'
+      limiter = 'none'
       
       # run the rad-hydro transient
       rad_new, hydro_new = runNonlinearTransient(
          mesh         = mesh,
          problem_type = 'rad_hydro',
          dt_option    = 'CFL',
-         #dt_option    = 'constant',
          CFL          = 0.5,
-         #dt_constant  = 0.002,
+       #  dt_option    = 'constant',
+       #  dt_constant  = 0.0002,
          slope_limiter = limiter,
          time_stepper = 'BDF2',
          use_2_cycles = False,
@@ -163,6 +161,11 @@ class TestRadHydroMMS(unittest.TestCase):
          psim_src     = psim_src,
          psip_src     = psip_src,
          verbosity    = verbosity,
+            rho_f =rho_f,
+            u_f = u_f,
+            E_f = E_f,
+            gamma_value = gamma_value,
+            cv_value = cv_value,
          check_balance = True)
 
       # plot

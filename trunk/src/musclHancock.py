@@ -27,6 +27,7 @@ def hydroPredictor(mesh, states_old, slopes, dt):
     # number of elements
     n = mesh.n_elems
 
+    ###### THIS ALL PRODUCES THE SAME RESULTS AS CURRENT CODE, LEFT FOR REFERENCE
     ##Create vectors of conserved quantities
     #rho = [s.rho for s in states]
     #mom = [s.rho*s.u for s in states]

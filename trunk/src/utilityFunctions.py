@@ -578,10 +578,16 @@ def evalEdgeSource(func, x_l, x_r,t):
     f_L = lambda x: 2./h*(x_r-x)/h*func(x,t)
     f_R = lambda x: 2./h*(x-x_l)/h*func(x,t)
    
-    Q_L = quad(f_L, x_l, x_r, epsrel=1.0e-11)[0]
-    Q_R = quad(f_R, x_l, x_r, epsrel=1.0e-11)[0]
+    #These are the moments
+    Q_L_m = quad(f_L, x_l, x_r, epsrel=QUAD_REL_TOL)[0]
+    Q_R_m = quad(f_R, x_l, x_r, epsrel=QUAD_REL_TOL)[0]
 
-    return (Q_L, Q_R)
+    #Now compute the edge values based on exact moments
+    Q_L = 2.*Q_L_m - Q_R_m
+    Q_R = 2.*Q_R_m - Q_L_m
+
+    return ( Q_L, Q_R )
+
 
 ## Compute average function for an element and certain time
 #

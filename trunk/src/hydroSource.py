@@ -223,7 +223,7 @@ class QEHandler(TransientSourceTerm):
             Q_elem = list(self.func(i, **kwargs))
             for x in range(2):
 
-                Q[i][x] += Q_elem[x]
+                Q[i][x] = Q_elem[x]
 
         return Q
 
