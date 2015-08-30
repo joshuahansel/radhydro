@@ -314,13 +314,20 @@ class StreamingTerm(TransientSourceTerm):
         return np.zeros(4)
 
     #--------------------------------------------------------------------------------
-    ## Computes old streaming term,
-    #  \f$\mu^\pm\frac{\partial\Psi^{\pm,n}}{\partial x}\f$
+    ## Compute RHS term. This function has to be separate function just because the boundary
+    #  fluxes may be variable in time and evalOld and evalOlder only have one BC
+    #  object which knows old values
     #
-    #  @param[in] i         element id
-    #  @param[in] rad_old   old radiation
-    #
-    def evalOld(self, i, rad_old, psi_left, psi_right, **kwargs):
+    def evalRHSTerm(self, i, rad_old, rad_BC, time_step, **kwargs):
+
+        #If it is a time dependent boundary condition, make a copy and
+        #update to the old time
+        if time_step == "old":
+           psi_left, psi_right = rad_BC.getOldIncidentFluxes()
+        elif time_step == "older":
+           psi_left, psi_right = rad_BC.getOlderIncidentFluxes()
+        else:
+           raise IOError("Invalid call of evalRHSTerm BC time")
 
         # get local indices
         Lm = getLocalIndex("L","-") # dof L,-
@@ -330,13 +337,19 @@ class StreamingTerm(TransientSourceTerm):
 
         # psip_{i-1/2}
         if i == 0: # left boundary
-            psip_Lface = psi_left
+            if rad_BC.bc_type == "periodic":
+               psip_Lface = rad_old.psip[self.mesh.n_elems-1][1] # psip_{N-1,R}
+            else:
+               psip_Lface = psi_left
         else:
             psip_Lface = rad_old.psip[i-1][1]
 
         # psim_{i+1/2}
         if i == self.mesh.n_elems - 1: # right boundary
-            psim_Rface = psi_right
+            if rad_BC.bc_type == "periodic":
+               psim_Rface = rad_old.psim[0][0] #psim_{0,L}
+            else:
+               psim_Rface = psi_right
         else:
             psim_Rface  = rad_old.psim[i+1][0]
 
@@ -364,20 +377,36 @@ class StreamingTerm(TransientSourceTerm):
         return Q_local
 
     #--------------------------------------------------------------------------------
+    ## Computes old streaming term,
+    #  \f$\mu^\pm\frac{\partial\Psi^{\pm,n}}{\partial x}\f$
+    #
+    #  @param[in] i         element id
+    #  @param[in] rad_old   old radiation
+    #
+    def evalOld(self, i, rad_old, rad_BC, t_old=None, **kwargs):
+
+        return self.evalRHSTerm(i,
+                  rad_old   = rad_old,
+                  rad_BC    = rad_BC,
+                  time_step = "old")
+
+
+    #--------------------------------------------------------------------------------
     ## Computes older streaming term,
     #  \f$\mu^\pm\frac{\partial\Psi^{\pm,n-1}}{\partial x}\f$
     #
     #  @param[in] i           element id
     #  @param[in] rad_older   older radiation
     #
-    def evalOlder(self, i, rad_older, psi_left, psi_right, **kwargs):
+    def evalOlder(self, i, rad_older, rad_BC, **kwargs):
 
         # Use old function but with older arguments.
         # carefully pass in **kwargs to avoid duplicating
-        return self.evalOld(i,
+        return self.evalRHSTerm(i,
                   rad_old   = rad_older,
-                  psi_left  = psi_left,
-                  psi_right = psi_right)
+                  rad_BC    = rad_BC,
+                  time_step = "older")
+
 
 
 #====================================================================================

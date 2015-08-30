@@ -26,6 +26,7 @@ from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolutio
 from crossXInterface import ConstantCrossSection
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
+from radBC   import RadBC
 import globalConstants as GC
 
 ## Derived unittest class to test the MMS source creator functions
@@ -111,6 +112,9 @@ class TestRadHydroMMS(unittest.TestCase):
       psi_left  = psip_f(x=0.0,   t=0.0)
       psi_right = psim_f(x=width, t=0.0)
 
+      #Create Radiation BC object
+      rad_BC = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
+
       # compute hydro IC
       hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
          rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
@@ -151,8 +155,7 @@ class TestRadHydroMMS(unittest.TestCase):
          use_2_cycles = False,
          t_start      = t_start,
          t_end        = t_end,
-         psi_left     = psi_left,
-         psi_right    = psi_right,
+         rad_BC       = rad_BC,
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,

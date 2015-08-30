@@ -54,9 +54,11 @@ class HydroBC(object):
 
    ## Updates the boundary values for each conservative variable.
    #
-   #  @param[in] states  hydro states for each cell. If it edge conserved
-   #                     quantities it will be edge values passed in
+   #  @param[in] states  hydro states at cell centers for each cell. 
    #  @param[in] t       time at which to evaluate time-dependent BC
+   #  @param[in] slopes  If it is edge values, then use slopes to reconstruct edge
+   #  @param[in] edge_value boolean of whether to compute at edge or at center of 
+   #                        ghost cell
    #
    def update(self, states, t, slopes=None, edge_value=False):
 

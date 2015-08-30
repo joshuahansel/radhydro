@@ -26,6 +26,7 @@ from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolutio
 from crossXInterface import ConstantCrossSection
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
+from radBC   import RadBC
 
 ## Derived unittest class
 #
@@ -100,10 +101,6 @@ class TestHydroMMS(unittest.TestCase):
       t_start  = 0.0
       t_end = 0.4
       t_end = 0.1
-      # compute radiation BC; assumes BC is independent of time
-      psi_left  = psip_f(x=0.0,   t=0.0)
-      psi_right = psim_f(x=width, t=0.0)
-
       # initialize lists for mesh size and L1 error for each cycle
       max_dx = list()
       err = list()
@@ -124,6 +121,9 @@ class TestHydroMMS(unittest.TestCase):
          psi_IC = computeRadiationVector(psim_f, psip_f, mesh, t=0.0)
          rad_IC = Radiation(psi_IC)
    
+         #Make rad BC object with vacuum for hydro only
+         rad_BC = RadBC(mesh, "vacuum")
+
          # compute hydro IC
          hydro_IC = computeAnalyticHydroSolution(mesh, t=0.0,
             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
@@ -160,8 +160,7 @@ class TestHydroMMS(unittest.TestCase):
             use_2_cycles = False,
             t_start      = t_start,
             t_end        = t_end,
-            psi_left     = psi_left,
-            psi_right    = psi_right,
+            rad_BC       = rad_BC,
             hydro_BC     = hydro_BC,
             cross_sects  = cross_sects,
             rad_IC       = rad_IC,

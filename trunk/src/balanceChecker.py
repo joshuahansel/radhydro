@@ -35,7 +35,7 @@ class BalanceChecker:
     ## Compute balance on a simple steady state problem
     #  Constructor
     #
-    def computeSSRadBalance(self, psi_left, psi_right, rad, sigma_a, Q_iso):
+    def computeSSRadBalance(self, psi_L, psi_R, rad, sigma_a, Q_iso):
 
         #assume uniform volume
         vol = self.mesh.getElement(0).dx
@@ -46,7 +46,7 @@ class BalanceChecker:
 
         #Get currents
         mu = RU.mu["+"]
-        j_in = (psi_left*mu + psi_right*mu)
+        j_in = (psi_L*mu + psi_R*mu)
         j_out= rad.psim[0][0]*mu + rad.psip[-1][1]*mu
 
         bal = j_in - j_out + sources - absor
@@ -68,11 +68,16 @@ class BalanceChecker:
     #----------------------------------------------------------------------------
     ## Compute balance for a coupled rad-hydro problem
     #
-    def computeBalance(self, psi_left=None, psi_right=None, hydro_new=None,
+    def computeBalance(self, rad_BC=None, hydro_new=None,
             hydro_old=None, rad_old=None, rad_new=None, hydro_F_left=None, hydro_F_right=None, 
             src_totals={"rad":0.0,"rho":0.0,"erg":0.0,"mom":0.0}, 
-            hydro_older=None,rad_older=None,
+            hydro_older=None,rad_older=None, t_old = None, t_older = None,
             cx_new=None, write=True):
+
+        #Get radiation boundary condition fluxes at different times
+        psi_L, psi_R = rad_BC.getIncidentFluxes()
+        psi_L_old, psi_R_old = rad_BC.getOldIncidentFluxes()
+        psi_L_older, psi_R_older = rad_BC.getOlderIncidentFluxes()
 
         #assume uniform volume
         vol = self.mesh.getElement(0).dx
@@ -157,25 +162,25 @@ class BalanceChecker:
            mom_netflow_hydro  = hydro_F_left["mom"] - hydro_F_right["mom"] 
            erg_netflow_hydro  = hydro_F_left["erg"] - hydro_F_right["erg"] 
 
-        # compute radiation momentum net inflow. Note that at Old and Older
-        # we use the same upwinding, so this is correct
-        mom_left_new_rad  = (psi_left + rad_new.psim[0][0])/(3.0*c)
-        mom_left_old_rad  = (psi_left + rad_old.psim[0][0])/(3.0*c) 
-        mom_right_new_rad = (rad_new.psip[-1][1] + psi_right)/(3.0*c)
-        mom_right_old_rad = (rad_old.psip[-1][1] + psi_right)/(3.0*c)
+        # compute radiation momentum net inflow. Note that at old and older
+        # we may have different updwinded values
+        mom_left_new_rad  = (psi_L + rad_new.psim[0][0])/(3.0*c)
+        mom_left_old_rad  = (psi_L_old + rad_old.psim[0][0])/(3.0*c) 
+        mom_right_new_rad = (rad_new.psip[-1][1] + psi_R)/(3.0*c)
+        mom_right_old_rad = (rad_old.psip[-1][1] + psi_R_old)/(3.0*c)
         mom_netflow_new_rad = mom_left_new_rad - mom_right_new_rad
         mom_netflow_old_rad = mom_left_old_rad - mom_right_old_rad
 
         if self.time_stepper == 'BDF2':
 
-            mom_left_older_rad= (psi_left + rad_older.psim[0][0])/(3.0*c)
-            mom_right_older_rad = (rad_older.psip[-1][1] + psi_right)/(3.0*c)
+            mom_left_older_rad= (psi_L_older + rad_older.psim[0][0])/(3.0*c)
+            mom_right_older_rad = (rad_older.psip[-1][1] + psi_R_older)/(3.0*c)
             mom_netflow_older_rad = mom_left_older_rad - mom_right_older_rad
 
         # compute radiation energy net inflow
         mu = RU.mu["+"]
-        erg_inflow_new_rad  = psi_left*mu + psi_right*mu
-        erg_inflow_old_rad  = psi_left*mu + psi_right*mu
+        erg_inflow_new_rad  = psi_L*mu + psi_R*mu
+        erg_inflow_old_rad  = psi_L_old*mu + psi_R_old*mu
         erg_outflow_new_rad = rad_new.psim[0][0]*mu + rad_new.psip[-1][1]*mu
         erg_outflow_old_rad = rad_old.psim[0][0]*mu + rad_old.psip[-1][1]*mu
         erg_netflow_new_rad = erg_inflow_new_rad - erg_outflow_new_rad
@@ -183,7 +188,7 @@ class BalanceChecker:
 
         if self.time_stepper == 'BDF2':
 
-            erg_inflow_older_rad  = psi_left*mu + psi_right*mu
+            erg_inflow_older_rad  = psi_L_older*mu + psi_R_older*mu
             erg_outflow_older_rad = rad_older.psim[0][0]*mu + rad_older.psip[-1][1]*mu
             erg_netflow_older_rad = erg_inflow_older_rad - erg_outflow_older_rad
 

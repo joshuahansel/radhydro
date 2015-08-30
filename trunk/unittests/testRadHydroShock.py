@@ -17,6 +17,7 @@ from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolutio
 from crossXInterface import ConstantCrossSection
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
+from radBC   import RadBC
 import globalConstants as GC
 
 ## Derived unittest class to test the radiation-hydrodynamics shock problem
@@ -42,6 +43,9 @@ class TestRadHydroShock(unittest.TestCase):
       # NOTE: What is the justification for this? Does Jarrod assume Fr = 0?
       psi_left  = 0.5*c*Erad_left  
       psi_right = 0.5*c*Erad_right
+
+      #Create BC object
+      rad_BC = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
       
       # gamma constant
       gam = 5.0/3.0
@@ -114,14 +118,13 @@ class TestRadHydroShock(unittest.TestCase):
          time_stepper = 'BDF2',
          t_start      = t_start,
          t_end        = t_end,
-         psi_left     = psi_left,
-         psi_right    = psi_right,
+         rad_BC       = rad_BC,
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
          verbosity    = verbosity,
-         slope_limiter = 'none',
+         slope_limiter = 'vanleer',
          check_balance=True)
 
       # plot

@@ -16,7 +16,7 @@ from radSlopesHandler import computeTotalEnergySlopes
 #
 #  @return new hydro and rad solutions
 #
-def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
+def nonlinearSolve(mesh, time_stepper, problem_type, dt, rad_BC,
    cx_old, hydro_old, hydro_star, rad_old, slopes_old, e_rad_old,
    Qpsi_new, Qmom_new, Qerg_new, Qpsi_old, Qmom_old, Qerg_old, Qpsi_older,
    Qmom_older, Qerg_older, Qrho_new=None, Qrho_old=None, Qrho_older=None,
@@ -147,8 +147,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, psi_left, psi_right,
            time_stepper  = time_stepper,
            problem_type  = problem_type,
            dt            = dt,
-           psi_left      = psi_left,
-           psi_right     = psi_right,
+           rad_BC        = rad_BC,
            cx_new        = cx_mod_prev,
            cx_prev       = cx_prev,
            cx_old        = cx_old,

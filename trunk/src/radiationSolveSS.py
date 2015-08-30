@@ -35,27 +35,16 @@ from radiation import Radiation
 #          -# \f$\mathcal{E}\f$: radiation energy
 #          -# \f$\mathcal{F}\f$: radiation flux
 #
-def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
-    bound_curr_lt=0.0, bound_curr_rt=0.0,
-    bc_psi_left = None, bc_psi_right = None):
+def radiationSolveSS(mesh, cross_x, Q, rad_BC, diag_add_term=0.0, implicit_scale=1.0):
 
     # abbreviation for the scale term
     beta = implicit_scale
 
-    # compute boundary fluxes based on incoming currents if there is no specified
-    # fluxes.  If fluxes are specified, they will overwrite current value. Default 
-    # is zero current
-    if bc_psi_left != None and bound_curr_lt != 0.0:
-        raise ValueError("You cannot specify a current and boundary flux, on left")
-    if bc_psi_right != None and bound_curr_rt != 0.0:
-        raise ValueError("You cannot specify a current and boundary flux, on right")
-
-    if bc_psi_left == None:
-        bc_psi_left  =  bound_curr_lt / (0.5)
-
-    if bc_psi_right == None:
-        bc_psi_right = bound_curr_rt / (0.5)
-
+    # Handle boundary conditions  
+    if rad_BC.bc_type == 'periodic':
+        bc_psi_left = bc_psi_right = None
+    else:
+        bc_psi_left, bc_psi_right = rad_BC.getIncidentFluxes()
 
     # initialize numpy arrays for system matrix and rhs
     n = 4*mesh.n_elems
@@ -97,10 +86,18 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
       
        # Left control volume, plus direction
        row = np.zeros(n)
+
+       #Handle BC's
        if i == 0:
-          rhs[iLplus] = 2.0*beta*mu["+"]/h*bc_psi_left
+          if rad_BC.bc_type == 'periodic':
+             rhs[iLplus] = 0.0    #If periodic no term to add 
+             iPerPlus = getIndex(mesh.n_elems-1,"R","+") #periodic outflow index
+             row[iPerPlus] = 2.0*beta*mu["+"]/h
+          else:
+             rhs[iLplus] = 2.0*beta*mu["+"]/h*bc_psi_left
        else:
           row[iprevRplus] = -2.0*beta*mu["+"]/h
+
        row[iLminus]    = -0.5*beta*cx_sL
        row[iLplus]     = beta*mu["+"]/h + (beta*cx_tL + diag_add_term) - 0.5*beta*cx_sL
        row[iRplus]     = beta*mu["+"]/h
@@ -112,10 +109,18 @@ def radiationSolveSS(mesh, cross_x, Q, diag_add_term=0.0, implicit_scale=1.0,
        row[iLminus]     = -beta*mu["-"]/h
        row[iRminus]     = -beta*mu["-"]/h + (beta*cx_tR + diag_add_term) - 0.5*beta*cx_sR
        row[iRplus]      = -0.5*beta*cx_sR
+
+       #Handle BC
        if i == mesh.n_elems-1:
-          rhs[iRminus] = -2.0*beta*mu["-"]/h*bc_psi_right
+          if rad_BC.bc_type == 'periodic':
+             rhs[iRminus] = 0.0
+             iPerMinus = getIndex(0,"L","-")
+             row[iPerMinus] = -2.0*beta*mu["-"]/h
+          else:
+             rhs[iRminus] = -2.0*beta*mu["-"]/h*bc_psi_right
        else:
           row[inextLminus] = 2.0*beta*mu["-"]/h
+
        matrix[iRminus]  = row
        rhs[iRminus]    += QRminus
 

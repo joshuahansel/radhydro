@@ -37,7 +37,7 @@ class TestHydroMMS(unittest.TestCase):
    def test_HydroMMS(self):
       
       # number of elements in first cycle
-      n_elems = 50
+      n_elems = 25
 
       # number of refinement cycles
       n_cycles = 4
@@ -45,7 +45,7 @@ class TestHydroMMS(unittest.TestCase):
       # spatial and temporal domains
       width = 1.0
       t_start  = 0.0
-      t_end = 0.05
+      t_end = 0.02
       
       # declare symbolic variables
       x, t, alpha = symbols('x t alpha')

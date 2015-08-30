@@ -19,7 +19,7 @@ beta = {"CN":0.5, "BDF2":2./3., "BE":1.}
 #                           e.g., 'CN'
 #
 def takeRadiationStep(mesh, time_stepper, problem_type, dt,
-   cx_new, psi_left, psi_right,
+   cx_new, rad_BC,
    Qpsi_older, Qpsi_old, Qpsi_new, **kwargs):
 
    # assert that the appropriate sources were provided
@@ -35,8 +35,7 @@ def takeRadiationStep(mesh, time_stepper, problem_type, dt,
       time_stepper   = time_stepper,
       problem_type   = problem_type,
       dt             = dt,
-      psi_left       = psi_left,
-      psi_right      = psi_right,
+      rad_BC         = rad_BC,
       Qpsi_older     = Qpsi_older,
       Qpsi_old       = Qpsi_old,
       Qpsi_new       = Qpsi_new,
@@ -50,8 +49,7 @@ def takeRadiationStep(mesh, time_stepper, problem_type, dt,
       mesh           = mesh,
       cross_x        = cx_new,
       Q              = Q_tr,
-      bc_psi_left    = psi_left,
-      bc_psi_right   = psi_right,
+      rad_BC         = rad_BC,
       diag_add_term  = alpha,
       implicit_scale = beta[time_stepper] )
 
