@@ -30,7 +30,7 @@ class TestRadHydroShock(unittest.TestCase):
    def test_RadHydroShock(self):
 
       # test case
-      test_case = "mach2" # mach1.2 mach2 mach50
+      test_case = "mach50" # mach1.2 mach2 mach50
       
       # create uniform mesh
       n_elems = 100
@@ -67,6 +67,9 @@ class TestRadHydroShock(unittest.TestCase):
          T2     = 1.1947515210501813e-001
          Erad_right = 2.7955320762182542e-06
 
+         # final time
+         t_end = 0.5
+
          # temperature plot filename
          test_filename = "radshock_mach1.2.pdf"
 
@@ -87,6 +90,9 @@ class TestRadHydroShock(unittest.TestCase):
          T2     = 2.0775699953301918e-001
          Erad_right = 2.5560936967521927e-005
 
+         # final time
+         t_end = 1.0
+
          # temperature plot filename
          test_filename = "radshock_mach2.pdf"
 
@@ -106,6 +112,9 @@ class TestRadHydroShock(unittest.TestCase):
          e2     = E2/rho2 - 0.5*u2*u2
          T2     = 8.5515528368625038e+000
          Erad_right = 7.3372623010289956e+001
+
+         # final time
+         t_end = 1.5
 
          # temperature plot filename
          test_filename = "radshock_mach50.pdf"
@@ -153,7 +162,6 @@ class TestRadHydroShock(unittest.TestCase):
   
       # transient options
       t_start  = 0.0
-      t_end = 0.5
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
