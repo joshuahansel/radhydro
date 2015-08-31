@@ -99,8 +99,8 @@ class TestHydroMMS(unittest.TestCase):
       # spatial and temporal domains
       width = 1.0
       t_start  = 0.0
-      t_end = 0.4
       t_end = 0.1
+
       # initialize lists for mesh size and L1 error for each cycle
       max_dx = list()
       err = list()
@@ -157,7 +157,7 @@ class TestHydroMMS(unittest.TestCase):
             CFL          = 0.5,
             slope_limiter = slope_limiter,
             time_stepper = 'BDF2',
-            use_2_cycles = False,
+            use_2_cycles = True,
             t_start      = t_start,
             t_end        = t_end,
             rad_BC       = rad_BC,

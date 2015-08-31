@@ -26,6 +26,7 @@ from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolutio
 from crossXInterface import ConstantCrossSection
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
+from radBC import RadBC
 import globalConstants as GC
 
 ## Derived unittest class to test the MMS source creator functions
@@ -45,26 +46,22 @@ class TestRadHydroMMS(unittest.TestCase):
       cv_value    = 1.0
       gamma_value = 1.4
       sig_s = 1.0
-      sig_a = 0.1
+      sig_a = 1.0
       
       # create solution for thermodynamic state and flow field
-   #   rho = sympify('4.0')
-   #   u   = sympify('1.0')
-  #    E   = sympify('10.0')
-      rho = 2. + sin(2*pi*x+t)
-      u   = 2. + cos(2*pi*x-t) 
-      p   = 2. + cos(2*pi*x+t) 
-      e = p/(rho*(gamma_value-1.))
-      E = 0.5*rho*u*u + rho*e
+      rho = sympify('4.0')
+      u   = sympify('1.0')
+      E   = sympify('10.0')
+   #   rho = 2. + sin(2*pi*x+t)
+   #   u   = 2. + cos(2*pi*x-t) 
+   #   p   = 2. + cos(2*pi*x+t) 
+   #   e = p/(rho*(gamma_value-1.))
+   #   E = 0.5*rho*u*u + rho*e
       
       # create solution for radiation field
       rad_scale = 50*c
-      psim = rad_scale*2*t*sin(pi*(1-x))+10*c
-      psip = rad_scale*t*sin(pi*x)+10*c
-      #psim = 50*c
-      #psip = 50*c
-      #psim = sympify('0')
-      #psip = sympify('0')
+      psim = rad_scale*(2*t*sin(pi*(1-x))+2+0.1*t)
+      psip = rad_scale*(t*sin(pi*x)+2+0.1*t)
       
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
@@ -106,12 +103,8 @@ class TestRadHydroMMS(unittest.TestCase):
       psi_IC = computeRadiationVector(psim_f, psip_f, mesh, t=0.0)
       rad_IC = Radiation(psi_IC)
 
-      # compute radiation BC; assumes BC is independent of time
-      psi_left  = psip_f(x=0.0,   t=0.0)
-      psi_right = psim_f(x=width, t=0.0)
-
       # create rad BC object
-      rad_BC = RadBC(psip_
+      rad_BC = RadBC(mesh, 'dirichlet',psip_BC=psip_f,psim_BC=psim_f)
 
       # compute hydro IC
       hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
@@ -149,11 +142,10 @@ class TestRadHydroMMS(unittest.TestCase):
        #  dt_constant  = 0.0002,
          slope_limiter = limiter,
          time_stepper = 'BDF2',
-         use_2_cycles = False,
+         use_2_cycles = True,
          t_start      = t_start,
          t_end        = t_end,
-         psi_left     = psi_left,
-         psi_right    = psi_right,
+         rad_BC       = rad_BC,
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,

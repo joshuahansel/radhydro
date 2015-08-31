@@ -259,6 +259,8 @@ def runNonlinearTransient(mesh, problem_type,
                  Qerg_older   = deepcopy(Qerg_old),
                  Qrho_older   = deepcopy(Qrho_old))
 
+              raise NotImplementedError("Balance checker is wrong, CN step is just a predictor, dont need the sources")
+
               # add up source totals for each cycle to total for whole time step
               src_totals = dict()
               for key in src_totals_cycle1:
@@ -298,6 +300,15 @@ def runNonlinearTransient(mesh, problem_type,
                  Qerg_older   = Qerg_older,
                  Qrho_older   = Qrho_older)
 
+              # compute balance
+              if check_balance and (time_stepper != 'BDF2' or time_index>1):
+                 bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
+                 bal.computeBalance(rad_BC=rad_BC, hydro_old=hydro_old,
+                    hydro_new=hydro_new, rad_old=rad_old, rad_new=rad_new,
+                    hydro_older=hydro_older, rad_older=rad_older,
+                    hydro_F_right=hydro_F_right, hydro_F_left=hydro_F_left, 
+                    src_totals=src_totals, cx_new=cx_new,write=True)
+
        else: # problem_type == 'rad_hydro'
 
           # if user chose to use the 2-cycle scheme
@@ -312,7 +323,7 @@ def runNonlinearTransient(mesh, problem_type,
                 takeTimeStepMUSCLHancock(
                 mesh           = mesh,
                 dt             = 0.5*dt, 
-                rad_BC       = rad_BC,
+                rad_BC         = rad_BC,
                 hydro_BC       = hydro_BC,
                 slope_limiter  = slope_limiter,
                 cx_old         = cx_old,
@@ -345,6 +356,16 @@ def runNonlinearTransient(mesh, problem_type,
                 gamma_value = gamma_value,
                 cv_value=cv_value
              )
+
+             #Compute balance over first cycle
+             print "++++++++++++++++++++++++++++++++++++++++++++++++++++"
+             print "    END OF CYCLE 1 "
+             if check_balance:
+                bal = BalanceChecker(mesh, problem_type, 'CN', 0.5*dt)
+                bal.computeBalance(rad_BC=rad_BC, hydro_old=hydro_old,
+                   hydro_new=hydro_half, rad_old=rad_old, rad_new=rad_half,
+                   hydro_F_right=hydro_F_right, hydro_F_left=hydro_F_left, 
+                   src_totals=src_totals_cycle1, cx_new=cx_half,write=True)
 
              print("  Cycle 2:")
 
@@ -388,11 +409,17 @@ def runNonlinearTransient(mesh, problem_type,
                 gamma_value = gamma_value,
                 cv_value=cv_value)
 
-             # add up source totals for each cycle to total for whole time step
-             src_totals = dict()
-             for key in src_totals_cycle1:
-                src_totals[key] = src_totals_cycle1[key] + src_totals_cycle2[key]
-             
+             #Compute balance over second cycle
+             print "++++++++++++++++++++++++++++++++++++++++++++++++++++"
+             print "    END OF CYCLE 2 "
+             if check_balance:
+                bal = BalanceChecker(mesh, problem_type, 'BDF2', 0.5*dt)
+                bal.computeBalance(rad_BC=rad_BC, hydro_old=hydro_half,
+                   hydro_new=hydro_new, rad_old=rad_half, rad_new=rad_new,
+                   hydro_older=hydro_old, rad_older=rad_old,
+                   hydro_F_right=hydro_F_right, hydro_F_left=hydro_F_left, 
+                   src_totals=src_totals_cycle2, cx_new=cx_new,write=True)
+
           else: # use only 1 cycle
 
              # for first step, can't use BDF2; use CN instead
@@ -403,6 +430,12 @@ def runNonlinearTransient(mesh, problem_type,
                    time_stepper_corrector = 'CN'
                 else:
                    time_stepper_corrector = 'BDF2'
+
+                #Because of bad coding, dirichlet_BC only work here for fixed dt
+                if dt_option == 'CFL':
+                   if rad_BC.has_mms_func:
+                      raise NotImplementedError("For 1 cycle, BDF2 does not work" \
+                           " with MMS, time-dependent radiation boundaries")
             
              # take time step with MUSCL-Hancock
              hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
@@ -444,14 +477,14 @@ def runNonlinearTransient(mesh, problem_type,
                 gamma_value = gamma_value,
                 cv_value=cv_value)
 
-       # compute balance
-       if check_balance and (time_stepper != 'BDF2' or time_index>1):
-          bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
-          bal.computeBalance(rad_BC=rad_BC, hydro_old=hydro_old,
-             hydro_new=hydro_new, rad_old=rad_old, rad_new=rad_new,
-             hydro_older=hydro_older, rad_older=rad_older,
-             hydro_F_right=hydro_F_right, hydro_F_left=hydro_F_left, 
-             src_totals=src_totals, cx_new=cx_new,write=True)
+             # compute balance
+             if check_balance and (time_stepper != 'BDF2' or time_index>1):
+                bal = BalanceChecker(mesh, problem_type, time_stepper, dt)
+                bal.computeBalance(rad_BC=rad_BC, hydro_old=hydro_old,
+                   hydro_new=hydro_new, rad_old=rad_old, rad_new=rad_new,
+                   hydro_older=hydro_older, rad_older=rad_older,
+                   hydro_F_right=hydro_F_right, hydro_F_left=hydro_F_left, 
+                   src_totals=src_totals, cx_new=cx_new,write=True)
 
        # save older solutions
        cx_older  = deepcopy(cx_old)
@@ -489,61 +522,64 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, rad_BC,
    psim_src=None, psip_src=None, mom_src=None, E_src=None, t_old=None, Qpsi_old=None, Qmom_old=None, Qerg_old=None,
    Qpsi_older=None, Qmom_older=None, Qerg_older=None, slope_limiter=None):
 
-       # compute new extraneous sources
-       Qpsi_new, Qmom_new, Qerg_new, Qrho_new = computeExtraneousSources(
-          psim_src, psip_src, mom_src, E_src, mesh, t_old+dt, rho_src=rho_src)
+    # compute new extraneous sources
+    Qpsi_new, Qmom_new, Qerg_new, Qrho_new = computeExtraneousSources(
+       psim_src, psip_src, mom_src, E_src, mesh, t_old+dt, rho_src=rho_src)
 
-       # update hydro BC
-       hydro_BC.update(states=hydro_old, t=t_old)
+    # update hydro BC
+    hydro_BC.update(states=hydro_old, t=t_old)
 
-       # update radiation boundary condition if necessary 
-       rad_BC.update(t=t_old+dt)
+    # update radiation boundary condition if necessary 
+    rad_BC.update(t_new=t_old+dt, t_old=t_old, t_older=t_old-dt)
 
-       # compute slopes
-       slopes_old = HydroSlopes(hydro_old, bc=hydro_BC, limiter=slope_limiter)
+    # compute slopes
+    slopes_old = HydroSlopes(hydro_old, bc=hydro_BC, limiter=slope_limiter)
 
-       # if there is no material motion, then the homogeneous hydro solution
-       # should be equal to the old hydro solution
-       hydro_star = deepcopy(hydro_old)
+    # if there is no material motion, then the homogeneous hydro solution
+    # should be equal to the old hydro solution
+    hydro_star = deepcopy(hydro_old)
 
-       # perform nonlinear solve
-       hydro_new, rad_new, cx_new, e_rad_new = nonlinearSolve(
-          mesh         = mesh,
-          time_stepper = time_stepper,
-          problem_type = 'rad_mat',
-          dt           = dt,
-          rad_BC       = rad_BC,
-          cx_old       = cx_old,
-          cx_older     = cx_older,
-          hydro_old    = hydro_old,
-          hydro_older  = hydro_older,
-          hydro_star   = hydro_star,
-          rad_old      = rad_old,
-          rad_older    = rad_older,
-          slopes_old   = slopes_old,
-          slopes_older = slopes_older,
-          e_rad_old    = e_rad_old,
-          e_rad_older  = e_rad_older,
-          Qpsi_new     = Qpsi_new,
-          Qmom_new     = Qmom_new,
-          Qerg_new     = Qerg_new,
-          Qpsi_old     = Qpsi_old,
-          Qmom_old     = Qmom_old,
-          Qerg_old     = Qerg_old,
-          Qpsi_older   = Qpsi_older,
-          Qmom_older   = Qmom_older,
-          Qrho_older   = Qrho_older,
-          Qerg_older   = Qerg_older)
+    # perform nonlinear solve
+    hydro_new, rad_new, cx_new, e_rad_new = nonlinearSolve(
+       mesh         = mesh,
+       time_stepper = time_stepper,
+       problem_type = 'rad_mat',
+       dt           = dt,
+       rad_BC       = rad_BC,
+       cx_old       = cx_old,
+       cx_older     = cx_older,
+       hydro_old    = hydro_old,
+       hydro_older  = hydro_older,
+       hydro_star   = hydro_star,
+       rad_old      = rad_old,
+       rad_older    = rad_older,
+       slopes_old   = slopes_old,
+       slopes_older = slopes_older,
+       e_rad_old    = e_rad_old,
+       e_rad_older  = e_rad_older,
+       Qpsi_new     = Qpsi_new,
+       Qmom_new     = Qmom_new,
+       Qerg_new     = Qerg_new,
+       Qpsi_old     = Qpsi_old,
+       Qmom_old     = Qmom_old,
+       Qerg_old     = Qerg_old,
+       Qpsi_older   = Qpsi_older,
+       Qmom_older   = Qmom_older,
+       Qrho_older   = Qrho_older,
+       Qerg_older   = Qerg_older)
 
-       # add up sources for entire time step for balance checker
-       src_totals =  computeMMSSrcTotal(mesh,dt,time_stepper,
-         Qmom_new=Qmom_new,Qmom_old=Qmom_old,Qmom_older=Qmom_older,
-         Qpsi_new=Qpsi_new,Qpsi_old=Qpsi_old,Qpsi_older=Qpsi_older,
-         Qerg_new=Qerg_new,Qerg_old=Qerg_old,Qerg_older=Qerg_older,
-         Qrho_new=Qrho_new,Qrho_old=Qrho_old,Qrho_older=Qrho_older)
+    # add up sources for entire time step for balance checker
+    src_totals =  computeMMSSrcTotal(mesh,dt,time_stepper,
+      Qmom_new=Qmom_new,Qmom_old=Qmom_old,Qmom_older=Qmom_older,
+      Qpsi_new=Qpsi_new,Qpsi_old=Qpsi_old,Qpsi_older=Qpsi_older,
+      Qerg_new=Qerg_new,Qerg_old=Qerg_old,Qerg_older=Qerg_older,
+      Qrho_new=Qrho_new,Qrho_old=Qrho_old,Qrho_older=Qrho_older)
 
-       return hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
-          Qpsi_new, Qmom_new, Qerg_new, Qrho_new, src_totals
+    #Store the radiation flux values if necessary
+    rad_BC.storeAllIncidentFluxes(rad_new, rad_old=rad_old, rad_older=rad_older)
+
+    return hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
+       Qpsi_new, Qmom_new, Qerg_new, Qrho_new, src_totals
 
 
 ## Takes time step with MUSCL-Hancock.
@@ -601,8 +637,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
    Qpsi_half, Qmom_half, Qerg_half, Qrho_half = computeExtraneousSources(
       psim_src, psip_src, mom_src, E_src, mesh, t_old+0.5*dt, rho_src=rho_src)
 
-   #update rad BC to be at t+1/2
-   rad_BC.update(t=t_old+0.5*dt)
+   #update rad BC to be at t+1/2, keep old at start of time step
+   rad_BC.update(t_new=t_old+0.5*dt, t_old=t_old)
 
    # perform nonlinear solve
    hydro_half, rad_half, cx_half, e_rad_half = nonlinearSolve(
@@ -629,7 +665,6 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
       Qmom_older   = Qmom_older, # this is a dummy argument
       Qerg_older   = Qerg_older, # this is a dummy argument
       verbosity    = verbosity)
-
 
 
    if debug_mode:
@@ -666,8 +701,11 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
    Qpsi_new, Qmom_new, Qerg_new, Qrho_new = computeExtraneousSources(
       psim_src, psip_src, mom_src, E_src, mesh, t_old+dt, rho_src=rho_src)
 
-   #update rad BC to be at end of time step
-   rad_BC.update(t=t_old+dt)
+   #update rad BC to be at end of time step for implicit terms, old term is
+   #kept at beginning of time step. NOTE IF BDF2 in play, here we have assumed
+   #That you are using a step back of twice the size of dt. It is better
+   #to just use periodic BC 
+   rad_BC.update(t_new=t_old+dt, t_old=t_old, t_older=t_old-dt)
 
    # perform nonlinear solve
    hydro_new, rad_new, cx_new, e_rad_new = nonlinearSolve(
@@ -715,6 +753,10 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
          Qpsi_new=Qpsi_new,Qpsi_old=Qpsi_old,Qpsi_older=Qpsi_older,
          Qerg_new=Qerg_new,Qerg_old=Qerg_old,Qerg_older=Qerg_older,
          Qrho_new=Qrho_new,Qrho_old=Qrho_old,Qrho_older=Qrho_older)
+
+   #Store the incident fluxes on boundary for computing balance
+   rad_BC.storeAllIncidentFluxes(rad_new, rad_old=rad_old, rad_older=rad_older)
+   
 
    if verbosity > 1:
       print ""

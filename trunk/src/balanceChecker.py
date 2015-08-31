@@ -79,6 +79,8 @@ class BalanceChecker:
         psi_L_old, psi_R_old = rad_BC.getOldIncidentFluxes()
         psi_L_older, psi_R_older = rad_BC.getOlderIncidentFluxes()
 
+
+
         #assume uniform volume
         vol = self.mesh.getElement(0).dx
         dt  = self.dt
