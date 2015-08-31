@@ -39,17 +39,6 @@ class TestRadHydroShock(unittest.TestCase):
       mesh_center = x_start + 0.5*width
       mesh = Mesh(n_elems, width, x_start=x_start)
 
-      # compute radiation BC; assumes BC is independent of time
-      Erad_left = 1.372E-06
-      Erad_right = 2.7955320762182542e-06
-      c = GC.SPD_OF_LGT
-      # NOTE: What is the justification for this? Does Jarrod assume Fr = 0?
-      psi_left  = 0.5*c*Erad_left  
-      psi_right = 0.5*c*Erad_right
-
-      #Create BC object
-      rad_BC = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
-      
       # gamma constant
       gam = 5.0/3.0
  
@@ -68,13 +57,15 @@ class TestRadHydroShock(unittest.TestCase):
          u1     = 1.4055888445772469e-01
          e1     = E1/rho1 - 0.5*u1*u1
          T1     = 0.1
+         Erad_left = 1.372E-06
 
          # material 2 IC
-         rho2 = 1.2973213452231311
+         rho2   = 1.2973213452231311
          E2     = 2.6753570531538713e-002
          u2     = 1.0834546504247138e-001
          e2     = E2/rho2 - 0.5*u2*u2
          T2     = 1.1947515210501813e-001
+         Erad_right = 2.7955320762182542e-06
 
          # temperature plot filename
          test_filename = "radshock_mach1.2.pdf"
@@ -86,6 +77,7 @@ class TestRadHydroShock(unittest.TestCase):
          u1     = 2.3426480742954117e-001
          e1     = E1/rho1 - 0.5*u1*u1
          T1     = 0.1
+         Erad_left = 1.372E-06
 
          # material 2 IC
          rho2   = 2.2860748989303659e+000
@@ -93,6 +85,7 @@ class TestRadHydroShock(unittest.TestCase):
          u2     = 1.0247468599526272e-001
          e2     = E2/rho2 - 0.5*u2*u2
          T2     = 2.0775699953301918e-001
+         Erad_right = 2.5560936967521927e-005
 
          # temperature plot filename
          test_filename = "radshock_mach2.pdf"
@@ -104,6 +97,7 @@ class TestRadHydroShock(unittest.TestCase):
          u1     = 5.8566201857385289e+000
          e1     = E1/rho1 - 0.5*u1*u1
          T1     = 0.1
+         Erad_left = 1.372E-06
 
          # material 2 IC
          rho2   = 6.5189217901173153e+000
@@ -111,6 +105,7 @@ class TestRadHydroShock(unittest.TestCase):
          u2     = 8.9840319830453630e-001
          e2     = E2/rho2 - 0.5*u2*u2
          T2     = 8.5515528368625038e+000
+         Erad_right = 7.3372623010289956e+001
 
          # temperature plot filename
          test_filename = "radshock_mach50.pdf"
@@ -118,6 +113,15 @@ class TestRadHydroShock(unittest.TestCase):
       else:
          raise NotImplementedError("Invalid test case")
          
+      # compute radiation BC; assumes BC is independent of time
+      c = GC.SPD_OF_LGT
+      # NOTE: What is the justification for this? Does Jarrod assume Fr = 0?
+      psi_left  = 0.5*c*Erad_left  
+      psi_right = 0.5*c*Erad_right
+
+      #Create BC object
+      rad_BC = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
+      
 
       # construct cross sections and hydro IC
       cross_sects = list()

@@ -96,6 +96,23 @@ class HydroSlopes:
             # compute un-limited slope
             del_i = 0.5*(1.+omega)*del_L + 0.5*(1.-omega)*del_R
    
+            # compute ratio of slopes, avoiding division by zero
+            if abs(del_R) < 1.0e-15:
+                if abs(del_L) < 1.0e-15:
+                    r = 1.0
+                else:
+                    r = -1.
+            else:
+                r = del_L/del_R
+
+            # compute zeta_R, used by several limiters
+            beta = 1.
+            den = 1.-omega+(1.+omega)*r
+            if abs(den) < 1.0e-15:
+                zeta_R = 1.0e15 # arbitrary large number, just needs to be > 2
+            else:
+                zeta_R = 2.*beta/den
+
             # compute limited slope
             #---------------------------------------------
 
@@ -104,25 +121,36 @@ class HydroSlopes:
 
                 del_i = minMod(del_R,del_L)
 
+            # MINBEE limiter
+            elif self.limiter == "minbee":
+
+                if r <= 0.0 or isinf(r):
+                    zeta = 0.0
+                elif r <= 1.0:
+                    zeta = r
+                else:
+                    zeta = min(1.0,zeta_R)
+                del_i = zeta*del_i
+
+            # SUPERBEE limiter
+            elif self.limiter == "superbee":
+
+                if r <= 0.0 or isinf(r):
+                    zeta = 0.0
+                elif r <= 0.5:
+                    zeta = 2.0*r
+                elif r <= 1.0:
+                    zeta = 1.0
+                else:
+                    zeta = min(min(r,zeta_R),2.0)
+                del_i = zeta*del_i
+
             # vanLeer limiter
             elif self.limiter == "vanleer":
 
-                beta = 1.
-
-                #Catch if divide by zero
-                if abs(del_R) < 1.0e-15: #0.000000001*(u[i]+0.00001):
-                    if abs(del_L) < 1.0e-15: #0.000000001*(u[i]+0.00001):
-                        r = 1.0
-                    else:
-                        r = -1.
-                else:
-                    r = del_L/del_R
-                        
-                if r < 0.0 or isinf(r):
+                if r <= 0.0 or isinf(r):
                     del_i = 0.0
                 else:
-
-                    zeta_R = 2.*beta/(1.-omega+(1.+omega)*r)
                     zeta =  min(2.*r/(1.+r), zeta_R)
                     del_i = zeta*del_i
             
