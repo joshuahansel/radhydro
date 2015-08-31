@@ -7,7 +7,7 @@ import sys
 sys.path.append('../src')
 
 # symbolic math packages
-from sympy import symbols, exp, sin, pi, sympify, cos
+from sympy import symbols, exp, sin, pi, sympify, cos, diff
 from sympy.utilities.lambdify import lambdify
 
 # numpy
@@ -28,6 +28,7 @@ from transient import runNonlinearTransient
 from hydroBC import HydroBC
 from radBC import RadBC
 import globalConstants as GC
+import radUtilities as RU
 
 ## Derived unittest class to test the MMS source creator functions
 ##
@@ -47,6 +48,7 @@ class TestRadHydroMMS(unittest.TestCase):
       gamma_value = 1.4
       sig_s = 1.0
       sig_a = 1000.0
+      sig_t = sig_s + sig_a
       
       # create solution for thermodynamic state and flow field
  #     rho = sympify('4.0')
@@ -58,10 +60,20 @@ class TestRadHydroMMS(unittest.TestCase):
       e = p/(rho*(gamma_value-1.))
       E = 0.5*rho*u*u + rho*e
       
-      # create solution for radiation field
-      rad_scale = 2*c
-      psim = rad_scale*(sin(2*pi*x - t))
-      psip = 2*rad_scale*(cos(2*pi*x - t))
+      # create solution for radiation field based on solution for F 
+      # that is the leading order diffusion limit solution
+      a = GC.RAD_CONSTANT
+      c = GC.SPD_OF_LGT
+      mu = RU.mu["+"]
+
+      #Equilibrium diffusion solution
+      T = e/cv_value
+      Er = a*T**4
+      Fr = -1./(3.*sig_t)*diff(Er*c,x) + 4./3.*Er*u
+
+      #Form psi+ and psi- from Fr and Er
+      psip = (Er*c*mu + Fr)/(2.*mu)
+      psim = (Er*c*mu - Fr)/(2.*mu)
       
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
