@@ -12,6 +12,7 @@ from sympy.utilities.lambdify import lambdify
 
 # numpy
 import numpy as np
+import math
 
 # unit test package
 import unittest
@@ -55,8 +56,8 @@ class TestRadHydroMMS(unittest.TestCase):
  #     u   = sympify('1.0')
  #     E   = sympify('10.0')
       rho = 2. + sin(2*pi*x-t)
-      u   = 2. + cos(2*pi*x-t)
-      p   = 2. + cos(2*pi*x-t)
+      u   = 2. + cos(2*pi*x+t)
+      p   = 2. + cos(2*pi*x+t)
       e = p/(rho*(gamma_value-1.))
       E = 0.5*rho*u*u + rho*e
       
@@ -71,7 +72,6 @@ class TestRadHydroMMS(unittest.TestCase):
       #Form psi+ and psi- from Fr and Er
       psip = (Er*c*mu + Fr)/(2.*mu)
       psim = (Er*c*mu - Fr)/(2.*mu)
-      
 
       # create functions for exact solutions
       substitutions = dict()
@@ -132,7 +132,7 @@ class TestRadHydroMMS(unittest.TestCase):
 
       # transient options
       t_start  = 0.0
-      t_end = pi
+      t_end = 0.000001*math.pi
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
