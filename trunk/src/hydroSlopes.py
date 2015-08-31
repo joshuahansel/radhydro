@@ -121,6 +121,11 @@ class HydroSlopes:
 
                 del_i = minMod(del_R,del_L)
 
+            elif self.limiter == "double-minmod":
+             
+                #Implemented from McClarren Lowrie paper in JCP 227 (2008) 9711-9726
+                del_i = minMod(2*del_R,2*del_L)
+
             # MINBEE limiter
             elif self.limiter == "minbee":
 

@@ -143,11 +143,12 @@ def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, filename='scalarFlux.p
 
 ## Plot arbitrary radiation density
 #
-def plotRadErg(mesh, Er_edge, save=False, filename='Radiation.pdf',
+def plotRadErg(mesh, Er_edge, Fr_edge=None, exact_Fr=None, save=False, filename='Radiation.pdf',
         exact_Er=None, print_values=False):
 
    # create new figure
    plt.figure()
+   plt.subplot(2,1,1)
 
    # create x-points
    x = mesh.getCellCenters()
@@ -158,7 +159,8 @@ def plotRadErg(mesh, Er_edge, save=False, filename='Radiation.pdf',
    # plot
    plt.rc('text', usetex=True)         # use tex to generate text
    plt.rc('font', family='sans-serif') # use sans-serif font family
-   plt.plot(x, Er, 'r-', label='Numerical')
+   plt.plot(x, Er, 'r-', label='Numerical $E_r$')
+   plt.legend(loc='best')
 
    # annotations
    plt.xlabel('$x$')
@@ -167,19 +169,38 @@ def plotRadErg(mesh, Er_edge, save=False, filename='Radiation.pdf',
    #plot the exact 
    if exact_Er != None:
 
-       plt.plot(x, exact_Er, "*--b", label='Exact')
+       plt.plot(x, exact_Er, "*--b", label='Exact $E_r$')
 
    if exact_Er == None:
  
        exact_Er = [0.0 for i in Er]
 
- #  exact_Er = list(exact_Er)
- #  Er = list(Er)
- #  y1 = min( min(exact_Er), min(Er))
- #  y2 = max( max(exact_Er), max(Er))
+   if Fr_edge != None:
+   
+      Fr = computeAverageValues(Fr_edge)
+      plt.subplot(2,1,2)
 
+      # plot
+      
+      plt.rc('text', usetex=True)         # use tex to generate text
+      plt.rc('font', family='sans-serif') # use sans-serif font family
+      plt.plot(x, Fr, 'r-', label='Numerical $F_r$')
+
+      if exact_Fr != None:
+
+          plt.plot(x, exact_Fr, "*--b", label='Exact $F_r$')
+
+      if exact_Fr == None:
     
- #  plt.axis([0.0, 1.0,0.99*float(y1),1.01*float(y2)])
+          exact_Fr = [0.0 for i in Fr]
+
+    #  exact_Er = list(exact_Er)
+    #  Er = list(Er)
+    #  y1 = min( min(exact_Er), min(Er))
+    #  y2 = max( max(exact_Er), max(Er))
+
+       
+    #  plt.axis([0.0, 1.0,0.99*float(y1),1.01*float(y2)])
 
 
    plt.legend(loc='best')
