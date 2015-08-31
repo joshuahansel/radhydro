@@ -40,7 +40,7 @@ class TestRadHydroMMS(unittest.TestCase):
    def test_RadHydroMMS(self):
       
       # declare symbolic variables
-      x, t, alpha, c = symbols('x t alpha c')
+      x, t, alpha, c, a, mu  = symbols('x t alpha c a mu')
       
       # numeric values
       alpha_value = 0.01
@@ -49,22 +49,19 @@ class TestRadHydroMMS(unittest.TestCase):
       sig_s = 1.0
       sig_a = 1000.0
       sig_t = sig_s + sig_a
-      
+
       # create solution for thermodynamic state and flow field
  #     rho = sympify('4.0')
  #     u   = sympify('1.0')
  #     E   = sympify('10.0')
-      rho = 2. + sin(2*pi*x+t)
-      u   = 2. + cos(2*pi*x-t) 
-      p   = 2. + cos(2*pi*x+t) 
+      rho = 2. + sin(2*pi*x-t)
+      u   = 2. + cos(2*pi*x-t)
+      p   = 2. + cos(2*pi*x-t)
       e = p/(rho*(gamma_value-1.))
       E = 0.5*rho*u*u + rho*e
       
       # create solution for radiation field based on solution for F 
       # that is the leading order diffusion limit solution
-      a = GC.RAD_CONSTANT
-      c = GC.SPD_OF_LGT
-      mu = RU.mu["+"]
 
       #Equilibrium diffusion solution
       T = e/cv_value
@@ -75,6 +72,26 @@ class TestRadHydroMMS(unittest.TestCase):
       psip = (Er*c*mu + Fr)/(2.*mu)
       psim = (Er*c*mu - Fr)/(2.*mu)
       
+
+      # create functions for exact solutions
+      substitutions = dict()
+      substitutions['alpha'] = alpha_value
+      substitutions['c']     = GC.SPD_OF_LGT
+      substitutions['a']     = GC.RAD_CONSTANT
+      substitutions['mu']    = RU.mu["+"]
+      rho = rho.subs(substitutions)
+      u   = u.subs(substitutions)
+      mom = rho*u
+      E   = E.subs(substitutions)
+      psim = psim.subs(substitutions)
+      psip = psip.subs(substitutions)
+      rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy")
+      u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy")
+      mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy")
+      E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy")
+      psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy")
+      psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
+
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
          rho           = rho,
@@ -89,23 +106,6 @@ class TestRadHydroMMS(unittest.TestCase):
          alpha_value   = alpha_value,
          display_equations = True)
 
-      # create functions for exact solutions
-      substitutions = dict()
-      substitutions['alpha'] = alpha_value
-      substitutions['c']     = GC.SPD_OF_LGT
-      rho = rho.subs(substitutions)
-      u   = u.subs(substitutions)
-      mom = rho*u
-      E   = E.subs(substitutions)
-      psim = psim.subs(substitutions)
-      psip = psip.subs(substitutions)
-      rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy")
-      u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy")
-      mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy")
-      E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy")
-      psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy")
-      psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
-      
       # create uniform mesh
       n_elems = 50
       width = 1.0
@@ -132,8 +132,7 @@ class TestRadHydroMMS(unittest.TestCase):
 
       # transient options
       t_start  = 0.0
-#      t_end = 0.005
-      t_end = 0.02
+      t_end = pi
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
