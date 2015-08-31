@@ -28,6 +28,9 @@ class TestRadHydroShock(unittest.TestCase):
    def tearDown(self):
       pass
    def test_RadHydroShock(self):
+
+      # test case
+      test_case = "mach2" # mach1.2 mach2 mach50
       
       # create uniform mesh
       n_elems = 100
@@ -50,25 +53,71 @@ class TestRadHydroShock(unittest.TestCase):
       # gamma constant
       gam = 5.0/3.0
  
-      # material 1 properties and IC, Table 6.1 and 6.2
+      # material 1 and 2 properties: Table 6.1
       sig_a1 = 390.71164263502122
       sig_s1 = 8.5314410158161809E+2-sig_a1
       c_v1   = 1.2348000000000001e-01
-      rho1   = 1.0
-      E1     = 2.2226400000000000e-02
-      u1     = 1.4055888445772469e-01
-      e1     = E1/rho1 - 0.5*u1*u1
-      T1     = 0.1
-
-      # material 2 properties and IC, Table 6.1 and 6.2
       sig_a2 = sig_a1
       sig_s2 = sig_s1
-      rho2   = 1.2973213452231311
       c_v2   = c_v1
-      E2     = 2.6753570531538713e-002
-      u2     = 1.0834546504247138e-001
-      e2     = E2/rho2 - 0.5*u2*u2
-      T2     = 1.1947515210501813e-001
+
+      if test_case == "mach1.2": # Mach 1.2 problem: Table 6.2
+         # material 1 IC
+         rho1   = 1.0
+         E1     = 2.2226400000000000e-02
+         u1     = 1.4055888445772469e-01
+         e1     = E1/rho1 - 0.5*u1*u1
+         T1     = 0.1
+
+         # material 2 IC
+         rho2 = 1.2973213452231311
+         E2     = 2.6753570531538713e-002
+         u2     = 1.0834546504247138e-001
+         e2     = E2/rho2 - 0.5*u2*u2
+         T2     = 1.1947515210501813e-001
+
+         # temperature plot filename
+         test_filename = "radshock_mach1.2.pdf"
+
+      elif test_case == "mach2": # Mach 2 problem: Table 6.3
+         # material 1 IC
+         rho1   = 1.0
+         E1     = 3.9788000000000004e-002
+         u1     = 2.3426480742954117e-001
+         e1     = E1/rho1 - 0.5*u1*u1
+         T1     = 0.1
+
+         # material 2 IC
+         rho2   = 2.2860748989303659e+000
+         E2     = 7.0649692950433357e-002
+         u2     = 1.0247468599526272e-001
+         e2     = E2/rho2 - 0.5*u2*u2
+         T2     = 2.0775699953301918e-001
+
+         # temperature plot filename
+         test_filename = "radshock_mach2.pdf"
+
+      elif test_case == "mach50": # Mach 50 problem: Table 6.4
+         # material 1 IC
+         rho1   = 1.0
+         E1     = 1.7162348000000001e+001
+         u1     = 5.8566201857385289e+000
+         e1     = E1/rho1 - 0.5*u1*u1
+         T1     = 0.1
+
+         # material 2 IC
+         rho2   = 6.5189217901173153e+000
+         E2     = 9.5144308747326214e+000
+         u2     = 8.9840319830453630e-001
+         e2     = E2/rho2 - 0.5*u2*u2
+         T2     = 8.5515528368625038e+000
+
+         # temperature plot filename
+         test_filename = "radshock_mach50.pdf"
+
+      else:
+         raise NotImplementedError("Invalid test case")
+         
 
       # construct cross sections and hydro IC
       cross_sects = list()
@@ -136,7 +185,8 @@ class TestRadHydroShock(unittest.TestCase):
          # plot hydro solution
          plotHydroSolutions(mesh, hydro_new, exact=hydro_exact)
 
-         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=False)
+         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=False,
+            save=True, filename=test_filename)
 
 # run main function from unittest module
 if __name__ == '__main__':
