@@ -74,7 +74,7 @@ def createMMSSourceFunctionsRadOnly(psim, psip,
    # make substitutions
    Qpsim_sub = Qpsim.subs(substitutions)
    Qpsip_sub = Qpsip.subs(substitutions)
-   
+
    # create MMS source functions
    psim_f = lambdify((symbols('x'),symbols('t')), Qpsim_sub, "numpy")
    psip_f = lambdify((symbols('x'),symbols('t')), Qpsip_sub, "numpy")
