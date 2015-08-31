@@ -92,7 +92,7 @@ def radiationSolveSS(mesh, cross_x, Q, rad_BC, diag_add_term=0.0, implicit_scale
           if rad_BC.bc_type == 'periodic':
              rhs[iLplus] = 0.0    #If periodic no term to add 
              iPerPlus = getIndex(mesh.n_elems-1,"R","+") #periodic outflow index
-             row[iPerPlus] = 2.0*beta*mu["+"]/h
+             row[iPerPlus] = -2.0*beta*mu["+"]/h #negative because on LHS of eq
           else:
              rhs[iLplus] = 2.0*beta*mu["+"]/h*bc_psi_left
        else:
@@ -115,7 +115,7 @@ def radiationSolveSS(mesh, cross_x, Q, rad_BC, diag_add_term=0.0, implicit_scale
           if rad_BC.bc_type == 'periodic':
              rhs[iRminus] = 0.0
              iPerMinus = getIndex(0,"L","-")
-             row[iPerMinus] = -2.0*beta*mu["-"]/h
+             row[iPerMinus] = 2.0*beta*mu["-"]/h #no negative because on LHS of eq
           else:
              rhs[iRminus] = -2.0*beta*mu["-"]/h*bc_psi_right
        else:

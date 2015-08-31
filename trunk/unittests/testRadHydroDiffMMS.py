@@ -46,24 +46,22 @@ class TestRadHydroMMS(unittest.TestCase):
       cv_value    = 1.0
       gamma_value = 1.4
       sig_s = 1.0
-      sig_a = 1.0
+      sig_a = 1000.0
       
       # create solution for thermodynamic state and flow field
-      rho = sympify('4.0')
-      u   = sympify('1.0')
-      E   = sympify('10.0')
- #     rho = 2. + sin(2*pi*x+t)
- #     u   = 2. + cos(2*pi*x-t) 
- #     p   = 2. + cos(2*pi*x+t) 
- #     e = p/(rho*(gamma_value-1.))
- #     E = 0.5*rho*u*u + rho*e
+ #     rho = sympify('4.0')
+ #     u   = sympify('1.0')
+ #     E   = sympify('10.0')
+      rho = 2. + sin(2*pi*x+t)
+      u   = 2. + cos(2*pi*x-t) 
+      p   = 2. + cos(2*pi*x+t) 
+      e = p/(rho*(gamma_value-1.))
+      E = 0.5*rho*u*u + rho*e
       
       # create solution for radiation field
-      rad_scale = 50*c
-      psim = rad_scale*(2*t*sin(pi*(1-x))+2+0.1*t)
-      psip = rad_scale*(t*sin(pi*x)+2+0.1*t)
-      psip =rad_scale
-      psim =2.*rad_scale
+      rad_scale = 2*c
+      psim = rad_scale*(sin(2*pi*x - t))
+      psip = 2*rad_scale*(cos(2*pi*x - t))
       
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
@@ -123,7 +121,7 @@ class TestRadHydroMMS(unittest.TestCase):
       # transient options
       t_start  = 0.0
 #      t_end = 0.005
-      t_end = 0.000002
+      t_end = 0.02
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -132,7 +130,7 @@ class TestRadHydroMMS(unittest.TestCase):
          verbosity = 0
 
       #slope limiter
-      limiter = 'none'
+      limiter = 'vanleer'
       
       # run the rad-hydro transient
       rad_new, hydro_new = runNonlinearTransient(

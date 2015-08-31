@@ -95,8 +95,9 @@ class HydroSlopes:
 
             # compute un-limited slope
             del_i = 0.5*(1.+omega)*del_L + 0.5*(1.-omega)*del_R
-
+   
             # compute limited slope
+            #---------------------------------------------
 
             # minmod limiter
             if self.limiter == "minmod":
@@ -124,7 +125,7 @@ class HydroSlopes:
                     zeta_R = 2.*beta/(1.-omega+(1.+omega)*r)
                     zeta =  min(2.*r/(1.+r), zeta_R)
                     del_i = zeta*del_i
-
+            
             # no limiter; Lax-Wendroff
             elif self.limiter == "none":
                 del_i = del_i
