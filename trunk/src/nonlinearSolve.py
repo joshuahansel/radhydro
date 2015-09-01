@@ -50,8 +50,6 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, rad_BC,
        # increment iteration counter
        k += 1
 
-       print "This is the time stepper non-linear solve recieved", time_stepper
-
        # If MMS, may need to update rho
        updateDensity(
              mesh         = mesh,

@@ -786,6 +786,8 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
 def computeExtraneousSources(psim_src, psip_src, mom_src, E_src, mesh, t,
         rho_src=None):
 
+   print "Computing MMS sources..."
+
    # compute radiation extraneous source
    if psim_src != None and psip_src != None:
       Qpsi = computeRadiationExtraneousSource(psim_src, psip_src, mesh, t)

@@ -45,25 +45,22 @@ class TestRadHydroMMS(unittest.TestCase):
       x, t, alpha, c = symbols('x t alpha c')
 
       #Cycles for time convergence
-      n_cycles = 4
+      n_cycles = 1
       
       # numeric values
       alpha_value = 0.01
       cv_value    = 1.0
       gamma_value = 1.4
       sig_s = 1.0
-      sig_a = 1.0
+      sig_a = 10.0
       sig_t = sig_s + sig_a
 
       # create solution for thermodynamic state and flow field
-      rho = sympify('4.0') + 0.1*sin(t)+t
-      u   = sympify('1.0') + 0.1*sin(t)+t
-      E   = sympify('10.0') + 0.1*sin(t)+t
-#      rho = 2. + sin(2*pi*x-t)
-#      u   = 1./rho
-#      p   = 0.5*(2. + cos(2*pi*x-t))
-#      e = p/(rho*(gamma_value-1.))
-#      E = 0.5*rho*u*u + rho*e
+      rho = 2. + sin(2*pi*x-t)
+      u   = 2.  + cos(2*pi*x-t)
+      p   = 0.5*(2. + cos(2*pi*x-t))
+      e = p/(rho*(gamma_value-1.))
+      E = 0.5*rho*u*u + rho*e
       
       # create solution for radiation field based on solution for F 
       # that is the leading order diffusion limit solution
@@ -72,8 +69,8 @@ class TestRadHydroMMS(unittest.TestCase):
       mu = RU.mu["+"]
 
       #Equilibrium diffusion solution
-      Er = sympify(5.0)/c+0.1*sin(t)
-      Fr = sympify(5.0)+0.1*sin(t)
+      Er = (2.+cos(2*pi*x-t))
+      Fr = (2.+cos(2*pi*x-t))*c
       psip = (Er*c*mu + Fr)/(2.*mu)
       psim = (Er*c*mu - Fr)/(2.*mu)
 
@@ -113,7 +110,7 @@ class TestRadHydroMMS(unittest.TestCase):
       psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
 
      
-      dt_value = 0.01
+      dt_value = 0.001
       dt = []
       err = []
     
@@ -121,7 +118,7 @@ class TestRadHydroMMS(unittest.TestCase):
       for cycle in range(n_cycles):
       
           # create uniform mesh
-          n_elems = 5
+          n_elems = 50
           width = 1.0
           mesh = Mesh(n_elems, width)
 
@@ -149,7 +146,7 @@ class TestRadHydroMMS(unittest.TestCase):
 
           # transient options
           t_start  = 0.0
-          t_end = 0.01*math.pi
+          t_end = 0.01
 
           # if run standalone, then be verbose
           if __name__ == '__main__':
@@ -158,18 +155,17 @@ class TestRadHydroMMS(unittest.TestCase):
              verbosity = 0
 
           #slope limiter
-          limiter = 'superbee'
+          limiter = 'none'
           
           # run the rad-hydro transient
           rad_new, hydro_new = runNonlinearTransient(
              mesh         = mesh,
              problem_type = 'rad_hydro',
-           # dt_option    = 'CFL',
-           #  CFL          = 0.5,
-             dt_option    = 'constant',
-             dt_constant  = dt_value,
+             #dt_option    = 'constant',
+             #dt_constant  = dt_value,
+             dt_option     = 'CFL',
+             CFL           = 0.5,
              slope_limiter = limiter,
-             time_stepper = 'BDF2',
              use_2_cycles = True,
              t_start      = t_start,
              t_end        = t_end,
@@ -221,23 +217,28 @@ class TestRadHydroMMS(unittest.TestCase):
          plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),
             exact=hydro_exact)
 
-         # plot hydro solution
-         plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),exact=hydro_exact)
-
          #plot exact and our E_r
          Er_exact_fn = 1./GC.SPD_OF_LGT*(psim + psip)
          Fr_exact_fn = (psip - psim)*RU.mu["+"]
          Er_exact = []
          Fr_exact = []
+         psip_exact = []
+         psim_exact = []
          x = mesh.getCellCenters()
          for xi in x:
              
              substitutions = {'x':xi, 't':t_end}
              Er_exact.append(Er_exact_fn.subs(substitutions))
              Fr_exact.append(Fr_exact_fn.subs(substitutions))
+             psip_exact.append(psip_f(xi,t_end))
+             psim_exact.append(psim_f(xi,t_end))
 
-         plotRadErg(mesh, rad_new.E, rad_new.F, exact_Er=Er_exact, exact_Fr =
+
+         plotRadErg(mesh, rad_new.E, Fr_edge=rad_new.F, exact_Er=Er_exact, exact_Fr =
                Fr_exact)
+
+         plotRadErg(mesh, rad_new.psim, rad_new.psip, exact_Er=psip_exact,
+                 exact_Fr=psim_exact)
 
 # run main function from unittest module
 if __name__ == '__main__':

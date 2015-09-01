@@ -142,7 +142,7 @@ class TestRadHydroMMS(unittest.TestCase):
          verbosity = 0
 
       #slope limiter
-      limiter = 'superbee'
+      limiter = 'double-minmod'
       
       # run the rad-hydro transient
       rad_new, hydro_new = runNonlinearTransient(

@@ -30,7 +30,7 @@ class TestRadHydroShock(unittest.TestCase):
    def test_RadHydroShock(self):
 
       # test case
-      test_case = "mach50" # mach1.2 mach2 mach50
+      test_case = "mach2" # mach1.2 mach2 mach50
       
       # create uniform mesh
       n_elems = 100
