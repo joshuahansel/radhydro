@@ -30,7 +30,7 @@ class TestRadHydroShock(unittest.TestCase):
    def test_RadHydroShock(self):
 
       # test case
-      test_case = "mach50" # mach1.2 mach2 mach50
+      test_case = "mach2" # mach1.2 mach2 mach50
       
       # create uniform mesh
       n_elems = 100
@@ -51,12 +51,12 @@ class TestRadHydroShock(unittest.TestCase):
       c_v2   = c_v1
 
       if test_case == "mach1.2": # Mach 1.2 problem: Table 6.2
+
          # material 1 IC
          rho1   = 1.0
          E1     = 2.2226400000000000e-02
          u1     = 1.4055888445772469e-01
          e1     = E1/rho1 - 0.5*u1*u1
-         T1     = 0.1
          Erad_left = 1.372E-06
 
          # material 2 IC
@@ -64,7 +64,6 @@ class TestRadHydroShock(unittest.TestCase):
          E2     = 2.6753570531538713e-002
          u2     = 1.0834546504247138e-001
          e2     = E2/rho2 - 0.5*u2*u2
-         T2     = 1.1947515210501813e-001
          Erad_right = 2.7955320762182542e-06
 
          # final time
@@ -73,13 +72,16 @@ class TestRadHydroShock(unittest.TestCase):
          # temperature plot filename
          test_filename = "radshock_mach1.2.pdf"
 
+         # temperature plot exact solution filename
+         exact_solution_filename = "mach1.2_exact_solution.csv"
+
       elif test_case == "mach2": # Mach 2 problem: Table 6.3
+
          # material 1 IC
          rho1   = 1.0
          E1     = 3.9788000000000004e-002
          u1     = 2.3426480742954117e-001
          e1     = E1/rho1 - 0.5*u1*u1
-         T1     = 0.1
          Erad_left = 1.372E-06
 
          # material 2 IC
@@ -87,22 +89,28 @@ class TestRadHydroShock(unittest.TestCase):
          E2     = 7.0649692950433357e-002
          u2     = 1.0247468599526272e-001
          e2     = E2/rho2 - 0.5*u2*u2
-         T2     = 2.0775699953301918e-001
          Erad_right = 2.5560936967521927e-005
 
          # final time
-         t_end = 1.0
+         #t_end = 0.5
+         t_end = 0.001
 
-         # temperature plot filename
+         # temperature plot output filename
          test_filename = "radshock_mach2.pdf"
 
+         # temperature plot exact solution filename
+         exact_solution_filename = "mach2_exact_solution.csv"
+
       elif test_case == "mach50": # Mach 50 problem: Table 6.4
+
+         raise NotImplementedError("Mach 50 test requires negativity monitoring," \
+            + "which is not yet implemented.")
+
          # material 1 IC
          rho1   = 1.0
          E1     = 1.7162348000000001e+001
          u1     = 5.8566201857385289e+000
          e1     = E1/rho1 - 0.5*u1*u1
-         T1     = 0.1
          Erad_left = 1.372E-06
 
          # material 2 IC
@@ -110,7 +118,6 @@ class TestRadHydroShock(unittest.TestCase):
          E2     = 9.5144308747326214e+000
          u2     = 8.9840319830453630e-001
          e2     = E2/rho2 - 0.5*u2*u2
-         T2     = 8.5515528368625038e+000
          Erad_right = 7.3372623010289956e+001
 
          # final time
@@ -118,6 +125,9 @@ class TestRadHydroShock(unittest.TestCase):
 
          # temperature plot filename
          test_filename = "radshock_mach50.pdf"
+
+         # temperature plot exact solution filename
+         exact_solution_filename = "mach50_exact_solution.csv"
 
       else:
          raise NotImplementedError("Invalid test case")
@@ -131,7 +141,6 @@ class TestRadHydroShock(unittest.TestCase):
       #Create BC object
       rad_BC = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
       
-
       # construct cross sections and hydro IC
       cross_sects = list()
       hydro_IC = list()
@@ -197,8 +206,10 @@ class TestRadHydroShock(unittest.TestCase):
          # plot hydro solution
          plotHydroSolutions(mesh, hydro_new, exact=hydro_exact)
 
+         # plot material and radiation temperatures
          plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=False,
-            save=True, filename=test_filename)
+            save=True, filename=test_filename,
+            exact_solution_filename=exact_solution_filename)
 
 # run main function from unittest module
 if __name__ == '__main__':

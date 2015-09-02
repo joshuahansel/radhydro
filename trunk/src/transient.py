@@ -160,8 +160,6 @@ def runNonlinearTransient(mesh, problem_type,
 
        # increment time index
        time_index += 1
-       if time_index > 3:
-          break
 
        # if first step, then can't use BDF2
        if time_index == 1 and time_stepper == 'BDF2':

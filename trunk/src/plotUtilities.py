@@ -3,7 +3,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy import array
+from numpy import array, genfromtxt
 import globalConstants as GC
 from matplotlib import rc # for rendering tex in plots
 from radUtilities import computeScalarFlux
@@ -202,7 +202,8 @@ def plotRadErg(mesh, Er_edge, save=False, filename='Radiation.pdf',
 ## Plots hydrodynamic and radiation temperatures
 #
 def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
-        hydro_states=None, exact_Er=None, print_values=False):
+        hydro_states=None, exact_Er=None, print_values=False,
+        exact_solution_filename=None):
 
    # create new figure
    plt.figure()
@@ -215,23 +216,42 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
    a = GC.RAD_CONSTANT
    Tr = [pow(i/a, 0.25) for i in Er]
 
-   # plot
+   # tex and fonts
    plt.rc('text', usetex=True)         # use tex to generate text
    plt.rc('font', family='sans-serif') # use sans-serif font family
-   plt.plot(x, Tr, 'r-', label='$T_r$')
 
-   #if necessary get temperature and plot it
+   # plot material temperature
    if hydro_states != None:
-
        T = [state.getTemperature() for state in hydro_states]
-       plt.plot(x,T,'b-', label='$T_m$')
+       plt.plot(x,T,'bx', label='$T_m$')
     
+   # plot radiation temperature
+   plt.plot(x, Tr, 'r+', label='$T_r$')
+
+   # plot the exact temperatures
+   if exact_solution_filename != None:
+      # read data from csv file
+      exact_data = genfromtxt(exact_solution_filename, delimiter=',')
+      # get x points, 1st column
+      x_exact = exact_data[:,0]
+      # get exact material temperature, 2nd column
+      T_exact = exact_data[:,1]
+      # get exact radiation temperature, 3rd column
+      Tr_exact = exact_data[:,2]
+      # plot exact temperatures
+      plt.plot(x_exact,T_exact,'b-',label='$T_m$, analytic')
+      plt.plot(x_exact,Tr_exact,'r-',label='$T_r$, analytic')
+
    # annotations
    plt.xlabel('$x$')
    plt.ylabel('$T$ (keV)')
    plt.legend(loc='best')
 
-   #plot the exact 
+   # strongly set x-axis limits, keep current y-axis limits
+   x_min = mesh.elements[0].xl
+   x_max = mesh.elements[-1].xr
+   xaxis_min, xaxis_max, yaxis_min, yaxis_max = plt.axis()
+   plt.axis((x_min,x_max,yaxis_min,yaxis_max))
 
    # if print requested
    if print_values:
