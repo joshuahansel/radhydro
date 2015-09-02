@@ -67,7 +67,7 @@ class TestHydroMMS(unittest.TestCase):
       
       # numeric values
       alpha_value = 0.01
-      cv_value    = 1.0
+      cv_value    = 2.0
       gamma_value = 1.4
       sig_s = 0.0
       sig_a = 0.0

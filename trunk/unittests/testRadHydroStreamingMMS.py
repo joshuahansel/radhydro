@@ -41,67 +41,41 @@ class TestRadHydroMMS(unittest.TestCase):
    def test_RadHydroMMS(self):
       
       # declare symbolic variables
-      x, t, alpha, c, a, mu  = symbols('x t alpha c a mu')
+      x, t, alpha, c = symbols('x t alpha c')
       
       # numeric values
       alpha_value = 0.01
+      cv_value    = 1.0
       gamma_value = 1.4
-      cv_value = gamma_value/(gamma_value-1.)
       sig_s = 0.0
-      sig_a = 1000000.0
+      sig_a = 1.0
       sig_t = sig_s + sig_a
 
-      #Want material speeed to be a small fraction of speed of light
-      C = GC.SPD_OF_LGT/1000.
-
       # create solution for thermodynamic state and flow field
-      # Here I have scaled all other variables to match the scaling
-      # of velocity
  #     rho = sympify('4.0')
  #     u   = sympify('1.0')
  #     E   = sympify('10.0')
-      rho = C*(2. + sin(2*pi*x-t))
-      u   = C*(2. + cos(2*pi*x-t))
-      p   = C*0.5*(2. + cos(2*pi*x-t))
+      rho = 2. + sin(2*pi*x-t)
+      u   = 1./rho
+      p   = 0.5*(2. + cos(2*pi*x-t))
       e = p/(rho*(gamma_value-1.))
       E = 0.5*rho*u*u + rho*e
       
       # create solution for radiation field based on solution for F 
       # that is the leading order diffusion limit solution
-
+      a = GC.RAD_CONSTANT
+      c = GC.SPD_OF_LGT
+      mu = RU.mu["+"]
 
       #Equilibrium diffusion solution
       T = e/cv_value
-      Er = a*T**4
-      Fr = -1./(3.*sig_t)*c*diff(Er,x) + sympify('4/3')*Er*u
+      Er = 0.5*(sin(2*pi*x - 10.*t) + 2.)/c
+      Fr = 0.5*(sin(2*pi*x - 10.*t) + 2.)
 
       #Form psi+ and psi- from Fr and Er
       psip = (Er*c*mu + Fr)/(2.*mu)
       psim = (Er*c*mu - Fr)/(2.*mu)
-
-      # create functions for exact solutions
-      substitutions = dict()
-      substitutions['alpha'] = alpha_value
-      substitutions['c']     = GC.SPD_OF_LGT
-      substitutions['a']     = GC.RAD_CONSTANT
-      substitutions['mu']    = RU.mu["+"]
-      rho = rho.subs(substitutions)
-      u   = u.subs(substitutions)
-      mom = rho*u
-      E   = E.subs(substitutions)
-      psim = psim.subs(substitutions)
-      psip = psip.subs(substitutions)
-      rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy")
-      u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy")
-      mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy")
-      E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy")
-      psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy")
-      psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
-
-
-
-
-
+      
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
          rho           = rho,
@@ -116,11 +90,27 @@ class TestRadHydroMMS(unittest.TestCase):
          alpha_value   = alpha_value,
          display_equations = True)
 
+      # create functions for exact solutions
+      substitutions = dict()
+      substitutions['alpha'] = alpha_value
+      substitutions['c']     = GC.SPD_OF_LGT
+      rho = rho.subs(substitutions)
+      u   = u.subs(substitutions)
+      mom = rho*u
+      E   = E.subs(substitutions)
+      psim = psim.subs(substitutions)
+      psip = psip.subs(substitutions)
+      rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy")
+      u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy")
+      mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy")
+      E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy")
+      psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy")
+      psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
+      
       # create uniform mesh
-      n_elems = 100
+      n_elems = 50
       width = 1.0
       mesh = Mesh(n_elems, width)
-
 
       # compute radiation IC
       psi_IC = computeRadiationVector(psim_f, psip_f, mesh, t=0.0)
@@ -133,17 +123,6 @@ class TestRadHydroMMS(unittest.TestCase):
       hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
          rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
-      # Diff length
-      Er = Er.subs(substitutions)
-      Er      = lambdify((symbols('x'),symbols('t')), Er, "numpy")
-      print "---------------------------------------------"
-      print " Diffusion limit info:"
-      print "---------------------------------------------"
-      print "Size in mfp of cell", mesh.getElement(0).dx*sig_t
-      a_inf = hydro_IC[int(0.25*len(hydro_IC))].getSoundSpeed()
-      print "Ratio of radiation energy to kinetic", Er(0.25,0)/(rho_f(0.25,0)*a_inf**2)
-      print "Ratio of speed of light to material sound speed", GC.SPD_OF_LGT/a_inf
-      print "---------------------------------------------"
       # create hydro BC
       hydro_BC = HydroBC(bc_type='periodic', mesh=mesh)
   
@@ -154,7 +133,7 @@ class TestRadHydroMMS(unittest.TestCase):
 
       # transient options
       t_start  = 0.0
-      t_end = 0.01*math.pi
+      t_end = 0.1*math.pi
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -163,14 +142,14 @@ class TestRadHydroMMS(unittest.TestCase):
          verbosity = 0
 
       #slope limiter
-      limiter = 'minmod'
+      limiter = 'double-minmod'
       
       # run the rad-hydro transient
       rad_new, hydro_new = runNonlinearTransient(
          mesh         = mesh,
          problem_type = 'rad_hydro',
          dt_option    = 'CFL',
-         CFL          = 0.3,
+         CFL          = 0.5,
        #  dt_option    = 'constant',
        #  dt_constant  = 0.0002,
          slope_limiter = limiter,
@@ -213,23 +192,15 @@ class TestRadHydroMMS(unittest.TestCase):
          Fr_exact_fn = (psip - psim)*RU.mu["+"]
          Er_exact = []
          Fr_exact = []
-         psip_exact = []
-         psim_exact = []
          x = mesh.getCellCenters()
          for xi in x:
              
              substitutions = {'x':xi, 't':t_end}
              Er_exact.append(Er_exact_fn.subs(substitutions))
              Fr_exact.append(Fr_exact_fn.subs(substitutions))
-             psip_exact.append(psip_f(xi,t_end))
-             psim_exact.append(psim_f(xi,t_end))
 
-
-         plotRadErg(mesh, rad_new.E, Fr_edge=rad_new.F, exact_Er=Er_exact, exact_Fr =
+         plotRadErg(mesh, rad_new.E, rad_new.F, exact_Er=Er_exact, exact_Fr =
                Fr_exact)
-
-         plotRadErg(mesh, rad_new.psim, rad_new.psip, exact_Er=psip_exact,
-                 exact_Fr=psim_exact)
 
 # run main function from unittest module
 if __name__ == '__main__':

@@ -119,7 +119,12 @@ class HydroSlopes:
             # minmod limiter
             if self.limiter == "minmod":
 
-                del_i = minMod(del_R,del_L)
+                del_i = minMod3(del_R,del_L,del_i)
+
+            elif self.limiter == "double-minmod":
+             
+                #Implemented from McClarren Lowrie paper in JCP 227 (2008) 9711-9726
+                del_i = minMod3(2*del_R,2*del_L,del_i)
 
             # MINBEE limiter
             elif self.limiter == "minbee":
@@ -187,4 +192,23 @@ def minMod(a,b):
         return max(a,b)
     else:
         return 0.
+
+# ----------------------------------------------------------------------------------
+## Computes the minmod() function for 3 parameters the minmod slope limiter.
+#
+#  @param[in] a  first value
+#  @param[in] b  second value
+#
+#  @return minmod(a,b)
+#
+def minMod3(a,b,c):
+
+    if a > 0 and b > 0 and c > 0:
+        return min(a,b,c)
+    elif a<0 and b<0 and c < 0:
+        return max(a,b,c)
+    else:
+        return 0.
+
+
 
