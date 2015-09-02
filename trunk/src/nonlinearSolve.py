@@ -86,27 +86,44 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, rad_BC,
              Qmom_old     = Qmom_old,
              Qmom_older   = Qmom_older)
 
-       # Compute E_slopes for use by E_star state
-       # For now it is hardcoded with E_star edge internal energies
-       e_star = []
-       e_old  = []
-       e_older= []
-       for i in xrange(len(hydro_star)):
-          e_star_i = computeHydroInternalEnergies(i,hydro_star[i],slopes_old)
-          e_star.append(e_star_i)
-          e_old_i = computeHydroInternalEnergies(i,hydro_old[i],slopes_old)
-          e_old.append(e_old_i)
-          if hydro_older != None:
-              e_older_i = computeHydroInternalEnergies(i,hydro_older[i],slopes_older)
-              e_older.append(e_older_i)
-
        # Compute E_slopes
-       E_slopes_star = computeTotalEnergySlopes(hydro_star, slopes_old, e_star)
-       E_slopes_old  = computeTotalEnergySlopes(hydro_old,  slopes_old, e_old)
-       E_slopes_older = None
-       if hydro_older != None:
-          E_slopes_older = computeTotalEnergySlopes(hydro_older, slopes_older, e_older)
+       use_hydro_star_slopes = True
+       if use_hydro_star_slopes:
 
+           e_star = []
+           e_old  = []
+           e_older= []
+           for i in xrange(len(hydro_star)):
+              e_star_i = computeHydroInternalEnergies(i,hydro_star[i],slopes_old)
+              e_star.append(e_star_i)
+              e_old_i = computeHydroInternalEnergies(i,hydro_old[i],slopes_old)
+              e_old.append(e_old_i)
+              if hydro_older != None:
+                  e_older_i = computeHydroInternalEnergies(i,hydro_older[i],slopes_older)
+                  e_older.append(e_older_i)
+
+           # Compute E_slopes
+           E_slopes_star = computeTotalEnergySlopes(hydro_star, slopes_old, e_star)
+           E_slopes_old  = computeTotalEnergySlopes(hydro_old,  slopes_old, e_old)
+           E_slopes_old  = slopes_old.erg_slopes
+           E_slopes_older = None
+           if hydro_older != None:
+              E_slopes_older = computeTotalEnergySlopes(hydro_older, slopes_older, e_older)
+              E_slopes_older = slopes_older.erg_slopes
+
+       #Compute E_slopes using the radiation computed values of e
+       else:
+         
+           print E_slopes_star
+            
+           E_slopes_star  = computeTotalEnergySlopes(hydro_star, slopes_old, e_rad_prev)
+           print E_slopes_star
+           raw_input()
+           E_slopes_old   = slopes_old.erg_slopes
+           E_slopes_older = None
+           if hydro_older != None:
+               E_slopes_older = slopes_older.erg_slopes
+    
        # compute QE
        src_handler = QEHandler(mesh, time_stepper)
        QE = src_handler.computeTerm(

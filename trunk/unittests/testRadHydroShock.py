@@ -30,7 +30,7 @@ class TestRadHydroShock(unittest.TestCase):
    def test_RadHydroShock(self):
 
       # test case
-      test_case = "mach2" # mach1.2 mach2 mach50
+      test_case = "mach1.2" # mach1.2 mach2 mach50
       
       # create uniform mesh
       n_elems = 100
@@ -67,7 +67,7 @@ class TestRadHydroShock(unittest.TestCase):
          Erad_right = 2.7955320762182542e-06
 
          # final time
-         t_end = 0.5
+         t_end = 0.7
 
          # temperature plot filename
          test_filename = "radshock_mach1.2.pdf"
@@ -183,8 +183,8 @@ class TestRadHydroShock(unittest.TestCase):
          mesh         = mesh,
          problem_type = 'rad_hydro',
          dt_option    = 'CFL',
-         CFL          = 0.3,
-         use_2_cycles = False,
+         CFL          = 0.6,
+         use_2_cycles = True,
          time_stepper = 'BDF2',
          t_start      = t_start,
          t_end        = t_end,

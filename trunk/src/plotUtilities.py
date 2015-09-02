@@ -160,7 +160,7 @@ def plotS2Erg(mesh, psim_edge, psip_edge, exact_psim=None, save=False, filename=
    plt.rc('text', usetex=True)         # use tex to generate text
    plt.rc('font', family='sans-serif') # use sans-serif font family
    plt.plot(x, psim, 'r-', label='Numerical $\psi^-$')
-   plt.plot(x, psip, 'b-', label='Numerical $\psi^-$')
+   plt.plot(x, psip, 'b-', label='Numerical $\psi^+$')
 
    # annotations
    plt.xlabel('$x$')
