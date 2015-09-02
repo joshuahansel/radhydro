@@ -65,7 +65,6 @@ def createMMSSourceFunctionsRadOnly(psim, psip,
    
    # substitute for all symbols except x and t
    substitutions = dict()
-   substitutions['alpha'] = alpha_value
    substitutions['c']     = GC.SPD_OF_LGT
    substitutions['sigma_s'] = sigma_s_value
    sigma_t_value = sigma_s_value + sigma_a_value

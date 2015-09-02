@@ -141,6 +141,59 @@ def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, filename='scalarFlux.p
    else:
       plt.show()
 
+
+## Plot the angular flux and exact angular flux
+def plotS2Erg(mesh, psim_edge, psip_edge, exact_psim=None, save=False, filename='Radiation.pdf',
+        exact_psip=None, print_values=False):
+
+   # create new figure
+   plt.figure()
+
+   # create x-points
+   x = mesh.getCellCenters()
+
+   # transform array of tuples into array
+   psip = computeAverageValues(psip_edge)
+   psim = computeAverageValues(psim_edge)
+
+   # plot
+   plt.rc('text', usetex=True)         # use tex to generate text
+   plt.rc('font', family='sans-serif') # use sans-serif font family
+   plt.plot(x, psim, 'r-', label='Numerical $\psi^-$')
+   plt.plot(x, psip, 'b-', label='Numerical $\psi^-$')
+
+   # annotations
+   plt.xlabel('$x$')
+   plt.ylabel('$\psi$')
+
+   #plot the exact 
+   if exact_psip != None:
+
+       plt.plot(x, exact_psip, "*r", label='Exact $\psi^+$')
+
+   if exact_psim != None:
+
+       plt.plot(x, exact_psim, "*b", label='Exact $\psi^-$')
+
+   plt.legend(loc='best')
+
+   # if print requested
+ #  if print_values:
+ #     print "  x   E_r    E_r_exact  "
+ #     print "-------------------"
+ #     for i in range(len(x)):
+##
+ #         print "%.12f" % x[i], "%.12f" % Er[i], "%.12f" % T[i]
+
+   
+
+   # save if requested
+   if save:
+      plt.savefig(filename)
+   else:
+      plt.show()
+
+
 ## Plot arbitrary radiation density
 #
 def plotRadErg(mesh, Er_edge, Fr_edge=None, exact_Fr=None, save=False, filename='Radiation.pdf',
@@ -160,7 +213,6 @@ def plotRadErg(mesh, Er_edge, Fr_edge=None, exact_Fr=None, save=False, filename=
    plt.rc('text', usetex=True)         # use tex to generate text
    plt.rc('font', family='sans-serif') # use sans-serif font family
    plt.plot(x, Er, 'r-', label='Numerical $E_r$')
-   plt.legend(loc='best')
 
    # annotations
    plt.xlabel('$x$')
@@ -170,6 +222,7 @@ def plotRadErg(mesh, Er_edge, Fr_edge=None, exact_Fr=None, save=False, filename=
    if exact_Er != None:
 
        plt.plot(x, exact_Er, "*--b", label='Exact $E_r$')
+   plt.legend(loc='best')
 
    if exact_Er == None:
  
@@ -180,15 +233,19 @@ def plotRadErg(mesh, Er_edge, Fr_edge=None, exact_Fr=None, save=False, filename=
       Fr = computeAverageValues(Fr_edge)
       plt.subplot(2,1,2)
 
+      #Divide by spd of light for comparison to E magnitude
+      for i in range(len(Fr)):
+         Fr[i] /= GC.SPD_OF_LGT
+         exact_Fr[i] /= GC.SPD_OF_LGT
+
       # plot
-      
       plt.rc('text', usetex=True)         # use tex to generate text
       plt.rc('font', family='sans-serif') # use sans-serif font family
-      plt.plot(x, Fr, 'r-', label='Numerical $F_r$')
+      plt.plot(x, Fr, 'r-', label='Numerical $F_r/c$')
 
       if exact_Fr != None:
 
-          plt.plot(x, exact_Fr, "*--b", label='Exact $F_r$')
+          plt.plot(x, exact_Fr, "*--b", label='Exact $F_r/c$')
 
       if exact_Fr == None:
     

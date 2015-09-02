@@ -10,6 +10,8 @@ sys.path.append('../src')
 from sympy import symbols, exp, sin, pi, sympify, cos, diff
 from sympy.utilities.lambdify import lambdify
 
+from scipy.optimize import fmin
+
 # numpy
 import numpy as np
 import math
@@ -21,9 +23,9 @@ import unittest
 # local packages
 from createMMSSourceFunctions import createMMSSourceFunctionsRadHydro
 from mesh import Mesh
-from hydroState import HydroState
+from hydroState import HydroState, getIntErg
 from radiation import Radiation
-from plotUtilities import plotHydroSolutions, plotTemperatures, plotRadErg
+from plotUtilities import plotHydroSolutions, plotTemperatures, plotRadErg, plotS2Erg
 from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolution,\
    computeHydroL2Error, computeHydroConvergenceRates, printHydroConvergenceTable
 from crossXInterface import ConstantCrossSection
@@ -49,25 +51,37 @@ class TestRadHydroMMS(unittest.TestCase):
       n_cycles = 4
       
       # numeric values
-      alpha_value = 0.01
       gamma_value = 1.4
-      cv_value = gamma_value/(gamma_value-1.)
+      cv_value = 1.0
       sig_s = 0.0
       sig_a = 100000.0
       sig_t = sig_s + sig_a
 
       #Want material speeed to be a small fraction of speed of light
-      C = GC.SPD_OF_LGT/1000.
+      #and radiation to be small relative to kinetic energy
+      C = 1000.
+      P = 0.001
+
+      #Arbitrary ratio of pressure to density
+      alpha_value = 0.5 
+
+      #Arbitrary mach number well below the sound speed
+      M = 0.8
+
+      #Arbitrary choice of rho_inf
+      rho_inf = 1.0
+
+      a_inf = GC.SPD_OF_LGT/C
+      #rho_inf = GC.RAD_CONSTANT*T_inf**4/(P*a_inf**2)   #to set rho_inf based on T_inf
+      T_inf = pow(rho_inf*P*a_inf**2/GC.RAD_CONSTANT,0.25)  #to set T_inf based on rho_inf
+      p_inf = alpha_value*rho_inf*a_inf**2
+      p_inf = alpha_value*rho_inf*a_inf/M*a_inf
+      cv_value = a_inf**2/(T_inf*gamma_value*(gamma_value-1.))
 
       # create solution for thermodynamic state and flow field
-      # Here I have scaled all other variables to match the scaling
-      # of velocity
- #     rho = sympify('4.0')
- #     u   = sympify('1.0')
- #     E   = sympify('10.0')
-      rho = C*(2. + sin(2*pi*x-t))
-      u   = C*(2. + cos(2*pi*x-t))
-      p   = C*0.5*(2. + cos(2*pi*x-t))
+      rho = rho_inf*(2. + sin(2*pi*x-t))
+      u   = a_inf*M*(2. + cos(2*pi*x-t))
+      p   = p_inf*(2. + cos(2*pi*x-t))
       e = p/(rho*(gamma_value-1.))
       E = 0.5*rho*u*u + rho*e
       
@@ -75,7 +89,7 @@ class TestRadHydroMMS(unittest.TestCase):
       # that is the leading order diffusion limit solution
       T = e/cv_value
       Er = a*T**4
-      Fr = -1./(3.*sig_t)*c*diff(Er,x) + sympify('4/3')*Er*u
+      Fr = -1./(3.*sig_t)*c*diff(Er,x) + sympify('4./3.')*Er*u
 
       #Form psi+ and psi- from Fr and Er
       psip = (Er*c*mu + Fr)/(2.*mu)
@@ -93,15 +107,26 @@ class TestRadHydroMMS(unittest.TestCase):
       E   = E.subs(substitutions)
       psim = psim.subs(substitutions)
       psip = psip.subs(substitutions)
+      T    = T.subs(substitutions)
       rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy")
       u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy")
       mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy")
       E_f    = lambdify((symbols('x'),symbols('t')), E,    "numpy")
       psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy")
       psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
+      T_f    = lambdify((symbols('x'),symbols('t')), T,    "numpy")
 
       Er = Er.subs(substitutions)
       Er      = lambdify((symbols('x'),symbols('t')), Er, "numpy")
+
+      #For reference create lambda as ratio of aT^4/rho--u^2 to check
+      #P_f = lambda x,t: GC.RAD_CONSTANT*T_f(x,t)**4/(rho_f(x,t)*u_f(x,t)**2)
+      #dx = 1./100.
+      #x = -1.*dx
+      #t=0.2
+      #for i in range(100):
+      #    x += dx
+      #    print "ratio:", P_f(x,t)
 
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
@@ -117,7 +142,7 @@ class TestRadHydroMMS(unittest.TestCase):
          alpha_value   = alpha_value,
          display_equations = True)
 
-      n_elems = 10
+      n_elems = 40
       width = 1.0
 
       # compute hydro IC for the sake of computing initial time step size
@@ -136,8 +161,8 @@ class TestRadHydroMMS(unittest.TestCase):
       dx = []
       err = []
 
-      # run for 50 time steps of initial dt
-      t_end = 20*dt_value
+      # run for 10 time steps of initial dt
+      t_end = 10*dt_value
 
       for cycle in range(n_cycles):
       
@@ -158,15 +183,16 @@ class TestRadHydroMMS(unittest.TestCase):
           hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
              rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
-          # Diff length
+          # Dimensionless parameters. These are all evaluated at peaks of trig
+          # functions, very hard coded
           print "---------------------------------------------"
           print " Diffusion limit info:"
           print "---------------------------------------------"
           print "Size in mfp of cell", mesh.getElement(0).dx*sig_t
-          a_inf = hydro_IC[int(0.25*len(hydro_IC))].getSoundSpeed()
-          print "Ratio of radiation energy to kinetic", Er(0.25,0)/(rho_f(0.25,0)*a_inf**2)
-          print "Ratio of speed of light to material sound speed", GC.SPD_OF_LGT/a_inf
+          print "Ratio of radiation energy to kinetic", Er(0.75,0)/(rho_f(0.25,0)*u_f(0.0,0)**2), GC.RAD_CONSTANT*T_inf**4/(rho_inf*a_inf**2)
+          print "Ratio of speed of light to material sound speed", GC.SPD_OF_LGT/u_f(0.0,0), GC.SPD_OF_LGT/(a_inf)
           print "---------------------------------------------"
+
           # create hydro BC
           hydro_BC = HydroBC(bc_type='periodic', mesh=mesh)
       
@@ -226,9 +252,16 @@ class TestRadHydroMMS(unittest.TestCase):
           n_elems *= 2
           dt_value *= 0.5
 
-      # compute convergence rates
-      rates_dx = computeHydroConvergenceRates(dx,err)
-      rates_dt = computeHydroConvergenceRates(dt,err)
+          # compute convergence rates
+          rates_dx = computeHydroConvergenceRates(dx,err)
+          rates_dt = computeHydroConvergenceRates(dt,err)
+
+          # print convergence table
+          if n_cycles > 1:
+             printHydroConvergenceTable(dx,err,rates=rates_dx,
+                dx_desc='dx',err_desc='$L_2$')
+             printHydroConvergenceTable(dt,err,rates=rates_dt,
+                dx_desc='dt',err_desc='$L_2$')
 
       # plot
       if __name__ == '__main__':
@@ -239,12 +272,6 @@ class TestRadHydroMMS(unittest.TestCase):
          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,
             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
-         # print convergence table
-         if n_cycles > 1:
-            printHydroConvergenceTable(dx,err,rates=rates_dx,
-               dx_desc='dx',err_desc='$L_2$')
-            printHydroConvergenceTable(dt,err,rates=rates_dt,
-               dx_desc='dt',err_desc='$L_2$')
 
          # plot hydro solution
          plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),exact=hydro_exact)
@@ -265,12 +292,13 @@ class TestRadHydroMMS(unittest.TestCase):
              psip_exact.append(psip_f(xi,t_end))
              psim_exact.append(psim_f(xi,t_end))
 
-
          plotRadErg(mesh, rad_new.E, Fr_edge=rad_new.F, exact_Er=Er_exact, exact_Fr =
                Fr_exact)
 
-         plotRadErg(mesh, rad_new.psim, rad_new.psip, exact_Er=psip_exact,
-                 exact_Fr=psim_exact)
+         plotS2Erg(mesh, rad_new.psim, rad_new.psip, exact_psim=psim_exact,
+                 exact_psip=psip_exact)
+
+         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=False)
 
 # run main function from unittest module
 if __name__ == '__main__':
