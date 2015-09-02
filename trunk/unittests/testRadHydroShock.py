@@ -33,7 +33,7 @@ class TestRadHydroShock(unittest.TestCase):
       test_case = "mach1.2" # mach1.2 mach2 mach50
       
       # create uniform mesh
-      n_elems = 100
+      n_elems = 250
       width = 0.02
       x_start = -0.01
       mesh_center = x_start + 0.5*width
@@ -193,7 +193,7 @@ class TestRadHydroShock(unittest.TestCase):
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
          verbosity    = verbosity,
-         slope_limiter = 'vanleer',
+         slope_limiter = 'double-minmod',
          check_balance=True)
 
       # plot
@@ -207,7 +207,7 @@ class TestRadHydroShock(unittest.TestCase):
 
          # plot material and radiation temperatures
          plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=False,
-            save=True, filename=test_filename,
+            save=False, filename=test_filename,
             exact_solution_filename=exact_solution_filename)
 
 # run main function from unittest module
