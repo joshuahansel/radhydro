@@ -8,7 +8,7 @@ from crossXInterface import CrossXInterface
 from hydroState import HydroState
 from scipy.integrate import quad
 
-QUAD_REL_TOL = 1.0E-8
+QUAD_REL_TOL = 1.0E-13
 
 #-----------------------------------------------------------------------------------
 ## Converge f_L and f_R to f_a and f_x
@@ -555,12 +555,17 @@ def computeAnalyticHydroSolution(mesh,t,rho,u,E,cv,gamma):
    for i in xrange(mesh.n_elems):
 
       # get cell center
-      x_i = mesh.getElement(i).x_cent
+    #  x_i = mesh.getElement(i).x_cent
 
       # evaluate functions at cell center
-      rho_i = rho(x=x_i, t=t)
-      u_i   =   u(x=x_i, t=t)
-      E_i   =   E(x=x_i, t=t)
+    #  rho_i = rho(x=x_i, t=t)
+    #  u_i   =   u(x=x_i, t=t)
+    #  E_i   =   E(x=x_i, t=t)
+      x_l = mesh.getElement(i).xl
+      x_r = mesh.getElement(i).xr
+      rho_i = evalAverageSource(rho,x_l,x_r,t)
+      u_i = evalAverageSource(u,x_l,x_r,t)
+      E_i = evalAverageSource(E,x_l,x_r,t)
 
       # add hydro state for cell
       hydro.append(HydroState(rho=rho_i, u=u_i, E=E_i,
@@ -578,7 +583,7 @@ def evalEdgeSource(func, x_l, x_r,t):
     f_L = lambda x: 2./h*(x_r-x)/h*func(x,t)
     f_R = lambda x: 2./h*(x-x_l)/h*func(x,t)
    
-    #These are the moments
+   # #These are the moments
     Q_L_m = quad(f_L, x_l, x_r, epsrel=QUAD_REL_TOL)[0]
     Q_R_m = quad(f_R, x_l, x_r, epsrel=QUAD_REL_TOL)[0]
 
@@ -596,4 +601,6 @@ def evalAverageSource(func, x_l, x_r, t):
     h = x_r - x_l
     Q_a = 1./h*quad(func, x_l, x_r, args=(t), epsrel=QUAD_REL_TOL)[0]
     return Q_a
+
+
 

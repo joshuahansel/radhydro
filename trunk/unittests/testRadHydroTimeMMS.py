@@ -45,14 +45,14 @@ class TestRadHydroMMS(unittest.TestCase):
       x, t, alpha, c = symbols('x t alpha c')
 
       #Cycles for time convergence
-      n_cycles = 1
+      n_cycles = 3
       
       # numeric values
       alpha_value = 0.01
       cv_value    = 1.0
       gamma_value = 1.4
       sig_s = 1.0
-      sig_a = 10.0
+      sig_a = 1.0
       sig_t = sig_s + sig_a
 
       # create solution for thermodynamic state and flow field
@@ -61,6 +61,10 @@ class TestRadHydroMMS(unittest.TestCase):
       p   = 0.5*(2. + cos(2*pi*x-t))
       e = p/(rho*(gamma_value-1.))
       E = 0.5*rho*u*u + rho*e
+
+      rho = sympify('2')*sin(t/4.)+2.
+      u   = sympify('3')*sin(t/4.)+3.
+      E   = sympify('10')*sin(t/4.)+10.
       
       # create solution for radiation field based on solution for F 
       # that is the leading order diffusion limit solution
@@ -73,6 +77,9 @@ class TestRadHydroMMS(unittest.TestCase):
       Fr = (2.+cos(2*pi*x-t))*c
       psip = (Er*c*mu + Fr)/(2.*mu)
       psim = (Er*c*mu - Fr)/(2.*mu)
+
+      psip = sympify('10')*c+1*sin(t/4.)
+      psim = sympify('10')*c+1*cos(t/4.)
 
       #Form psi+ and psi- from Fr and Er
       #psip = sympify('5.')*c
@@ -110,7 +117,7 @@ class TestRadHydroMMS(unittest.TestCase):
       psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
 
      
-      dt_value = 0.001
+      dt_value = 0.0001
       dt = []
       err = []
     
@@ -146,7 +153,7 @@ class TestRadHydroMMS(unittest.TestCase):
 
           # transient options
           t_start  = 0.0
-          t_end = 0.01
+          t_end = 0.001
 
           # if run standalone, then be verbose
           if __name__ == '__main__':
@@ -161,10 +168,8 @@ class TestRadHydroMMS(unittest.TestCase):
           rad_new, hydro_new = runNonlinearTransient(
              mesh         = mesh,
              problem_type = 'rad_hydro',
-             #dt_option    = 'constant',
-             #dt_constant  = dt_value,
-             dt_option     = 'CFL',
-             CFL           = 0.5,
+             dt_option    = 'constant',
+             dt_constant  = dt_value,
              slope_limiter = limiter,
              use_2_cycles = True,
              t_start      = t_start,
@@ -211,7 +216,7 @@ class TestRadHydroMMS(unittest.TestCase):
          # print convergence table
          if n_cycles > 1:
             printHydroConvergenceTable(dt,err,rates=rates,
-               dx_desc='dx',err_desc='L2')
+               dx_desc='dt',err_desc='L2')
 
          # plot hydro solution
          plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),

@@ -13,6 +13,7 @@ from sympy.utilities.lambdify import lambdify
 # numpy
 import numpy as np
 import math
+from math import sqrt
 
 # unit test package
 import unittest
@@ -23,7 +24,8 @@ from mesh import Mesh
 from hydroState import HydroState
 from radiation import Radiation
 from plotUtilities import plotHydroSolutions, plotTemperatures, plotRadErg
-from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolution
+from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolution,\
+   computeHydroL2Error, computeHydroConvergenceRates, printHydroConvergenceTable
 from crossXInterface import ConstantCrossSection
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
@@ -43,12 +45,15 @@ class TestRadHydroMMS(unittest.TestCase):
       # declare symbolic variables
       x, t, alpha, c, a, mu  = symbols('x t alpha c a mu')
       
+      #Cycles for time convergence
+      n_cycles = 4
+      
       # numeric values
       alpha_value = 0.01
       gamma_value = 1.4
       cv_value = gamma_value/(gamma_value-1.)
       sig_s = 0.0
-      sig_a = 1000000.0
+      sig_a = 100000.0
       sig_t = sig_s + sig_a
 
       #Want material speeed to be a small fraction of speed of light
@@ -68,9 +73,6 @@ class TestRadHydroMMS(unittest.TestCase):
       
       # create solution for radiation field based on solution for F 
       # that is the leading order diffusion limit solution
-
-
-      #Equilibrium diffusion solution
       T = e/cv_value
       Er = a*T**4
       Fr = -1./(3.*sig_t)*c*diff(Er,x) + sympify('4/3')*Er*u
@@ -98,9 +100,8 @@ class TestRadHydroMMS(unittest.TestCase):
       psim_f = lambdify((symbols('x'),symbols('t')), psim, "numpy")
       psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
 
-
-
-
+      Er = Er.subs(substitutions)
+      Er      = lambdify((symbols('x'),symbols('t')), Er, "numpy")
 
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
@@ -116,85 +117,118 @@ class TestRadHydroMMS(unittest.TestCase):
          alpha_value   = alpha_value,
          display_equations = True)
 
-      # create uniform mesh
-      n_elems = 100
+      n_elems = 10
       width = 1.0
-      mesh = Mesh(n_elems, width)
 
-
-      # compute radiation IC
-      psi_IC = computeRadiationVector(psim_f, psip_f, mesh, t=0.0)
-      rad_IC = Radiation(psi_IC)
-
-      # create rad BC object
-      rad_BC = RadBC(mesh, 'periodic')
-
-      # compute hydro IC
+      # compute hydro IC for the sake of computing initial time step size
+      mesh = Mesh(n_elems,width)
       hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
          rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
-      # Diff length
-      Er = Er.subs(substitutions)
-      Er      = lambdify((symbols('x'),symbols('t')), Er, "numpy")
-      print "---------------------------------------------"
-      print " Diffusion limit info:"
-      print "---------------------------------------------"
-      print "Size in mfp of cell", mesh.getElement(0).dx*sig_t
-      a_inf = hydro_IC[int(0.25*len(hydro_IC))].getSoundSpeed()
-      print "Ratio of radiation energy to kinetic", Er(0.25,0)/(rho_f(0.25,0)*a_inf**2)
-      print "Ratio of speed of light to material sound speed", GC.SPD_OF_LGT/a_inf
-      print "---------------------------------------------"
-      # create hydro BC
-      hydro_BC = HydroBC(bc_type='periodic', mesh=mesh)
-  
-      # create cross sections
-      cross_sects = [(ConstantCrossSection(sig_s, sig_s+sig_a),
-                      ConstantCrossSection(sig_s, sig_s+sig_a))
-                      for i in xrange(mesh.n_elems)]
+      # compute time step size according to 0.6 CFL (actually half)
+      sound_speed = [sqrt(i.p * i.gamma / i.rho) + abs(i.u) for i in hydro_IC]
+      dt_vals = [0.6*(mesh.elements[i].dx)/sound_speed[i]
+         for i in xrange(len(hydro_IC))]
+      dt_value = min(dt_vals)
 
-      # transient options
-      t_start  = 0.0
-      t_end = 0.01*math.pi
+      print "initial dt_value", dt_value
+      dt = []
+      dx = []
+      err = []
 
-      # if run standalone, then be verbose
-      if __name__ == '__main__':
-         verbosity = 2
-      else:
-         verbosity = 0
+      # run for 50 time steps of initial dt
+      t_end = 20*dt_value
 
-      #slope limiter
-      limiter = 'minmod'
+      for cycle in range(n_cycles):
       
-      # run the rad-hydro transient
-      rad_new, hydro_new = runNonlinearTransient(
-         mesh         = mesh,
-         problem_type = 'rad_hydro',
-         dt_option    = 'CFL',
-         CFL          = 0.3,
-       #  dt_option    = 'constant',
-       #  dt_constant  = 0.0002,
-         slope_limiter = limiter,
-         time_stepper = 'BDF2',
-         use_2_cycles = True,
-         t_start      = t_start,
-         t_end        = t_end,
-         rad_BC       = rad_BC,
-         cross_sects  = cross_sects,
-         rad_IC       = rad_IC,
-         hydro_IC     = hydro_IC,
-         hydro_BC     = hydro_BC,
-         mom_src      = mom_src,
-         E_src        = E_src,
-         rho_src      = rho_src,
-         psim_src     = psim_src,
-         psip_src     = psip_src,
-         verbosity    = verbosity,
-         rho_f =rho_f,
-         u_f = u_f,
-         E_f = E_f,
-         gamma_value = gamma_value,
-         cv_value = cv_value,
-         check_balance = True)
+          # create uniform mesh
+          mesh = Mesh(n_elems, width)
+
+          dt.append(dt_value)
+          dx.append(mesh.getElement(0).dx)
+
+          # compute radiation IC
+          psi_IC = computeRadiationVector(psim_f, psip_f, mesh, t=0.0)
+          rad_IC = Radiation(psi_IC)
+
+          # create rad BC object
+          rad_BC = RadBC(mesh, 'periodic')
+
+          # compute hydro IC
+          hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
+             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
+
+          # Diff length
+          print "---------------------------------------------"
+          print " Diffusion limit info:"
+          print "---------------------------------------------"
+          print "Size in mfp of cell", mesh.getElement(0).dx*sig_t
+          a_inf = hydro_IC[int(0.25*len(hydro_IC))].getSoundSpeed()
+          print "Ratio of radiation energy to kinetic", Er(0.25,0)/(rho_f(0.25,0)*a_inf**2)
+          print "Ratio of speed of light to material sound speed", GC.SPD_OF_LGT/a_inf
+          print "---------------------------------------------"
+          # create hydro BC
+          hydro_BC = HydroBC(bc_type='periodic', mesh=mesh)
+      
+          # create cross sections
+          cross_sects = [(ConstantCrossSection(sig_s, sig_s+sig_a),
+                          ConstantCrossSection(sig_s, sig_s+sig_a))
+                          for i in xrange(mesh.n_elems)]
+
+          # transient options
+          t_start  = 0.0
+
+          # if run standalone, then be verbose
+          if __name__ == '__main__':
+             verbosity = 2
+          else:
+             verbosity = 0
+
+          #slope limiter
+          limiter = 'none'
+          
+          # run the rad-hydro transient
+          rad_new, hydro_new = runNonlinearTransient(
+             mesh         = mesh,
+             problem_type = 'rad_hydro',
+             dt_option    = 'constant',
+             dt_constant  = dt_value,
+             slope_limiter = limiter,
+             time_stepper = 'BDF2',
+             use_2_cycles = True,
+             t_start      = t_start,
+             t_end        = t_end,
+             rad_BC       = rad_BC,
+             cross_sects  = cross_sects,
+             rad_IC       = rad_IC,
+             hydro_IC     = hydro_IC,
+             hydro_BC     = hydro_BC,
+             mom_src      = mom_src,
+             E_src        = E_src,
+             rho_src      = rho_src,
+             psim_src     = psim_src,
+             psip_src     = psip_src,
+             verbosity    = verbosity,
+             rho_f =rho_f,
+             u_f = u_f,
+             E_f = E_f,
+             gamma_value = gamma_value,
+             cv_value = cv_value,
+             check_balance = True)
+
+          # compute exact hydro solution
+          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,
+             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
+ 
+          #Compute error
+          err.append(computeHydroL2Error(hydro_new, hydro_exact))
+
+          n_elems *= 2
+          dt_value *= 0.5
+
+      # compute convergence rates
+      rates_dx = computeHydroConvergenceRates(dx,err)
+      rates_dt = computeHydroConvergenceRates(dt,err)
 
       # plot
       if __name__ == '__main__':
@@ -204,6 +238,13 @@ class TestRadHydroMMS(unittest.TestCase):
          # compute exact hydro solution
          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,
             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
+
+         # print convergence table
+         if n_cycles > 1:
+            printHydroConvergenceTable(dx,err,rates=rates_dx,
+               dx_desc='dx',err_desc='$L_2$')
+            printHydroConvergenceTable(dt,err,rates=rates_dt,
+               dx_desc='dt',err_desc='$L_2$')
 
          # plot hydro solution
          plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),exact=hydro_exact)
