@@ -358,9 +358,9 @@ def runNonlinearTransient(mesh, problem_type,
              )
 
              #Compute balance over first cycle
-             print "++++++++++++++++++++++++++++++++++++++++++++++++++++"
-             print "    END OF CYCLE 1 "
              if check_balance:
+                print "++++++++++++++++++++++++++++++++++++++++++++++++++++"
+                print "    END OF CYCLE 1 "
                 bal = BalanceChecker(mesh, problem_type, 'CN', 0.5*dt)
                 bal.computeBalance(rad_BC=rad_BC, hydro_old=hydro_old,
                    hydro_new=hydro_half, rad_old=rad_old, rad_new=rad_half,
@@ -410,9 +410,9 @@ def runNonlinearTransient(mesh, problem_type,
                 cv_value=cv_value)
 
              #Compute balance over second cycle
-             print "++++++++++++++++++++++++++++++++++++++++++++++++++++"
-             print "    END OF CYCLE 2 "
              if check_balance:
+                print "++++++++++++++++++++++++++++++++++++++++++++++++++++"
+                print "    END OF CYCLE 2 "
                 bal = BalanceChecker(mesh, problem_type, 'BDF2', 0.5*dt)
                 bal.computeBalance(rad_BC=rad_BC, hydro_old=hydro_half,
                    hydro_new=hydro_new, rad_old=rad_half, rad_new=rad_new,
@@ -786,7 +786,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
 def computeExtraneousSources(psim_src, psip_src, mom_src, E_src, mesh, t,
         rho_src=None):
 
-   print "Computing MMS sources..."
+   print "      Computing MMS sources..."
 
    # compute radiation extraneous source
    if psim_src != None and psip_src != None:

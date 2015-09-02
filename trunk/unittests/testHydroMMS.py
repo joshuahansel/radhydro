@@ -37,29 +37,40 @@ class TestHydroMMS(unittest.TestCase):
       pass
    def test_HydroMMS(self):
       
+      # slope limiter: choices are:
+      # none step minmod double-minmod superbee minbee vanleer
+      slope_limiter = 'none' 
+      
       # number of elements in first cycle
       n_elems = 50
 
       # number of refinement cycles
       n_cycles = 1
 
+      # end time
+      t_end = 0.1
+
+      # choice of solutions for hydro
+      hydro_case = "linear" # constant linear exponential
+
       # declare symbolic variables
       x, t, alpha = symbols('x t alpha')
       
       # create solution for thermodynamic state and flow field
-#      rho = sympify('4')
-#      u   = sympify('1.3')
-#      E   = sympify('10')
-#      rho = 1+x-t
-#      u   = sympify('1')
-#      E   = 5 + 50*x+t+50*(x-0.5)**2
-      E   = 5 +t+50*(x-0.75)**2
-      rho = exp(x+t)+5
-      u   = exp(-x)*sin(t) - 1
-#      E   = 10*exp(x+t)
-      #rho = 1 + sin(pi*x)
-      #u   = 1/(1 + sin(pi*x))
-      #E   = 10 + sin(pi*x)
+      if hydro_case == "constant":
+         rho = sympify('4.0')
+         u   = sympify('1.2')
+         E   = sympify('10.0')
+      elif hydro_case == "linear":
+         rho = 1 + x - t
+         u   = sympify('1')
+         E   = 5 + 5*(x - 0.5)**2
+      elif hydro_case == "exponential":
+         rho = exp(x+t)+5
+         u   = exp(-x)*sin(t) - 1
+         E   = 10*exp(x+t)
+      else:
+         raise NotImplementedError("Invalid hydro test case")
       
       # create solution for radiation field
       psim = sympify('0')
@@ -67,9 +78,9 @@ class TestHydroMMS(unittest.TestCase):
       
       # numeric values
       alpha_value = 0.01
-      cv_value    = 2.0
+      cv_value    = 1.0
       gamma_value = 1.4
-      sig_s = 0.0
+      sig_s = 1.0
       sig_a = 0.0
       
       # create MMS source functions
@@ -80,7 +91,7 @@ class TestHydroMMS(unittest.TestCase):
          gamma_value   = gamma_value,
          cv_value      = cv_value,
          alpha_value   = alpha_value,
-         display_equations = True)
+         display_equations = False)
 
       # create functions for exact solutions
       substitutions = dict()
@@ -98,8 +109,6 @@ class TestHydroMMS(unittest.TestCase):
       
       # spatial and temporal domains
       width = 1.0
-      t_start  = 0.0
-      t_end = 0.1
 
       # initialize lists for mesh size and L1 error for each cycle
       max_dx = list()
@@ -137,9 +146,6 @@ class TestHydroMMS(unittest.TestCase):
                          ConstantCrossSection(sig_s, sig_s+sig_a))
                          for i in xrange(mesh.n_elems)]
    
-         # slope limiter option
-         slope_limiter = "none"
-   
          # if run standalone, then be verbose
          if __name__ == '__main__':
             if n_cycles == 1:
@@ -158,7 +164,7 @@ class TestHydroMMS(unittest.TestCase):
             slope_limiter = slope_limiter,
             time_stepper = 'BDF2',
             use_2_cycles = True,
-            t_start      = t_start,
+            t_start      = 0.0,
             t_end        = t_end,
             rad_BC       = rad_BC,
             hydro_BC     = hydro_BC,
@@ -171,12 +177,12 @@ class TestHydroMMS(unittest.TestCase):
             psip_src     = psip_src,
             rho_src      = rho_src,
             verbosity    = verbosity,
-            check_balance = True,
-            rho_f =rho_f,
-            u_f = u_f,
-            E_f = E_f,
-            gamma_value = gamma_value,
-            cv_value = cv_value  )
+            check_balance = False,
+            rho_f        = rho_f,
+            u_f          = u_f,
+            E_f          = E_f,
+            gamma_value  = gamma_value,
+            cv_value     = cv_value  )
    
          # compute exact hydro solution
          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,

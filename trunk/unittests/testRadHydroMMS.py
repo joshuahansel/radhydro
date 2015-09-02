@@ -38,28 +38,53 @@ class TestRadHydroMMS(unittest.TestCase):
       pass
    def test_RadHydroMMS(self):
       
+      # slope limiter: choices are:
+      # none step minmod double-minmod superbee minbee vanleer
+      slope_limiter = 'none' 
+      
+      # number of elements
+      n_elems = 50
+
+      # end time
+      t_end = 0.1
+
+      # choice of solutions for hydro
+      hydro_case = "linear" # constant linear exponential
+      # choice of solutions for radiation
+      rad_case   = "zero" # zero constant sin
+
       # declare symbolic variables
       x, t, alpha, c = symbols('x t alpha c')
       
       # create solution for thermodynamic state and flow field
- #     rho = sympify('4.0')
- #     u   = sympify('1.2')
- #     E   = sympify('10.0')
-    #  rho = 1 + x - t
-    #  u   = sympify('1')
-      E   = 5 + 5*(x - 0.5)**2
-      rho = exp(x+t)+5
-      u   = exp(-x)*sin(t) - 1
-     # E   = 10*exp(x+t)
+      if hydro_case == "constant":
+         rho = sympify('4.0')
+         u   = sympify('1.2')
+         E   = sympify('10.0')
+      elif hydro_case == "linear":
+         rho = 1 + x - t
+         u   = sympify('1')
+         E   = 5 + 5*(x - 0.5)**2
+      elif hydro_case == "exponential":
+         rho = exp(x+t)+5
+         u   = exp(-x)*sin(t) - 1
+         E   = 10*exp(x+t)
+      else:
+         raise NotImplementedError("Invalid hydro test case")
       
       # create solution for radiation field
-      rad_scale = 50*c
-      psim = rad_scale*2*t*sin(pi*(1-x))+10*c
-      psip = rad_scale*t*sin(pi*x)+10*c
-      #psim = 50*c
-      #psip = 50*c
-      #psim = sympify('0')
-      #psip = sympify('0')
+      if rad_case == "zero":
+         psim = sympify('0')
+         psip = sympify('0')
+      elif rad_case == "constant":
+         psim = 50*c
+         psip = 50*c
+      elif rad_case == "sin":
+         rad_scale = 50*c
+         psim = rad_scale*2*t*sin(pi*(1-x))+10*c
+         psip = rad_scale*t*sin(pi*x)+10*c
+      else:
+         raise NotImplementedError("Invalid radiation test case")
       
       # numeric values
       alpha_value = 0.01
@@ -67,6 +92,7 @@ class TestRadHydroMMS(unittest.TestCase):
       gamma_value = 1.4
       sig_s = 1.0
       sig_a = 1.0
+      #sig_a = 0.0
       
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
@@ -100,7 +126,6 @@ class TestRadHydroMMS(unittest.TestCase):
       psip_f = lambdify((symbols('x'),symbols('t')), psip, "numpy")
       
       # create uniform mesh
-      n_elems = 50
       width = 1.0
       mesh = Mesh(n_elems, width)
 
@@ -128,20 +153,12 @@ class TestRadHydroMMS(unittest.TestCase):
                       ConstantCrossSection(sig_s, sig_s+sig_a))
                       for i in xrange(mesh.n_elems)]
 
-      # transient options
-      t_start  = 0.0
-#      t_end = 0.005
-      t_end = 0.1
-
       # if run standalone, then be verbose
       if __name__ == '__main__':
          verbosity = 2
       else:
          verbosity = 0
 
-      #slope limiter
-      limiter = 'superbee'
-      
       # run the rad-hydro transient
       rad_new, hydro_new = runNonlinearTransient(
          mesh         = mesh,
@@ -150,10 +167,10 @@ class TestRadHydroMMS(unittest.TestCase):
          #dt_option    = 'constant',
          CFL          = 0.5,
          #dt_constant  = 0.002,
-         slope_limiter = limiter,
+         slope_limiter = slope_limiter,
          time_stepper = 'BDF2',
          use_2_cycles = True,
-         t_start      = t_start,
+         t_start      = 0.0,
          t_end        = t_end,
          rad_BC       = rad_BC,
          cross_sects  = cross_sects,
@@ -166,12 +183,10 @@ class TestRadHydroMMS(unittest.TestCase):
          psim_src     = psim_src,
          psip_src     = psip_src,
          verbosity    = verbosity,
-         check_balance = True)
+         check_balance = False)
 
       # plot
       if __name__ == '__main__':
-
-         # plot radiation solution
 
          # compute exact hydro solution
          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,
@@ -180,15 +195,15 @@ class TestRadHydroMMS(unittest.TestCase):
          # plot hydro solution
          plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),exact=hydro_exact)
 
-         #plot exact and our E_r
+         # compute exact radiation energy
          Er_exact_fn = 1./GC.SPD_OF_LGT*(psim + psip)
          Er_exact = []
          x = mesh.getCellCenters()
          for xi in x:
-             
              substitutions = {'x':xi, 't':t_end}
              Er_exact.append(Er_exact_fn.subs(substitutions))
 
+         # plot radiation energy
          plotRadErg(mesh, rad_new.E, exact_Er=Er_exact)
 
 # run main function from unittest module
