@@ -256,9 +256,9 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
       # get x points, 1st column
       x_exact = exact_data[:,0]
       # get exact material temperature, 2nd column
-      T_exact = exact_data[:,1]
+      T_exact = exact_data[:,1] / 10.0
       # get exact radiation temperature, 3rd column
-      Tr_exact = exact_data[:,2]
+      Tr_exact = exact_data[:,2] / 10.0
       # plot exact temperatures
       plt.plot(x_exact,T_exact,'b-',label='$T_m$, analytic')
       plt.plot(x_exact,Tr_exact,'r-',label='$T_r$, analytic')
