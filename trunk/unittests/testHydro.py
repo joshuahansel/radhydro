@@ -14,6 +14,7 @@ from plotUtilities import plotHydroSolutions
 from radiation import Radiation
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
+from radBC   import RadBC
 
 ## Unit test class
 #
@@ -34,6 +35,9 @@ class TestHydro(unittest.TestCase):
       CFL     = 0.5
       t_start = 0.0
       t_end   = 0.2
+
+      # slope limiter
+      slope_limiter = "vanleer"
 
       # constant properties
       sig_s = 1.0 # arbitrary
@@ -82,6 +86,7 @@ class TestHydro(unittest.TestCase):
       psi_left  = 0.0
       psi_right = 0.0
       rad_IC    = Radiation([0.0 for i in range(n_elems*4)])
+      rad_BC    = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -99,16 +104,14 @@ class TestHydro(unittest.TestCase):
          use_2_cycles = True,
          t_start      = t_start,
          t_end        = t_end,
-         psi_left     = psi_left,
-         psi_right    = psi_right,
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
+         rad_BC       = rad_BC,
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
+         slope_limiter = slope_limiter,
          verbosity    = verbosity,
-         check_balance= True)
-
-
+         check_balance= False)
 
       # plot solutions if run standalone
       if __name__ == "__main__":
@@ -136,15 +139,8 @@ class TestHydro(unittest.TestCase):
          for i in range(len(x_e)):
             hydro_exact.append(HydroState(u=u_e[i],rho=rho_e[i],e=e_e[i],gamma=gam,spec_heat=c_v) )
 
-
          plotHydroSolutions(mesh, hydro_new,x_exact=x_e,exact=hydro_exact)
 
-         # print out the states
-         for i in hydro_new:
-
-             print i
-
-  
 # run main function from unittest module
 if __name__ == '__main__':
    unittest.main()

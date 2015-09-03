@@ -47,8 +47,11 @@ class TestRadHydroMMS(unittest.TestCase):
       # declare symbolic variables
       x, t, alpha, c, a, mu  = symbols('x t alpha c a mu')
       
-      #Cycles for time convergence
+      # number of refinement cycles
       n_cycles = 1
+
+      # number of elements in first cycle
+      n_elems = 100
       
       # numeric values
       gamma_value = 1.4
@@ -119,15 +122,6 @@ class TestRadHydroMMS(unittest.TestCase):
       Er = Er.subs(substitutions)
       Er      = lambdify((symbols('x'),symbols('t')), Er, "numpy")
 
-      #For reference create lambda as ratio of aT^4/rho--u^2 to check
-      #P_f = lambda x,t: GC.RAD_CONSTANT*T_f(x,t)**4/(rho_f(x,t)*u_f(x,t)**2)
-      #dx = 1./100.
-      #x = -1.*dx
-      #t=0.2
-      #for i in range(100):
-      #    x += dx
-      #    print "ratio:", P_f(x,t)
-
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
          rho           = rho,
@@ -142,11 +136,11 @@ class TestRadHydroMMS(unittest.TestCase):
          alpha_value   = alpha_value,
          display_equations = True)
 
-      n_elems = 40
+      # mesh
       width = 1.0
+      mesh = Mesh(n_elems,width)
 
       # compute hydro IC for the sake of computing initial time step size
-      mesh = Mesh(n_elems,width)
       hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
          rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
@@ -266,12 +260,9 @@ class TestRadHydroMMS(unittest.TestCase):
       # plot
       if __name__ == '__main__':
 
-         # plot radiation solution
-
          # compute exact hydro solution
          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,
             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
-
 
          # plot hydro solution
          plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),exact=hydro_exact)

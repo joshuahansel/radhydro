@@ -196,8 +196,8 @@ def plotS2Erg(mesh, psim_edge, psip_edge, exact_psim=None, save=False, filename=
 
 ## Plot arbitrary radiation density
 #
-def plotRadErg(mesh, Er_edge, Fr_edge=None, exact_Fr=None, save=False, filename='Radiation.pdf',
-        exact_Er=None, print_values=False):
+def plotRadErg(mesh, Er_edge, Fr_edge=None, exact_Fr=None, save=False, 
+   filename='Radiation.pdf', exact_Er=None, print_values=False):
 
    # create new figure
    plt.figure()
@@ -218,58 +218,53 @@ def plotRadErg(mesh, Er_edge, Fr_edge=None, exact_Fr=None, save=False, filename=
    plt.xlabel('$x$')
    plt.ylabel('$E_r$')
 
-   #plot the exact 
+   # plot exact radiation energy
    if exact_Er != None:
-
        plt.plot(x, exact_Er, "*--b", label='Exact $E_r$')
+
    plt.legend(loc='best')
 
-   if exact_Er == None:
- 
-       exact_Er = [0.0 for i in Er]
-
+   # plot radiation flux it is supplied
    if Fr_edge != None:
    
-      Fr = computeAverageValues(Fr_edge)
+      # split plot into 2
       plt.subplot(2,1,2)
 
-      #Divide by spd of light for comparison to E magnitude
+      # compute cell average radiation flux
+      Fr = computeAverageValues(Fr_edge)
+
+      # divide by speed of light for comparison to E magnitude
       for i in range(len(Fr)):
          Fr[i] /= GC.SPD_OF_LGT
-         exact_Fr[i] /= GC.SPD_OF_LGT
 
       # plot
       plt.rc('text', usetex=True)         # use tex to generate text
       plt.rc('font', family='sans-serif') # use sans-serif font family
       plt.plot(x, Fr, 'r-', label='Numerical $F_r/c$')
 
+      # annotations
+      plt.xlabel('$x$')
+      plt.ylabel('$F_r/c$')
+
+      # plot exact radiation flux
       if exact_Fr != None:
 
-          plt.plot(x, exact_Fr, "*--b", label='Exact $F_r/c$')
+         # divide by speed of light for comparison to E magnitude
+         for i in range(len(Fr)):
+            exact_Fr[i] /= GC.SPD_OF_LGT
 
-      if exact_Fr == None:
-    
-          exact_Fr = [0.0 for i in Fr]
+         # plot
+         plt.plot(x, exact_Fr, "*--b", label='Exact $F_r/c$')
 
-    #  exact_Er = list(exact_Er)
-    #  Er = list(Er)
-    #  y1 = min( min(exact_Er), min(Er))
-    #  y2 = max( max(exact_Er), max(Er))
-
-       
-    #  plt.axis([0.0, 1.0,0.99*float(y1),1.01*float(y2)])
-
-
+   # legend
    plt.legend(loc='best')
-   # if print requested
- #  if print_values:
- #     print "  x   E_r    E_r_exact  "
- #     print "-------------------"
- #     for i in range(len(x)):
-##
- #         print "%.12f" % x[i], "%.12f" % Er[i], "%.12f" % T[i]
 
-   
+   # if print requested
+   if print_values:
+      print "  x   E_r  "
+      print "-------------------"
+      for i in range(len(x)):
+         print "%.12f" % x[i], "%.12f" % Er[i]
 
    # save if requested
    if save:
