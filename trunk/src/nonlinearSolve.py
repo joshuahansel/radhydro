@@ -113,12 +113,10 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, rad_BC,
 
        #Compute E_slopes using the radiation computed values of e
        else:
-         
-           print E_slopes_star
+        
             
-           E_slopes_star  = computeTotalEnergySlopes(hydro_star, slopes_old, e_rad_prev)
-           print E_slopes_star
-           raw_input()
+           E_slopes_star  = computeTotalEnergySlopes(hydro_star, slopes_old,
+                   e_rad_old)
            E_slopes_old   = slopes_old.erg_slopes
            E_slopes_older = None
            if hydro_older != None:
@@ -199,7 +197,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, rad_BC,
           hydro_prev   = hydro_prev,
           hydro_star   = hydro_star,
           slopes_old   = slopes_old,
-          E_slopes_old = E_slopes_old,
+          E_slopes_star= E_slopes_star,
           e_rad_prev   = e_rad_prev)
 
        # check nonlinear convergence

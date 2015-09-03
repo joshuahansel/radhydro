@@ -48,7 +48,7 @@ class TestRadHydroMMS(unittest.TestCase):
       x, t, alpha, c, a, mu  = symbols('x t alpha c a mu')
       
       #Cycles for time convergence
-      n_cycles = 1
+      n_cycles = 4
       
       # numeric values
       gamma_value = 1.4

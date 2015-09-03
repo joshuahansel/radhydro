@@ -33,7 +33,7 @@ class TestRadHydroShock(unittest.TestCase):
       test_case = "mach1.2" # mach1.2 mach2 mach50
       
       # create uniform mesh
-      n_elems = 100
+      n_elems = 500
       width = 0.02
       x_start = -0.01
       mesh_center = x_start + 0.5*width
@@ -67,7 +67,7 @@ class TestRadHydroShock(unittest.TestCase):
          Erad_right = 2.7955320762182542e-06
 
          # final time
-         t_end = 0.7
+         t_end = 0.5
 
          # temperature plot filename
          test_filename = "radshock_mach1.2.pdf"
@@ -193,8 +193,8 @@ class TestRadHydroShock(unittest.TestCase):
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
          verbosity    = verbosity,
-         slope_limiter = 'vanleer',
-         check_balance=True)
+         slope_limiter = 'double-minmod',
+         check_balance=False)
 
       # plot
       if __name__ == '__main__':

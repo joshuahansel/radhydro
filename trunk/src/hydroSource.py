@@ -65,7 +65,7 @@ def updateDensity(mesh, time_stepper, dt, hydro_star, hydro_new, hydro_prev, **k
 #    which contains new velocities \f$u_i^{k+1}\f$
 #
 def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
-    hydro_prev, hydro_star, slopes_old, e_rad_prev=None, E_slopes_old=None):
+    hydro_prev, hydro_star, slopes_old, e_rad_prev=None, E_slopes_star=None):
  
     # constants
     a = GC.RAD_CONSTANT
@@ -99,8 +99,8 @@ def updateInternalEnergy(time_stepper, dt, QE, cx_prev, rad_new, hydro_new,
         e_prev = e_rad_prev[i]
 
         #Compute the total energy at left and right
-        E_star = [hydro_star[i].E() - 0.5*E_slopes_old[i],
-                  hydro_star[i].E() + 0.5*E_slopes_old[i]]
+        E_star = [hydro_star[i].E() - 0.5*E_slopes_star[i],
+                  hydro_star[i].E() + 0.5*E_slopes_star[i]]
 
         # Compute the total energy before and after
         E_l = E_star[0]

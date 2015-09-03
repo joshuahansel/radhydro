@@ -30,8 +30,12 @@ def computeTotalEnergySlopes(states, slopes, erad):
        u_r = mom_r/rho_r
 
        #Compute total energy on edge, using e_rad values
-       e_l = erad[i][0]
-       e_r = erad[i][1]
+       #for slope, but average from hydro
+       e_avg = states[i].e
+
+       de = erad[i][1]-erad[i][0]
+       e_l = e_avg - 0.5*de
+       e_r = e_avg + 0.5*de
 
        #Edge total energies
        E_l = rho_l*(e_l + 0.5*u_l**2)
