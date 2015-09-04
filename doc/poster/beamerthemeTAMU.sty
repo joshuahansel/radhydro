@@ -1,0 +1,173 @@
+\ProvidesPackage{beamerthemeTAMU}  % this style was created by Thomas Deselaers; edited by Andrew Till
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\selectcolormodel{cmyk}
+\mode<presentation>
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Maroon
+\definecolor{LightMaroon}{cmyk}{0.10,1,0.7,0.49}
+\definecolor{MediumMaroon}{cmyk}{0,1,1,0.686}
+\definecolor{DarkMaroon}{cmyk}{0.15,1,0.39,0.69}
+\definecolor{VeryDarkMaroon}{cmyk}{0,1,1,0.9}
+
+% butter (yellowish)
+\definecolor{tabutter}{rgb}{0.98824, 0.91373, 0.30980}        % #fce94f
+\definecolor{ta2butter}{rgb}{0.92941, 0.83137, 0}        % #edd400
+\definecolor{ta3butter}{rgb}{0.76863, 0.62745, 0}        % #c4a000
+
+% sky blue
+\definecolor{taskyblue}{rgb}{0.44706, 0.56078, 0.81176}        % #728fcf
+\definecolor{ta2skyblue}{rgb}{0.20392, 0.39608, 0.64314}    % #3465a4
+\definecolor{ta3skyblue}{rgb}{0.12549, 0.29020, 0.52941}    % #204a87
+
+% aluminium
+\definecolor{OffWhite}{rgb}{0.97, 0.97, 0.96}
+\definecolor{taaluminium}{rgb}{0.93333, 0.93333, 0.92549}    % #eeeeec
+\definecolor{ta2aluminium}{rgb}{0.82745, 0.84314, 0.81176}    % #d3d7cf
+\definecolor{ta3aluminium}{rgb}{0.72941, 0.74118, 0.71373}    % #babdb6
+
+% gray
+\definecolor{tagray}{rgb}{0.53333, 0.54118, 0.52157}        % #888a85
+\definecolor{ta2gray}{rgb}{0.33333, 0.34118, 0.32549}        % #555753
+\definecolor{ta3gray}{rgb}{0.18039, 0.20392, 0.21176}        % #2e3436
+
+\setbeamercolor{headline}{fg=MediumMaroon,bg=ta3aluminium}
+\setbeamercolor{footline}{fg=MediumMaroon, bg=ta3gray}
+\setbeamerfont{footline}{size=\large,series=\tt}
+\setbeamercolor{separation line}{bg=MediumMaroon}
+\setbeamercolor{title in headline}{fg=tabutter}
+\setbeamercolor{author in headline}{fg=MediumMaroon}
+\setbeamercolor{institute in headline}{fg=DarkMaroon}
+
+\setbeamercolor{framesubtitle}{fg=DarkMaroon, bg=ta3gray}
+\setbeamercolor{author in head/foot}{fg=DarkMaroon, bg=ta3aluminium}
+\setbeamercolor{title in head/foot}{fg=DarkMaroon, bg=ta3gray}
+
+\setbeamercolor*{normal text}{fg=LightMaroon, bg=ta3gray}
+\setbeamercolor*{block body}{bg=White,fg=black}
+\setbeamercolor*{block title}{fg=ta2aluminium,bg=DarkMaroon}
+\setbeamerfont{block title}{size=\large,series=\bf}
+\setbeamercolor{upper separation line head}{fg=MediumMaroon}
+
+\setbeamercolor*{example body}{fg=ta3aluminium,bg=black}
+\setbeamercolor*{example text}{fg=ta3aluminium,bg=black}
+\setbeamercolor*{example title}{bg=MediumMaroon,fg=ta2gray}
+
+%\setbeamercolor{alerted text}{fg=ta3gray}
+
+\setbeamercolor{structure}{fg=ta3skyblue}
+
+\setbeamertemplate{navigation symbols}{}  % no navigation on a poster
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{block begin}{
+    \vskip.75ex
+    \begin{beamercolorbox}[ht=3.5ex,dp=0.5ex,center,leftskip=-1em,colsep*=.75ex]{block title}%
+        \usebeamerfont*{block title}%
+        {\phantom{Gg}\insertblocktitle}% phantom because of baseline problem
+    \end{beamercolorbox}%
+    {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}%
+    \usebeamerfont{block body}%
+    \begin{beamercolorbox}[leftskip=1em,colsep*=.75ex,sep=0.5ex,vmode]{block body}%
+        \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
+    }
+    \setbeamertemplate{block end}{
+    \end{beamercolorbox}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{headline}{
+    \leavevmode
+
+    \begin{beamercolorbox}[wd=\paperwidth]{headline}
+        \begin{columns}[T]
+            \begin{column}{.99\paperwidth}
+                \vskip4ex
+                \centering
+                \usebeamercolor{title in headline}{\color{fg}\textbf{\Huge{\inserttitle}}\\[2ex]}
+                \usebeamercolor{author in headline}{\color{fg}\large{\insertauthor}\\[1ex]}
+                \usebeamercolor{institute in headline}{\color{fg}\large{\insertinstitute}\\[1ex]}
+            \end{column}
+        \end{columns}
+        \vskip2ex
+    \end{beamercolorbox}
+
+%    \begin{beamercolorbox}[wd=\paperwidth]{headline}
+%        \begin{columns}[T]
+%            \begin{column}{.1\paperwidth}
+%            \end{column}
+%            \begin{column}{.7\paperwidth}
+%                \vskip4ex
+%                \raggedleft
+%                \usebeamercolor{title in headline}{\color{fg}\textbf{\Huge{\inserttitle}}\\[2ex]}
+%                \usebeamercolor{author in headline}{\color{fg}\large{\insertauthor}\\[1ex]}
+%                \usebeamercolor{institute in headline}{\color{fg}\large{\insertinstitute}\\[1ex]}
+%            \end{column}
+%            \begin{column}{.15\paperwidth}
+%                \begin{center}
+%                    \vskip3ex
+%                    \includegraphics[width=.7\linewidth]{CSGF_horiz.png} \\
+%                    \vskip3ex
+%                    \includegraphics[width=.82\linewidth]{cert_logo_maroon.png}
+%                \end{center}
+%            \end{column}
+%        \end{columns}
+%        \vskip2ex
+%    \end{beamercolorbox}
+
+    \begin{beamercolorbox}[wd=\paperwidth]{lower separation line head}
+        \rule{0pt}{3pt}
+    \end{beamercolorbox}
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{footline}{
+    %\begin{beamercolorbox}[wd=\paperwidth]{upper separation line foot}
+    %    \rule{0pt}{3pt}
+    %\end{beamercolorbox}
+
+    \leavevmode%
+    \begin{center}
+        \includegraphics[width=\textwidth]{cert_banner.pdf}
+    \end{center}
+    %\begin{beamercolorbox}[ht=4ex,leftskip=1em,rightskip=1em]{author in head/foot}%
+    %    \texttt{May 6, 2014}
+    %    \hfill
+    %    \texttt{attom@tamu.edu}
+    %    \vskip1ex
+    %\end{beamercolorbox}
+
+    %\vskip0pt%
+    %\begin{beamercolorbox}[wd=\paperwidth]{lower separation line foot}
+    %    \rule{0pt}{3pt}
+    %\end{beamercolorbox}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Display a grid to help align images ... and it looks nice with this color scheme
+%\beamertemplategridbackground[1cm]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\mode<all>
+
+% adapt height of imtemize rectangles
+\setbeamertemplate{itemize items}[square]
+\setbeamertemplate{itemize item}{{ \small \raisebox{0.12ex}{\color{VeryDarkMaroon}$\blacktriangleright$}\hskip0.1em}}
+\setbeamertemplate{itemize subitem}{{ \footnotesize \raisebox{0.12ex}{\color{VeryDarkMaroon}$\blacktriangleright$}\hskip0.1em}}
+%\setbeamertemplate{itemize subitem}{\raisebox{0.12ex}{$\triangleright$}\hskip0.1em}
+% or define your own template using \defbeamertemplate{itemize item}, see beameruserguide.pdf
+
+% equal font sizes for all levels
+\setbeamerfont{itemize/enumerate body}{size=\normalsize}
+\setbeamerfont{itemize/enumerate subbody}{size=\normalsize}
+\setbeamerfont{itemize/enumerate subsubbody}{size=\normalsize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-PDF-mode: t
+%%% TeX-master: "poster-surf"
+%%% End:
