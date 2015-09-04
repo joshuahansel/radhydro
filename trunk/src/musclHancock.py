@@ -188,7 +188,10 @@ def hydroCorrectorJosh(mesh, states_old, states_half, slopes_old, dt, bc):
 
         # solve Riemann problem at interface
         rho_F[i] = riem_solver(rho_L, rho_R, state_L, state_R, rhoFlux)
+        #print "Fluxes in", momFlux(state_L,state_R)
         mom_F[i] = riem_solver(mom_L, mom_R, state_L, state_R, momFlux)
+        #print "Flux out", mom_F[i]
+        #print ""
         erg_F[i] = riem_solver(erg_L, erg_R, state_L, state_R, ergFlux)
 
     #Intialize cell average quantity arrays at t_old
@@ -386,11 +389,34 @@ def HLLCSolver(U_l, U_r, L, R, flux): #quantity of interest U, state to the left
     #Compute bounding speeds
     S_l = min(L.u - a_l, R.u - a_r)
     S_r = max(L.u + a_l, R.u + a_r)
+
+    #Alternative wave speed estimate from Toro page 331
+    p_l = L.p
+    p_r = R.p
+    u_r = R.u
+    u_l = L.u
+    rho_bar = 0.5*(L.rho + R.rho)
+    a_bar   = 0.5*(a_l + a_r)
+    p_pvrs = 0.5*(p_l + p_r) - 0.5*(u_r - u_l)*rho_bar*a_bar
+    p_star = max(0.,p_pvrs)
+
+    if p_star <= p_l:
+        q_l = 1.
+    else:
+        q_l = sqrt(1.+(L.gamma+1.)/(2.*L.gamma)*(p_star/p_l - 1.))
+    if p_star <= p_r:
+        q_r = 1.
+    else:
+        q_r = sqrt(1.+(R.gamma+1.)/(2.*R.gamma)*(p_star/p_r - 1.))
+
+    S_l = L.u - a_l*q_l 
+    S_r = R.u + a_r*q_r
+
     S_star = ( (R.p - L.p + L.rho*L.u*(S_l - L.u) - R.rho*R.u*(S_r - R.u)) /
                (L.rho*(S_l - L.u) - R.rho*(S_r - R.u)) )
 
     #Check for zero velocity differences:
-    if L == R:
+    if L.u == R.u and a_l == a_r:
         S_star = L.u
 
     #Compute fluxes at the boundaries
@@ -427,25 +453,64 @@ def HLLCSolver(U_l, U_r, L, R, flux): #quantity of interest U, state to the left
     F_lstar = F_l + S_l*(U_lstar - U_l)
     F_rstar = F_r + S_r*(U_rstar - U_r)
 
+    #Alternative formulation
+    #-----------------------------------
+#    print "Trying alternate fluxes"
+#    if flux == rhoFlux:
+#
+#        D_star = 0
+#
+#    elif flux == momFlux:
+#
+#        D_star = 1.
+#
+#    elif flux == ergFlux:
+#
+#        D_star = S_star
+#
+#    else:
+#
+#        raise ValueError("Ended up in a wierd place in HLLC") 
+#
+#    U_lstar = (S_l*U_l - F_l + L.p*D_star)/(S_l - S_star)
+#    U_rstar = (S_r*U_r - F_r + R.p*D_star)/(S_r - S_star)
+#
+#    F_lstar = ( S_star*(S_l*U_l - F_l) + S_l*(L.p + L.rho*(S_l - L.u)*(S_star - L.u)*D_star) ) \
+#            /   (S_l - S_star)
+#    F_rstar = ( S_star*(S_r*U_r - F_r) + S_r*(R.p + R.rho*(S_r - R.u)*(S_star - R.u)*D_star) ) \
+#            /   (S_r - S_star)
+    
+    
+
+    
+#    if F_rstar > F_r and F_rstar > F_l:
+#        F_rstar == max(F_r,F_l)
+#    if F_lstar > F_l and F_lstar > F_r:
+#        F_lstar == max(F_r,F_l)
+#    if F_rstar < F_r and F_rstar < F_l:
+#        F_rstar == min(F_r,F_l)
+#    if F_lstar < F_l and F_lstar < F_r:
+#        F_lstar == min(F_r,F_l)
+
     #Return appropraite state
     if S_r < 0:
 
-        #print "Return F_r", F_r
+        #print "I picked S_r", F_r
         return F_r
 
-    elif S_l <= 0.0 and S_star > 0.0:
+    elif S_l <= 0.0 and S_star >= 0.0:
         
-        #print "Retrun F_lstar", F_lstar
+        #print "I picked S_lstar", F_lstar
         return F_lstar
 
-    elif S_star <= 0.0 and S_r > 0.0:
+    elif S_star <= 0.0 and S_r >= 0.0:
 
-        #print "Return F_rstar", F_rstar
+        #print "I picked S_rstar", F_rstar
         return F_rstar
 
     elif S_l > 0.0:
 
-        #print "Return F_l", F_l
+        #print "I picked S_l", F_l
         return F_l
 
     else:

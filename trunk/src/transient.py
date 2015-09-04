@@ -14,7 +14,7 @@ from takeRadiationStep import takeRadiationStep
 from hydroSlopes import HydroSlopes
 from musclHancock import hydroPredictor, hydroCorrectorSimon, hydroCorrectorJosh
 from balanceChecker import BalanceChecker
-from plotUtilities import plotHydroSolutions
+from plotUtilities import plotHydroSolutions, plotIntErgs
 from radUtilities import mu
 import globalConstants as GC
 
@@ -508,6 +508,19 @@ def runNonlinearTransient(mesh, problem_type,
        Qerg_old = deepcopy(Qerg_new)
        Qrho_old = deepcopy(Qrho_new)
 
+       #Check if in Steady State
+       end_at_SS = True
+       if end_at_SS:
+
+           trans_change = computeL2RelDiff(hydro_new, hydro_older, aux_func=lambda i:i.E())
+           print "Total energy relative changed by this much", trans_change
+           if trans_change < 1.e-5:
+               print "Exiting because in steady state..."
+               break
+
+     
+   plotIntErgs(mesh, e_rad_new, hydro_new, slopes_half)
+
    # return final solutions
    return rad_new, hydro_new
 
@@ -603,11 +616,12 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
 
    if debug_mode:
 
-      hydro_exact = computeAnalyticHydroSolution(mesh, t=t_old,
-            rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
+    #  hydro_exact = computeAnalyticHydroSolution(mesh, t=t_old,
+     #       rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
+      hydro_exact = None
 
-  #    plotHydroSolutions(mesh, hydro_old, x_exact=mesh.getCellCenters(),
-  #        exact=hydro_exact)
+      plotHydroSolutions(mesh, hydro_old, x_exact=mesh.getCellCenters(),
+          exact=hydro_exact)
     
    if verbosity > 1:
       print "    Predictor step:"
@@ -624,14 +638,14 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
 
    if debug_mode:
       print "hydro_old:"
-      for i in hydro_old:
-         print i
+    #  for i in hydro_old:
+    #     print i
 
       print "hydro_star predictor:"
-      for i in hydro_star:
-         print i
-    #  plotHydroSolutions(mesh, hydro_star, x_exact=mesh.getCellCenters(),
-    #            exact=None)
+    #  for i in hydro_star:
+    #     print i
+      plotHydroSolutions(mesh, hydro_star, x_exact=mesh.getCellCenters(),
+                exact=None)
 
    # compute new extraneous sources
    Qpsi_half, Qmom_half, Qerg_half, Qrho_half = computeExtraneousSources(
@@ -668,14 +682,15 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
 
 
    if debug_mode:
-      print "hydro_half:"
-      for i in hydro_half:
-         print i
-      hydro_exact = computeAnalyticHydroSolution(mesh, t=t_old+0.5*dt,
-            rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
+       print "hydro_half after nonlinear:"
+#      for i in hydro_half:
+#         print i
+ #     hydro_exact = computeAnalyticHydroSolution(mesh, t=t_old+0.5*dt,
+ #           rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
+       hydro_exact = None
 
-#      plotHydroSolutions(mesh, hydro_half, x_exact=mesh.getCellCenters(),
-#        exact=hydro_exact)
+       plotHydroSolutions(mesh, hydro_half, x_exact=mesh.getCellCenters(),
+           exact=hydro_exact)
 
    if verbosity > 1:
       print "    Corrector step:"
@@ -690,12 +705,12 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
       mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
 
    if debug_mode:
-      print "hydro_star corrector:"
-      for i in hydro_star:
-         print i
+    #  print "hydro_star corrector:"
+    #  for i in hydro_star:
+    #     print i
 
-#     plotHydroSolutions(mesh, hydro_star, x_exact=mesh.getCellCenters(),
-#               exact=None)
+      plotHydroSolutions(mesh, hydro_star, x_exact=mesh.getCellCenters(),
+               exact=None)
 
    # compute new extraneous sources
    Qpsi_new, Qmom_new, Qerg_new, Qrho_new = computeExtraneousSources(
@@ -740,12 +755,12 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
       verbosity    = verbosity)
 
    if debug_mode:
-       hydro_exact = computeAnalyticHydroSolution(mesh, t=t_old+dt,
-            rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
+#       hydro_exact = computeAnalyticHydroSolution(mesh, t=t_old+dt,
+ #           rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
     
- #      plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),
- #           exact=hydro_exact)
+       plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),
+            exact=hydro_exact)
 
    # add up sources for entire time step for balance checker
    src_totals =  computeMMSSrcTotal(mesh,dt,time_stepper_corrector,
@@ -761,10 +776,6 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
    if verbosity > 1:
       print ""
 
-   if debug_mode:
-      print "hydro_new:"
-      for i in hydro_new:
-         print i
 
    return hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
       Qpsi_new, Qmom_new, Qerg_new, Qrho_new, hydro_F_left, hydro_F_right,\

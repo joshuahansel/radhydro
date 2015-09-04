@@ -20,7 +20,8 @@ class HydroBC(object):
    #  @param[in] erg_BC   function handle for total energy as a function of (x,t),
    #                      necessary if Dirichlet BC are chosen
    #
-   def __init__(self, bc_type, mesh, rho_BC=None, mom_BC=None, erg_BC=None):
+   def __init__(self, bc_type, mesh, rho_BC=None, mom_BC=None, erg_BC=None,
+                state_L=None, state_R=None):
 
       # save the BC type
       self.bc_type = bc_type
@@ -37,6 +38,11 @@ class HydroBC(object):
          self.rho_BC = rho_BC
          self.mom_BC = mom_BC
          self.erg_BC = erg_BC
+      elif self.bc_type == 'fixed':
+         self.state_L = state_L
+         self.state_R = state_R
+         self.rho_L, self.mom_L, self.erg_L = state_L.getConservativeVariables()
+         self.rho_R, self.mom_R, self.erg_R = state_R.getConservativeVariables()
       else:
          raise NotImplementedError("Invalid hydro BC type")
 
@@ -140,6 +146,10 @@ class HydroBC(object):
              self.mom_R = self.mom_BC(self.x_R, t)
              self.erg_L = self.erg_BC(self.x_L, t)
              self.erg_R = self.erg_BC(self.x_R, t)
+
+      elif self.bc_type == 'fixed':
+      
+         pass #Keep what we had
 
       else:
 

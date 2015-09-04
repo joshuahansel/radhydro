@@ -14,6 +14,7 @@ from plotUtilities import plotHydroSolutions
 from radiation import Radiation
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
+from radBC   import RadBC
 
 ## Unit test class
 #
@@ -25,7 +26,7 @@ class TestHydro(unittest.TestCase):
    def test_Hydro(self):
 
       # create mesh
-      n_elems = 100
+      n_elems = 200
       width = 1.0
       mesh = Mesh(n_elems,width)
       x_diaphragm = 0.3
@@ -79,8 +80,7 @@ class TestHydro(unittest.TestCase):
       hydro_BC = HydroBC(bc_type='reflective', mesh=mesh)
   
       # initialize radiation to zero solution to give pure hydrodynamics
-      psi_left  = 0.0
-      psi_right = 0.0
+      rad_BC    = RadBC(mesh, "vacuum")
       rad_IC    = Radiation([0.0 for i in range(n_elems*4)])
 
       # if run standalone, then be verbose
@@ -99,13 +99,13 @@ class TestHydro(unittest.TestCase):
          use_2_cycles = True,
          t_start      = t_start,
          t_end        = t_end,
-         psi_left     = psi_left,
-         psi_right    = psi_right,
+         rad_BC       = rad_BC,
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
          verbosity    = verbosity,
+         slope_limiter      = 'double-minmod',
          check_balance= True)
 
 

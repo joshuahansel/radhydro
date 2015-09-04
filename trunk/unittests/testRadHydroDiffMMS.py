@@ -53,8 +53,8 @@ class TestRadHydroMMS(unittest.TestCase):
       # numeric values
       gamma_value = 1.4
       cv_value = 1.0
-      sig_s = 0.0
-      sig_a = 100000.0
+      sig_s = 1000.0
+      sig_a = 1000.0
       sig_t = sig_s + sig_a
 
       #Want material speeed to be a small fraction of speed of light

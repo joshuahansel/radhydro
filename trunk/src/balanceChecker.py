@@ -267,6 +267,7 @@ class BalanceChecker:
                     erg_bal/max(erg_new+abs(src_totals["erg"]),1.E-65))
             print "=====================================================\n"
 
+            #See how well we satisfy each of the equations
             
 
 

@@ -8,6 +8,7 @@ import globalConstants as GC
 from matplotlib import rc # for rendering tex in plots
 from radUtilities import computeScalarFlux
 from hydroState import computeVelocity, computeIntEnergy, computePressure
+from utilityFunctions import computeHydroInternalEnergies
 
 ## Plots a function of (x,t)
 #
@@ -144,7 +145,7 @@ def plotScalarFlux(mesh, psi_minus, psi_plus, save=False, filename='scalarFlux.p
 
 ## Plot the angular flux and exact angular flux
 def plotS2Erg(mesh, psim_edge, psip_edge, exact_psim=None, save=False, filename='Radiation.pdf',
-        exact_psip=None, print_values=False):
+        exact_psip=None, edge_values=True, print_values=False):
 
    # create new figure
    plt.figure()
@@ -156,11 +157,19 @@ def plotS2Erg(mesh, psim_edge, psip_edge, exact_psim=None, save=False, filename=
    psip = computeAverageValues(psip_edge)
    psim = computeAverageValues(psim_edge)
 
+   x_e = mesh.getCellEdgesDiscontinuous()
+
+   # transform into a list of
+   psip_e = computeLRValues(psip_edge)
+   psim_e = computeLRValues(psim_edge)
+
    # plot
    plt.rc('text', usetex=True)         # use tex to generate text
    plt.rc('font', family='sans-serif') # use sans-serif font family
-   plt.plot(x, psim, 'r-', label='Numerical $\psi^-$')
-   plt.plot(x, psip, 'b-', label='Numerical $\psi^+$')
+   plt.plot(x, psim, 'r+', label='Numerical $\psi^-$ Avg')
+   plt.plot(x, psip, 'b+', label='Numerical $\psi^+$ Avg')
+   plt.plot(x_e, psim_e, 'r-', label='Numerical $\psi^-$ LD')
+   plt.plot(x_e, psip_e, 'b-', label='Numerical $\psi^+$ LD')
 
    # annotations
    plt.xlabel('$x$')
@@ -185,6 +194,7 @@ def plotS2Erg(mesh, psim_edge, psip_edge, exact_psim=None, save=False, filename=
 ##
  #         print "%.12f" % x[i], "%.12f" % Er[i], "%.12f" % T[i]
 
+
    
 
    # save if requested
@@ -193,6 +203,58 @@ def plotS2Erg(mesh, psim_edge, psip_edge, exact_psim=None, save=False, filename=
    else:
       plt.show()
 
+def plotIntErgs(mesh, e_rad_new, states_new, slopes, save=False, print_values=False):
+
+   # create new figure
+   plt.figure()
+
+   # create x-points
+   x = mesh.getCellCenters()
+
+   # transform array of tuples into array
+   e_rad_avg = computeAverageValues(e_rad_new)
+
+   x_e = mesh.getCellEdgesDiscontinuous()
+
+   e_e = [computeHydroInternalEnergies(i,states_new[i],slopes) for i in
+         range(len(states_new))]
+
+   e = [i.e for i in states_new]
+
+   # transform into a list of
+   e_rad_e = computeLRValues(e_rad_new)
+   e_e = computeLRValues(e_e)
+
+   # plot
+   plt.rc('text', usetex=True)         # use tex to generate text
+   plt.rc('font', family='sans-serif') # use sans-serif font family
+   plt.plot(x, e, 'bx', label='Hydro $e$ avg')
+   plt.plot(x_e,e_e,'b--',label='Hydro $e$ edge')
+   plt.plot(x, e_rad_avg, 'r+', label='Radiation Avg. $e$')
+   plt.plot(x_e, e_rad_e, 'r-', label='Radiation Edge $e$')
+
+   # annotations
+   plt.xlabel('$x$')
+   plt.ylabel('$e$')
+
+   plt.legend(loc='best')
+
+   # if print requested
+ #  if print_values:
+ #     print "  x   E_r    E_r_exact  "
+ #     print "-------------------"
+ #     for i in range(len(x)):
+##
+ #         print "%.12f" % x[i], "%.12f" % Er[i], "%.12f" % T[i]
+
+
+   
+
+   # save if requested
+   if save:
+      plt.savefig(filename)
+   else:
+      plt.show()
 
 ## Plot arbitrary radiation density
 #
@@ -313,10 +375,12 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
       # get x points, 1st column
       x_exact = exact_data[:,0]
       # get exact material temperature, 2nd column
-      T_exact = exact_data[:,1] / 10.0
+      T_exact = exact_data[:,1] * T[0]
       # get exact radiation temperature, 3rd column
-      Tr_exact = exact_data[:,2] / 10.0
+      Tr_exact = exact_data[:,2] * Tr[0]
       # plot exact temperatures
+      print T_exact, Tr_exact
+      exit()
       plt.plot(x_exact,T_exact,'b-',label='$T_m$, analytic')
       plt.plot(x_exact,Tr_exact,'r-',label='$T_r$, analytic')
 
@@ -416,6 +480,15 @@ def makeYPoints(tuples_array):
 def computeAverageValues(tuple_list):
    return [0.5*i[0] + 0.5*i[1] for i in tuple_list]
 
+## Make a plotting array from L, R values
+#
+def computeLRValues(tuple_list):
+   x = []
+   for i in tuple_list:
+      x.append(i[0])
+      x.append(i[1])
+
+   return x
 
 ## Plots hydro solution
 #
