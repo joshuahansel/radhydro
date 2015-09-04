@@ -193,7 +193,8 @@ class TestRadHydroMMS(unittest.TestCase):
             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
          # plot hydro solution
-         plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),exact=hydro_exact)
+         plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),
+            exact=hydro_exact)
 
          # compute exact radiation energy
          Er_exact_fn = 1./GC.SPD_OF_LGT*(psim + psip)

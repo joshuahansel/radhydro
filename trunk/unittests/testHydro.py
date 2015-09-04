@@ -36,6 +36,9 @@ class TestHydro(unittest.TestCase):
       t_start = 0.0
       t_end   = 0.2
 
+      # slope limiter
+      slope_limiter = "vanleer"
+
       # constant properties
       sig_s = 1.0 # arbitrary
       sig_a = 0.0 # set to zero to ensure no emission
@@ -82,6 +85,7 @@ class TestHydro(unittest.TestCase):
       # initialize radiation to zero solution to give pure hydrodynamics
       rad_BC    = RadBC(mesh, "vacuum")
       rad_IC    = Radiation([0.0 for i in range(n_elems*4)])
+      rad_BC    = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -102,8 +106,10 @@ class TestHydro(unittest.TestCase):
          rad_BC       = rad_BC,
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
+         rad_BC       = rad_BC,
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
+         slope_limiter = slope_limiter,
          verbosity    = verbosity,
          slope_limiter      = 'double-minmod',
          check_balance= True)
@@ -136,15 +142,8 @@ class TestHydro(unittest.TestCase):
          for i in range(len(x_e)):
             hydro_exact.append(HydroState(u=u_e[i],rho=rho_e[i],e=e_e[i],gamma=gam,spec_heat=c_v) )
 
-
          plotHydroSolutions(mesh, hydro_new,x_exact=x_e,exact=hydro_exact)
 
-         # print out the states
-         for i in hydro_new:
-
-             print i
-
-  
 # run main function from unittest module
 if __name__ == '__main__':
    unittest.main()

@@ -17,6 +17,7 @@ from plotUtilities import plotTemperatures
 from radiation import Radiation
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
+from radBC   import RadBC
 
 ## Unit test class for a 2-material TRT problem, using BE time discretization.
 #
@@ -33,8 +34,9 @@ class TestTRTOnly(unittest.TestCase):
 
       # time step size and transient start and end times
       dt      = 0.001
-      t_start = 0.
-      t_end   = 0.01
+      t_start = 0.0
+      #t_end   = 0.01
+      t_end   = 0.1
 
       # initialize temperature
       T_init = 0.05
@@ -81,6 +83,7 @@ class TestTRTOnly(unittest.TestCase):
       psi_left  = computeEquivIntensity(T_l)
       psi_right = computeEquivIntensity(T_r)
       rad_IC    = Radiation([psi_right for i in range(n_elems*4)])
+      rad_BC    = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
 
       # time-stepper
       time_stepper = "BDF2"
@@ -100,8 +103,7 @@ class TestTRTOnly(unittest.TestCase):
          dt_constant  = dt,
          t_start      = t_start,
          t_end        = t_end,
-         psi_left     = psi_left,
-         psi_right    = psi_right,
+         rad_BC       = rad_BC,
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
          hydro_IC     = hydro_IC,
