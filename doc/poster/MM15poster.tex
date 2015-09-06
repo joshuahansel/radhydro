@@ -456,26 +456,22 @@ where $\gamma$ is the adiabatic index, and $C_v$ is the specific heat.  However,
 	  \begin{itemize} 
     \item Each time step is broken into two half time steps.
     \item During the first half time step:
-%\end{itemize}
-      \begin{enumerate}
-        \item 1. Perform standard explicit MUSCL-Hancock predictor step.
-        \item 2. Enter iteration loop
-        \begin{enumerate}
-          \item \begin{tabular}{c l}(a)&Update material momentum change due to radiation momentum\\
-                 & deposition.\end{tabular}
-          \item \begin{tabular}{c l}(b)&Perform coupled solve of total material energy and S$_2$ equations
-                \\&with Crank-Nicholson temporal differencing.\end{tabular}
-        \end{enumerate}
-        \item 3. Perform standard explicit MUSCL-Hancock corrector step.
-        \item 4. Enter iteration loop
-        \begin{enumerate}
-          \item \begin{tabular}{c l}(a)&Compute new material momentum due to radiation momentum\\&deposition.\end{tabular}
-          \item \begin{tabular}{c l}(b)&Perform simultaneous solve for new total material energy due to \\
-             &radiation energy deposition and the radiation intensities with \\&Crank-Nicholson temporal differencing.\end{tabular}
-        \end{enumerate}
-      \end{enumerate}
-%\begin{itemize}
-      \item The second half time step is the same as the first except that TBDF2 temporal diffencing is used in the corrector step 
+      \begin{itemize}
+         \item[1.]\hspace{0.05in} Perform standard explicit MUSCL-Hancock predictor step.
+      \item[2.]\hspace{0.05in} Enter iteration loop
+        \begin{itemize}
+           \item[2a.]\hspace{0.05in} Update material momentum change due to radiation momentum deposition.
+           \item[2b.]\hspace{0.05in} Perform coupled solve of total material energy and S$_2$ equations with Crank-Nicholson temporal differencing.
+        \end{itemize}
+     \item[3.]\hspace{0.05in} Perform standard explicit MUSCL-Hancock corrector step.
+     \item[4.]\hspace{0.05in} Enter iteration loop
+        \begin{itemize}
+           \item[4a.]\hspace{0.05in} Compute new material momentum due to radiation momentum deposition.
+           \item[4b.]\hspace{0.05in} Perform simultaneous solve for new total material energy due to radiation energy deposition 
+        and the radiation intensities with Crank-Nicholson temporal differencing.
+        \end{itemize}
+      \end{itemize}
+   \item The second half time step is the same as the first except that TBDF2 temporal diffencing is used in the corrector step 
       in the simultaneous solve for the material total energy and the radiation intensities.
     \item The standard MUSCL-Hancock algorithm does not need internal energy slopes, but one can nonetheless 
           consistently compute them.  These slopes are not used to initialize the LDG representation for the 
@@ -496,7 +492,14 @@ where $\gamma$ is the adiabatic index, and $C_v$ is the specific heat.  However,
 \begin{subfigure}{0.49\textwidth}
   \centering
     \includegraphics[width=0.99\linewidth]{convergence_plot/e_convergence.pdf}
-    \caption{\label{e_convergence} MMS Spatial Convergence}
+    \vspace{0.6852in}
+    \caption{\label{e_convergence} MMS convergence ({\footnotesize $\Delta x/\Delta t$}
+    constant)}
+\end{subfigure}
+\begin{subfigure}{1.0\textwidth}
+   \centering
+   \includegraphics[width=0.5\linewidth]{Tr_shock.pdf}
+   \caption{\label{shock} Mach 2 Radiative Shock Solution}
 \end{subfigure}
 \end{figure}
 %    \vspace{0.7em}
