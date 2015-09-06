@@ -15,6 +15,7 @@ from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotAngularFlux, makeContinuousXPoints
 from radUtilities import mu, computeScalarFlux, extractAngularFluxes
 from integrationUtilities import computeL1ErrorLD
+from radBC import RadBC
 
 ## Derived unittest class to run a pure absorber problem and compare to
 #  exact solution.
@@ -25,20 +26,18 @@ class TestPureAbsorberProblem(unittest.TestCase):
       pass
    def test_PureAbsorberProblem(self):
 
-      # physics data
-      sig_t = 0.1    # total cross section
-      sig_s = 0.0
-      L = 10.0       # domain length
-      inc_minus = 10 # isotropic incoming angular flux for minus direction
-      inc_plus = 20  # isotropic incoming angular flux for plus  direction
-   
-      j_minus = 0.5*inc_minus # incoming current in minus direction
-      j_plus  = 0.5*inc_plus  # incoming current in plus  direction
-   
       # number of elements
       n_elems = 50
       # mesh
+      L = 10.0       # domain length
       mesh = Mesh(n_elems,L)
+   
+      # physics data
+      sig_t = 0.1    # total cross section
+      sig_s = 0.0    # scattering cross section
+      inc_minus = 10 # isotropic incoming angular flux for minus direction
+      inc_plus  = 20 # isotropic incoming angular flux for plus  direction
+      rad_BC    = RadBC(mesh, "dirichlet", psi_left=inc_plus, psi_right=inc_minus)
    
       # cross sections
       cross_sects = [(ConstantCrossSection(sig_s,sig_t),
@@ -51,8 +50,7 @@ class TestPureAbsorberProblem(unittest.TestCase):
       rad = radiationSolveSS(mesh,
                              cross_sects,
                              Q,
-                             bound_curr_lt=j_plus,
-                             bound_curr_rt=j_minus)
+                             rad_BC=rad_BC)
    
       # get continuous x-points
       xlist = makeContinuousXPoints(mesh)
