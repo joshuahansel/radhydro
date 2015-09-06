@@ -19,6 +19,8 @@ from transient import runNonlinearTransient
 from hydroBC import HydroBC
 from radBC   import RadBC
 import globalConstants as GC
+import cProfile
+import profile
 
 ## Derived unittest class to test the radiation-hydrodynamics shock problem
 #
@@ -30,10 +32,10 @@ class TestRadHydroShock(unittest.TestCase):
    def test_RadHydroShock(self):
 
       # test case
-      test_case = "marcho2" # mach1.2 mach2 mach50 marcho1.05
+      test_case = "mach2" # mach1.2 mach2 mach50 marcho1.05
       
       # create uniform mesh
-      n_elems = 50
+      n_elems = 300
       width = 0.04
       x_start = -0.02
       mesh_center = x_start + 0.5*width
@@ -67,7 +69,7 @@ class TestRadHydroShock(unittest.TestCase):
          Erad_right = 2.7955320762182542e-06
 
          # final time
-         t_end = 1.2
+         t_end = 1.0
 
          # temperature plot filename
          test_filename = "radshock_mach1.2.pdf"
@@ -99,9 +101,10 @@ class TestRadHydroShock(unittest.TestCase):
          print "momentum", rho1*u1, rho2*u2
          print "E",E1, E2
          print "E_r",Erad_left, Erad_right
+         print sig_a1, sig_s1
 
          # final time
-         t_end = 1.0
+         t_end = 0.5
 
          # temperature plot output filename
          test_filename = "radshock_mach2.pdf"
@@ -259,6 +262,8 @@ class TestRadHydroShock(unittest.TestCase):
       e_l   =  state_l.e
       e_r   =  state_r.e
       de    = e_r-e_l
+      print "p", state_l.p, state_r.p
+      print "mach number", state_l.u/state_l.getSoundSpeed(), state_r.u/state_r.getSoundSpeed()
 
       #Scale
       idx = 0
@@ -281,7 +286,7 @@ class TestRadHydroShock(unittest.TestCase):
       # create hydro BC
       hydro_BC = HydroBC(bc_type='fixed', mesh=mesh, state_L = state_l,
             state_R = state_r)
-      hydro_BC = HydroBC(bc_type='reflective', mesh=mesh)
+      #hydro_BC = HydroBC(bc_type='reflective', mesh=mesh)
 
       # transient options
       t_start  = 0.0
@@ -320,7 +325,7 @@ class TestRadHydroShock(unittest.TestCase):
          plotHydroSolutions(mesh, hydro_new, exact=hydro_exact)
 
          # plot material and radiation temperatures
-         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=False,
+         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=True,
             save=False, filename=test_filename,
             exact_solution_filename=exact_solution_filename)
 
@@ -328,5 +333,5 @@ class TestRadHydroShock(unittest.TestCase):
 
 # run main function from unittest module
 if __name__ == '__main__':
-   unittest.main()
+    profile.run(unittest.main(),filename='profiler_stats.txt')
 

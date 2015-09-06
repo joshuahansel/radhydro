@@ -12,7 +12,7 @@ from hydroSource import computeMomentumExtraneousSource,\
    computeEnergyExtraneousSource
 from takeRadiationStep import takeRadiationStep
 from hydroSlopes import HydroSlopes
-from musclHancock import hydroPredictor, hydroCorrectorSimon, hydroCorrectorJosh
+from musclHancock import hydroPredictor, hydroCorrector
 from balanceChecker import BalanceChecker
 from plotUtilities import plotHydroSolutions, plotIntErgs
 from radUtilities import mu
@@ -517,13 +517,13 @@ def runNonlinearTransient(mesh, problem_type,
        if end_at_SS:
 
            trans_change = computeL2RelDiff(hydro_new, hydro_older, aux_func=lambda i:i.E())
-           print "Total energy relative changed by this much", trans_change
-           if trans_change < 1.e-5:
-               print "Exiting because in steady state..."
+           if trans_change < 1.e-7:
+               print """Exiting transient (in transient.py) because steady state was detected as total energy only
+                        changed by a relative change of %0.4e. Be careful of this over small time steps""" % trans_change
                break
 
-     
-   plotIntErgs(mesh, e_rad_new, hydro_new, slopes_half)
+ #  Plots the hydro and rad edge values for internal energy   
+ #  plotIntErgs(mesh, e_rad_new, hydro_new, slopes_half)
 
    # return final solutions
    return rad_new, hydro_new
@@ -704,11 +704,9 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
 
    # update hydro BC
    hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, slopes=slopes_old, edge_value=True)
-   #hydro_BC.update(states=hydro_half, t=t_old+0.5*dt, edge_value=False)
 
    # perform corrector step of MUSCL-Hancock
-   hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorSimon(
-   #hydro_star, hydro_F_left, hydro_F_right = hydroCorrectorJosh(
+   hydro_star, hydro_F_left, hydro_F_right = hydroCorrector(
       mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
 
    if debug_mode:

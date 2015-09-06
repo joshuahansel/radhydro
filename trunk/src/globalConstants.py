@@ -18,7 +18,7 @@
 # All constants will are in units so that temperatures can just be treated as in 
 # keV.  This is confusing for specific heats, which will have units of
 #
-# C_V (energy/(temp * volume)) has units (keV/(keV*cm^3))
+# C_V (energy/(temp * volume)) has units (Jks/(keV*cm^3))
 
 ##shakes per second
 SH_PER_S = 1.E+8  

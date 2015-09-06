@@ -375,7 +375,6 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
       Tr_exact = exact_data[:,2] * Tr[0]
       # plot exact temperatures
       print T_exact, Tr_exact
-      exit()
       plt.plot(x_exact,T_exact,'b-',label='$T_m$, analytic')
       plt.plot(x_exact,Tr_exact,'r-',label='$T_r$, analytic')
 
@@ -391,12 +390,17 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
    plt.axis((x_min,x_max,yaxis_min,yaxis_max))
 
    # if print requested
+   file_name = "T_results_"+str(mesh.n_elems)+".txt"
+   f = open(file_name, "w")
    if print_values:
       print "  x   T_r    T_m   "
+      f.write("  x   T_r    T_m   \n")
       print "-------------------"
+      f.write("-------------------\n")
       for i in range(len(x)):
 
           print "%.12f" % x[i], "%.12f" % Tr[i], "%.12f" % T[i]
+          f.write("%.12e %.12e %.12e\n" % (x[i],Tr[i],T[i]))
 
    # save if requested
    if save:

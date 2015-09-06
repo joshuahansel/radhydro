@@ -119,116 +119,118 @@ def hydroPredictor(mesh, states_old, slopes, dt):
     return states_half
 
     
-## Corrector solver for hydro.
+### Corrector solver for hydro. This is an alternative version
+#   That passed the cell-averge values to Riemann solver instead of
+#   the predicted edge values.  In theory both options are second order
+##
+## @param[in] mesh         mesh object
+## @param[in] states_half  predicted cell-average states,
+##    \f$\mathbf{H}^{n+\frac{1}{2}}\f$
+## @param[in] states_old   old cell-average states, \f$\mathbf{H}^n\f$
+## @param[in] slopes_old   old slopes, \f$\Delta^n\f$
+## @param[in] dt           full time step size, \f$\Delta t\f$
+## @param[in] bc           hydro BC object
+##
+## @return
+##    -#  new cell-average states, \f$\mathbf{H}^{n+1}_i\f$
+##
+#def hydroCorrectorAlternative(mesh, states_old, states_half, slopes_old, dt, bc):
 #
-# @param[in] mesh         mesh object
-# @param[in] states_half  predicted cell-average states,
-#    \f$\mathbf{H}^{n+\frac{1}{2}}\f$
-# @param[in] states_old   old cell-average states, \f$\mathbf{H}^n\f$
-# @param[in] slopes_old   old slopes, \f$\Delta^n\f$
-# @param[in] dt           full time step size, \f$\Delta t\f$
-# @param[in] bc           hydro BC object
+#    #Choose riemann solver
+#    riem_solver = HLLCSolver #HLLSolver, HLLCSolver
 #
-# @return
-#    -#  new cell-average states, \f$\mathbf{H}^{n+1}_i\f$
+#    #Solve for fluxes and values at faces
+#    n = mesh.n_elems
 #
-def hydroCorrectorJosh(mesh, states_old, states_half, slopes_old, dt, bc):
+#    #Create vectors of predicted variables
+#    rho_p = [s.rho                     for s in states_half]
+#    mom_p = [s.rho*s.u                 for s in states_half]
+#    erg_p = [s.rho*(0.5*s.u*s.u + s.e) for s in states_half]
+#
+#    # get boundary values and states
+#    rho_BC_L, rho_BC_R, mom_BC_L, mom_BC_R, erg_BC_L, erg_BC_R =\
+#       bc.getBoundaryValues()
+#    state_BC_L, state_BC_R = bc.getBoundaryStates()
+#
+#    rho_F = np.zeros(n+1)
+#    mom_F = np.zeros(n+1)
+#    erg_F = np.zeros(n+1)
+#
+#    # solve Riemann problem at each interface
+#    for i in xrange(0,n+1):
+#
+#        # get left and right states for Riemann problem at interface
+#        if i == 0: # left boundary edge
+#            rho_L = rho_BC_L
+#            rho_R = rho_p[i]
+#            mom_L = mom_BC_L
+#            mom_R = mom_p[i]
+#            erg_L = erg_BC_L
+#            erg_R = erg_p[i]
+#            state_L = state_BC_L
+#            state_R = states_half[i]
+#        elif i == n: # right boundary edge
+#            rho_L = rho_p[i-1]
+#            rho_R = rho_BC_R
+#            mom_L = mom_p[i-1]
+#            mom_R = mom_BC_R
+#            erg_L = erg_p[i-1]
+#            erg_R = erg_BC_R
+#            state_L = states_half[i-1]
+#            state_R = state_BC_R
+#        else: # interior edge
+#            rho_L = rho_p[i-1]
+#            rho_R = rho_p[i]
+#            mom_L = mom_p[i-1]
+#            mom_R = mom_p[i]
+#            erg_L = erg_p[i-1]
+#            erg_R = erg_p[i]
+#            state_L = states_half[i-1]
+#            state_R = states_half[i]
+#
+#        # solve Riemann problem at interface
+#        rho_F[i] = riem_solver(rho_L, rho_R, state_L, state_R, rhoFlux)
+#        #print "Fluxes in", momFlux(state_L,state_R)
+#        mom_F[i] = riem_solver(mom_L, mom_R, state_L, state_R, momFlux)
+#        #print "Flux out", mom_F[i]
+#        #print ""
+#        erg_F[i] = riem_solver(erg_L, erg_R, state_L, state_R, ergFlux)
+#
+#    #Intialize cell average quantity arrays at t_old
+#    rho = [s.rho for s in states_old]
+#    mom = [s.rho*s.u for s in states_old]
+#    erg = [s.rho*(0.5*s.u**2. + s.e) for s in states_old]
+#    
+#    #Advance conserved values at centers based on edge fluxes
+#    for i in xrange(len(rho)):
+#
+#        dx = mesh.getElement(i).dx
+#
+#        #Example of edge fluxes:
+#        #   i is 0 for 1st element, so edge 0 and edge 1 is i and i+1
+#        rho[i] = advCons(rho[i],dx,dt,rho_F[i],rho_F[i+1])
+#        mom[i] = advCons(mom[i],dx,dt,mom_F[i],mom_F[i+1])
+#        erg[i] = advCons(erg[i],dx,dt,erg_F[i],erg_F[i+1])
+#
+#    # store the boundary fluxes
+#    bound_F_left = {}
+#    bound_F_right = {}
+#    bound_F_left['rho'] = rho_F[0]
+#    bound_F_left['mom'] = mom_F[0]
+#    bound_F_left['erg'] = erg_F[0]
+#    bound_F_right['rho'] = rho_F[-1]
+#    bound_F_right['mom'] = mom_F[-1]
+#    bound_F_right['erg'] = erg_F[-1]
+#
+#    #Advance primitive variables
+#    states_new = [deepcopy(i) for i in states_old] 
+#    for i in xrange(len(states_new)):
+#        states_new[i].updateState(rho[i],mom[i],erg[i])
+#
+#    return states_new, bound_F_left, bound_F_right
+#
 
-    #Choose riemann solver
-    riem_solver = HLLCSolver #HLLSolver, HLLCSolver
-
-    #Solve for fluxes and values at faces
-    n = mesh.n_elems
-
-    #Create vectors of predicted variables
-    rho_p = [s.rho                     for s in states_half]
-    mom_p = [s.rho*s.u                 for s in states_half]
-    erg_p = [s.rho*(0.5*s.u*s.u + s.e) for s in states_half]
-
-    # get boundary values and states
-    rho_BC_L, rho_BC_R, mom_BC_L, mom_BC_R, erg_BC_L, erg_BC_R =\
-       bc.getBoundaryValues()
-    state_BC_L, state_BC_R = bc.getBoundaryStates()
-
-    rho_F = np.zeros(n+1)
-    mom_F = np.zeros(n+1)
-    erg_F = np.zeros(n+1)
-
-    # solve Riemann problem at each interface
-    for i in xrange(0,n+1):
-
-        # get left and right states for Riemann problem at interface
-        if i == 0: # left boundary edge
-            rho_L = rho_BC_L
-            rho_R = rho_p[i]
-            mom_L = mom_BC_L
-            mom_R = mom_p[i]
-            erg_L = erg_BC_L
-            erg_R = erg_p[i]
-            state_L = state_BC_L
-            state_R = states_half[i]
-        elif i == n: # right boundary edge
-            rho_L = rho_p[i-1]
-            rho_R = rho_BC_R
-            mom_L = mom_p[i-1]
-            mom_R = mom_BC_R
-            erg_L = erg_p[i-1]
-            erg_R = erg_BC_R
-            state_L = states_half[i-1]
-            state_R = state_BC_R
-        else: # interior edge
-            rho_L = rho_p[i-1]
-            rho_R = rho_p[i]
-            mom_L = mom_p[i-1]
-            mom_R = mom_p[i]
-            erg_L = erg_p[i-1]
-            erg_R = erg_p[i]
-            state_L = states_half[i-1]
-            state_R = states_half[i]
-
-        # solve Riemann problem at interface
-        rho_F[i] = riem_solver(rho_L, rho_R, state_L, state_R, rhoFlux)
-        #print "Fluxes in", momFlux(state_L,state_R)
-        mom_F[i] = riem_solver(mom_L, mom_R, state_L, state_R, momFlux)
-        #print "Flux out", mom_F[i]
-        #print ""
-        erg_F[i] = riem_solver(erg_L, erg_R, state_L, state_R, ergFlux)
-
-    #Intialize cell average quantity arrays at t_old
-    rho = [s.rho for s in states_old]
-    mom = [s.rho*s.u for s in states_old]
-    erg = [s.rho*(0.5*s.u**2. + s.e) for s in states_old]
-    
-    #Advance conserved values at centers based on edge fluxes
-    for i in xrange(len(rho)):
-
-        dx = mesh.getElement(i).dx
-
-        #Example of edge fluxes:
-        #   i is 0 for 1st element, so edge 0 and edge 1 is i and i+1
-        rho[i] = advCons(rho[i],dx,dt,rho_F[i],rho_F[i+1])
-        mom[i] = advCons(mom[i],dx,dt,mom_F[i],mom_F[i+1])
-        erg[i] = advCons(erg[i],dx,dt,erg_F[i],erg_F[i+1])
-
-    # store the boundary fluxes
-    bound_F_left = {}
-    bound_F_right = {}
-    bound_F_left['rho'] = rho_F[0]
-    bound_F_left['mom'] = mom_F[0]
-    bound_F_left['erg'] = erg_F[0]
-    bound_F_right['rho'] = rho_F[-1]
-    bound_F_right['mom'] = mom_F[-1]
-    bound_F_right['erg'] = erg_F[-1]
-
-    #Advance primitive variables
-    states_new = [deepcopy(i) for i in states_old] 
-    for i in xrange(len(states_new)):
-        states_new[i].updateState(rho[i],mom[i],erg[i])
-
-    return states_new, bound_F_left, bound_F_right
-
-
-def hydroCorrectorSimon(mesh, states_old, states_half, slopes_old, dt, bc):
+def hydroCorrector(mesh, states_old, states_half, slopes_old, dt, bc):
 
     # choose riemann solver
     riem_solver = HLLCSolver #HLLSolver, HLLCSolver

@@ -4,7 +4,7 @@
 # Each source is responsible for implementing several functions to build the
 # source for each of the time stepping methods.  The derived classes will, in
 # general, only need to define each of several ``virtual functions''.  Each derived
-# class inherits a "computeTerm" function. Thhs is the primary function, responsible
+# class inherits a "computeTerm" function. This is the primary function, responsible
 # for building the entire right hand side for that term in the equation. 
 #
 # In general, each derived class is responsible for overriding the different
@@ -44,6 +44,13 @@
 # the only term for which its derived class overrides computeTerm
 # rather than implement the eval*** functions, since the term is the same for all
 # stepping algorithms
+#
+# TODO: There is a lot of extra passing of argumetns around to functions here.
+# Although it would be less clean looking, moving the loops over all elements
+# into the evaluate terms can probably speed up the code overall quite a bit.
+# I would recommend looking at the profiler unittest to see where the time
+# is being spent
+#
 
 import re
 import numpy as np
