@@ -23,6 +23,7 @@ from radiation import Radiation
 from createMMSSourceFunctions import createMMSSourceFunctionsRadOnly
 from transient import runLinearTransient
 from takeRadiationStep import takeRadiationStep
+from radBC import RadBC
 
 ## Derived unittest class to run a transient radiation MMS problem
 #
@@ -94,6 +95,9 @@ class TestRadSpatialConvergence(unittest.TestCase):
          # append max dx for this cycle to list
          max_dx.append(mesh.max_dx)
      
+         # radiation BC
+         rad_BC = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
+
          # compute uniform cross sections
          cross_sects = [(ConstantCrossSection(sig_s, sig_s+sig_a),
                          ConstantCrossSection(sig_s, sig_s+sig_a))
@@ -124,8 +128,7 @@ class TestRadSpatialConvergence(unittest.TestCase):
             dt_constant  = dt_start,
             t_start      = t_start,
             t_end        = t_end,
-            psi_left     = psi_left,
-            psi_right    = psi_right,
+            rad_BC       = rad_BC,
             cross_sects  = cross_sects,
             rad_IC       = rad_IC,
             psim_src     = psim_src,

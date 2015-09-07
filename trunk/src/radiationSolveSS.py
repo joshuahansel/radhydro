@@ -142,7 +142,7 @@ def radiationSolveSS(mesh, cross_x, Q, rad_BC, diag_add_term=0.0, implicit_scale
 
     # solve linear system as a sparse matrix
     sparse_matrix = csr_matrix(matrix)
-    solution = linalg.spsolve(matrix, rhs)
+    solution = linalg.spsolve(sparse_matrix, rhs)
 
  #   solution = np.linalg.solve(matrix,rhs)
 

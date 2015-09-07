@@ -76,7 +76,7 @@ class TestCreateMMSSourceFunctions(unittest.TestCase):
 
       # assert that the correct value is produced
       test_value = E_f(0.1,0.6)
-      actual_value = 17.262778973653464
+      actual_value = 17.263054849815813
       self.assertAlmostEqual(test_value, actual_value, 12)
 
 # run main function from unittest module

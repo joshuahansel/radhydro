@@ -35,11 +35,14 @@ class TestRadHydroShock(unittest.TestCase):
       test_case = "mach1.2" # mach1.2 mach2 mach50
       
       # create uniform mesh
-      n_elems = 300
+      n_elems = 50
       width = 0.04
       x_start = -0.02
       mesh_center = x_start + 0.5*width
       mesh = Mesh(n_elems, width, x_start=x_start)
+
+      # slope limiter
+      slope_limiter = "vanleer"
 
       # gamma constant
       gam = 5.0/3.0
@@ -69,7 +72,7 @@ class TestRadHydroShock(unittest.TestCase):
          Erad_right = 2.7955320762182542e-06
 
          # final time
-         t_end = 1.0
+         t_end = 0.5
 
          # temperature plot filename
          test_filename = "radshock_mach1.2.pdf"
@@ -158,7 +161,6 @@ class TestRadHydroShock(unittest.TestCase):
          E2     = 0.5*rho2*u2*u2 + e2*rho2
          Erad_right = 5.662673693907908e-05
 
-
          print "rho", rho1, rho2
          print "vel", u1, u2
          print "Temperature", T1, T2
@@ -192,15 +194,13 @@ class TestRadHydroShock(unittest.TestCase):
          e2     = T2*c_v2
          E2     = 0.5*rho2*u2*u2 + e2*rho2
          Erad_right = 1.664211799256650E-06
+
          print "rho", rho1, rho2
          print "vel", u1, u2
          print "Temperature", T1, T2
          print "momentum", rho1*u1, rho2*u2
          print "E",E1, E2
          print "E_r",Erad_left, Erad_right
-
-
-
 
          # final time
          t_end = 1.0
@@ -212,13 +212,11 @@ class TestRadHydroShock(unittest.TestCase):
          exact_solution_filename = "marcho1.05_exact_solution.csv"
          exact_solution_filename = None
 
-
       else:
          raise NotImplementedError("Invalid test case")
          
       # compute radiation BC; assumes BC is independent of time
       c = GC.SPD_OF_LGT
-      # NOTE: What is the justification for this? Does Jarrod assume Fr = 0?
       psi_left  = 0.5*c*Erad_left  
       psi_right = 0.5*c*Erad_right
 
@@ -279,6 +277,7 @@ class TestRadHydroShock(unittest.TestCase):
               E   = 0.5*rho*u*u + rho*e
               hydro_IC[i].updateState(rho, rho*u, E)
 
+      # plot hydro initial conditions
       plotHydroSolutions(mesh, hydro_IC)
 
       rad_IC = Radiation(psi_IC)
@@ -286,7 +285,6 @@ class TestRadHydroShock(unittest.TestCase):
       # create hydro BC
       hydro_BC = HydroBC(bc_type='fixed', mesh=mesh, state_L = state_l,
             state_R = state_r)
-      #hydro_BC = HydroBC(bc_type='reflective', mesh=mesh)
 
       # transient options
       t_start  = 0.0
@@ -312,7 +310,7 @@ class TestRadHydroShock(unittest.TestCase):
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
          verbosity    = verbosity,
-         slope_limiter = 'double-minmod',
+         slope_limiter = slope_limiter,
          check_balance=False)
 
       # plot
@@ -325,10 +323,11 @@ class TestRadHydroShock(unittest.TestCase):
          plotHydroSolutions(mesh, hydro_new, exact=hydro_exact)
 
          # plot material and radiation temperatures
-         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=True,
+         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=False,
             save=False, filename=test_filename,
             exact_solution_filename=exact_solution_filename)
 
+         # plot angular fluxes
          plotS2Erg(mesh, rad_new.psim, rad_new.psip)
 
 # run main function from unittest module

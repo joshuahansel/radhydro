@@ -27,6 +27,7 @@ from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolutio
 from crossXInterface import ConstantCrossSection
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
+from radBC import RadBC
 
 ## Class to test a pure hydro problem with uniform initial conditions.
 #
@@ -97,6 +98,7 @@ class TestHydroUniformIC(unittest.TestCase):
       # compute radiation BC; assumes BC is independent of time
       psi_left  = psip_f(x=0.0,   t=0.0)
       psi_right = psim_f(x=width, t=0.0)
+      rad_BC    = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
 
       # compute radiation IC
       psi_IC = computeRadiationVector(psim_f, psip_f, mesh, t=0.0)
@@ -134,8 +136,7 @@ class TestHydroUniformIC(unittest.TestCase):
          use_2_cycles = False,
          t_start      = t_start,
          t_end        = t_end,
-         psi_left     = psi_left,
-         psi_right    = psi_right,
+         rad_BC       = rad_BC,
          hydro_BC     = hydro_BC,
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,

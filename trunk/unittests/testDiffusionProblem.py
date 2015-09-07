@@ -16,6 +16,7 @@ from plotUtilities import plotScalarFlux, makeContinuousXPoints
 from radUtilities import computeScalarFlux, extractAngularFluxes
 from integrationUtilities import computeL1ErrorLD
 from balanceChecker import BalanceChecker
+from radBC import RadBC
 
 ## Derived unittest class to run a diffusion problem and compare to exact solution.
 #
@@ -26,22 +27,21 @@ class TestDiffusionProblem(unittest.TestCase):
       pass
    def test_DiffusionProblem(self):
 
+      # number of elements
+      n_elems = 50
+      # mesh
+      xL = 0.0             # left boundary of domain
+      xR = 3.0             # right boundary of domain
+      mesh = Mesh(n_elems,xR)
+   
       # physics data
       sig_a = 0.25         # absorption cross section
       sig_s = 0.75         # scattering cross section
       sig_t = sig_s+sig_a  # total cross section
       D = 1.0/(3*sig_t)    # diffusion coefficient
       L = sqrt(D/sig_a)    # diffusion length
-      xL = 0.0             # left boundary of domain
-      xR = 3.0             # right boundary of domain
-      inc_j_minus = 0      # incoming minus direction half-range current
-      inc_j_plus  = 0      # incoming plus  direction half-range current
       Q = 1.0              # isotropic source
-   
-      # number of elements
-      n_elems = 50
-      # mesh
-      mesh = Mesh(n_elems,xR)
+      rad_BC = RadBC(mesh, "dirichlet", psi_left=0.0, psi_right=0.0)
    
       # cross sections
       cross_sects = [(ConstantCrossSection(sig_s,sig_t),ConstantCrossSection(sig_s,sig_t))
@@ -53,8 +53,7 @@ class TestDiffusionProblem(unittest.TestCase):
       rad = radiationSolveSS(mesh,
                              cross_sects,
                              Q_iso,
-                             bound_curr_lt=inc_j_plus,
-                             bound_curr_rt=inc_j_minus)
+                             rad_BC=rad_BC)
 
       # get continuous x-points
       xlist = makeContinuousXPoints(mesh)

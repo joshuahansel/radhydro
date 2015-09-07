@@ -9,7 +9,7 @@
 # c = GC.SPD_OF_LGT   # get speed of light, etc.
 #
 # Our standard units are length: cm, time: shakes (sh),
-# energy and temperature: keV, mass: g, volume: cm^3
+# energy: jerks (jk), temperature: keV, mass: g, volume: cm^3
 #
 # Temperatures are done as an equivalent temperature, so 
 # 
@@ -18,7 +18,7 @@
 # All constants will are in units so that temperatures can just be treated as in 
 # keV.  This is confusing for specific heats, which will have units of
 #
-# C_V (energy/(temp * volume)) has units (Jks/(keV*cm^3))
+# C_V (energy/(temp * volume)) has units (jk/(keV*cm^3))
 
 ##shakes per second
 SH_PER_S = 1.E+8  

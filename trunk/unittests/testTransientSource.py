@@ -25,6 +25,7 @@ from radiationSolveSS import radiationSolveSS
 from transientSource import computeRadiationSource 
 from utilityFunctions import getIndex
 import globalConstants as GC
+from radBC import RadBC
 
 ## Derived unittest class to test source builder
 #
@@ -57,6 +58,7 @@ class TestTransientSource(unittest.TestCase):
       # boundary fluxes
       psi_left  = random()
       psi_right = random()
+      rad_BC    = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
   
       # create the steady-state source
       n = 4*mesh.n_elems
@@ -69,7 +71,7 @@ class TestTransientSource(unittest.TestCase):
   
       # compute the steady-state solution
       rad_ss = radiationSolveSS(mesh, cross_sects, Q,
-         bc_psi_right = psi_right, bc_psi_left = psi_left)
+         rad_BC = rad_BC)
   
       # time-stepper
       time_stepper = "CN"
@@ -80,8 +82,7 @@ class TestTransientSource(unittest.TestCase):
          time_stepper  = time_stepper,
          problem_type  = 'rad_only',
          dt            = dt,
-         psi_left      = psi_left,
-         psi_right     = psi_right,
+         rad_BC        = rad_BC,
          cx_old        = cross_sects,
          rad_old       = rad_ss,
          Qpsi_old      = Q,

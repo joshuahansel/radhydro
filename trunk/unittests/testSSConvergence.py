@@ -16,6 +16,7 @@ from plotUtilities import plotScalarFlux, makeContinuousXPoints
 from radUtilities import computeScalarFlux, extractAngularFluxes
 from integrationUtilities import computeL1ErrorLD
 from utilityFunctions import computeConvergenceRates, printConvergenceTable
+from radBC import RadBC
 
 ## Derived unittest class to run a diffusion problem and compare to exact solution.
 class TestSSConvergence(unittest.TestCase):
@@ -33,8 +34,6 @@ class TestSSConvergence(unittest.TestCase):
       L = sqrt(D/sig_a)    # diffusion length
       xL = 0.0             # left boundary of domain
       xR = 3.0             # right boundary of domain
-      inc_j_minus = 0      # incoming minus direction half-range current
-      inc_j_plus  = 0      # incoming plus  direction half-range current
       Q = 1.0              # isotropic source
       A = 2.4084787907     # constant used in exact solution function
       B = -2.7957606046    # constant used in exact solution function
@@ -63,6 +62,9 @@ class TestSSConvergence(unittest.TestCase):
          mesh = Mesh(n_elems,xR)
          # append max dx for this cycle to list
          max_dx.append(mesh.max_dx)
+ 
+         # radiation BC
+         rad_BC = RadBC(mesh, "dirichlet", psi_left=0.0, psi_right=0.0)
       
          # cross sections
          cross_sects = [(ConstantCrossSection(sig_s,sig_t),
@@ -76,8 +78,7 @@ class TestSSConvergence(unittest.TestCase):
          rad = radiationSolveSS(mesh,
                                 cross_sects,
                                 Q_iso,
-                                bound_curr_lt=inc_j_plus,
-                                bound_curr_rt=inc_j_minus)
+                                rad_BC=rad_BC)
       
          # compute L1 error
          L1_error.append(\

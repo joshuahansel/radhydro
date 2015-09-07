@@ -137,9 +137,10 @@ def runNonlinearTransient(mesh, problem_type,
    rad_old = deepcopy(rad_IC)
    hydro_old = deepcopy(hydro_IC)
    Qpsi_old, Qmom_old, Qerg_old, Qrho_old = computeExtraneousSources(
-      psim_src, psip_src, mom_src, E_src, mesh, t_start, rho_src=rho_src)
+      psim_src, psip_src, mom_src, E_src, mesh, t_start, rho_src=rho_src,
+      verbosity=verbosity)
 
-   #Just guess e_rad old is hydro initial conditionsstuff
+   # Just guess e_rad old from hydro initial conditions
    e_rad_old = np.array([(i.e, i.e) for i in hydro_old])
    
    # set older quantities to nothing; these shouldn't exist yet
@@ -193,7 +194,8 @@ def runNonlinearTransient(mesh, problem_type,
           t_new = t_old + dt
 
        # print each time step
-       print("Time step %d: t = %f -> %f:" % (time_index,t_old,t_new))
+       if verbosity > 0:
+          print("Time step %d: t = %f -> %f:" % (time_index,t_old,t_new))
   
        # take time step
        if problem_type == 'rad_mat':
@@ -517,13 +519,14 @@ def runNonlinearTransient(mesh, problem_type,
        if end_at_SS:
 
            trans_change = computeL2RelDiff(hydro_new, hydro_older, aux_func=lambda i:i.E())
-           if trans_change < 1.e-7:
-               print """Exiting transient (in transient.py) because steady state was detected as total energy only
-                        changed by a relative change of %0.4e. Be careful of this over small time steps""" % trans_change
+           trans_tol = 1.0e-7
+           if trans_change < trans_tol:
+               if verbosity > 1:
+                  print("Exiting transient because steady-state detected: L2 " +
+                     "relative difference between old and new\ntotal energy was " +
+                     "less than steady-state tolerance: %0.4e < %0.4e" %
+                     (trans_change, trans_tol))
                break
-
- #  Plots the hydro and rad edge values for internal energy   
- #  plotIntErgs(mesh, e_rad_new, hydro_new, slopes_half)
 
    # return final solutions
    return rad_new, hydro_new
@@ -542,7 +545,8 @@ def takeTimeStepRadiationMaterial(mesh, time_stepper, dt, rad_BC,
 
     # compute new extraneous sources
     Qpsi_new, Qmom_new, Qerg_new, Qrho_new = computeExtraneousSources(
-       psim_src, psip_src, mom_src, E_src, mesh, t_old+dt, rho_src=rho_src)
+       psim_src, psip_src, mom_src, E_src, mesh, t_old+dt, rho_src=rho_src,
+       verbosity=verbosity)
 
     # update hydro BC
     hydro_BC.update(states=hydro_old, t=t_old)
@@ -615,26 +619,10 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
    time_stepper_predictor='CN', time_stepper_corrector='BDF2',verbosity=2,
    rho_f=None,u_f=None,E_f=None,gamma_value=None,cv_value=None):
     
-   #This will print out all results
-   debug_mode = False
-
    # assert that BDF2 was not chosen for the predictor time-stepper
    assert time_stepper_predictor != 'BDF2', 'BDF2 cannot be used in\
       the predictor step.'
 
-   #optionally print out after each solve step
-   if debug_mode:
-
-     print "initial conditions"
-     if rho_f != None:
-         hydro_exact = computeAnalyticHydroSolution(mesh, t=t_old,
-            rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
-     else:
-         hydro_exact = None 
-
-     plotHydroSolutions(mesh, hydro_old, x_exact=mesh.getCellCenters(),
-          exact=hydro_exact)
-    
    if verbosity > 1:
       print "    Predictor step:"
 
@@ -647,18 +635,12 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
    # perform predictor step of MUSCL-Hancock
    hydro_star = hydroPredictor(mesh, hydro_old, slopes_old, dt)
 
-
-   if debug_mode:
-
-      print "hydro_star predictor:"
-      plotHydroSolutions(mesh, hydro_star, x_exact=mesh.getCellCenters(),
-                exact=None)
-
    # compute new extraneous sources
    Qpsi_half, Qmom_half, Qerg_half, Qrho_half = computeExtraneousSources(
-      psim_src, psip_src, mom_src, E_src, mesh, t_old+0.5*dt, rho_src=rho_src)
+      psim_src, psip_src, mom_src, E_src, mesh, t_old+0.5*dt, rho_src=rho_src,
+      verbosity=verbosity)
 
-   #update rad BC to be at t+1/2, keep old at start of time step
+   # update rad BC to be at t+1/2, keep old at start of time step
    rad_BC.update(t_new=t_old+0.5*dt, t_old=t_old)
 
    # perform nonlinear solve
@@ -687,19 +669,6 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
       Qerg_older   = Qerg_older, # this is a dummy argument
       verbosity    = verbosity)
 
-
-   if debug_mode:
-       print "hydro_half after nonlinear:"
-
-       if rho_f != None:
-           hydro_exact = computeAnalyticHydroSolution(mesh, t=t_old+0.5*dt,
-              rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
-       else:
-           hydro_exact = None 
-
-       plotHydroSolutions(mesh, hydro_half, x_exact=mesh.getCellCenters(),
-           exact=hydro_exact)
-
    if verbosity > 1:
       print "    Corrector step:"
 
@@ -710,15 +679,10 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
    hydro_star, hydro_F_left, hydro_F_right = hydroCorrector(
       mesh, hydro_old, hydro_half, slopes_old, dt, bc=hydro_BC)
 
-   if debug_mode:
-
-      print "After hydro corrector step, state *"
-      plotHydroSolutions(mesh, hydro_star, x_exact=mesh.getCellCenters(),
-               exact=None)
-
    # compute new extraneous sources
    Qpsi_new, Qmom_new, Qerg_new, Qrho_new = computeExtraneousSources(
-      psim_src, psip_src, mom_src, E_src, mesh, t_old+dt, rho_src=rho_src)
+      psim_src, psip_src, mom_src, E_src, mesh, t_old+dt, rho_src=rho_src,
+      verbosity=verbosity)
 
    #update rad BC to be at end of time step for implicit terms, old term is
    #kept at beginning of time step. NOTE IF BDF2 in play, here we have assumed
@@ -758,18 +722,6 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
       Qerg_older   = Qerg_older,
       verbosity    = verbosity)
 
-   if debug_mode:
-
-      if rho_f != None:
-          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_old+dt,
-             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
-      else:
-          hydro_exact = None 
-
-    
-      plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),
-            exact=hydro_exact)
-
    # add up sources for entire time step for balance checker
    src_totals =  computeMMSSrcTotal(mesh,dt,time_stepper_corrector,
          Qmom_new=Qmom_new,Qmom_old=Qmom_old,Qmom_older=Qmom_older,
@@ -779,11 +731,9 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
 
    #Store the incident fluxes on boundary for computing balance
    rad_BC.storeAllIncidentFluxes(rad_new, rad_old=rad_old, rad_older=rad_older)
-   
 
    if verbosity > 1:
       print ""
-
 
    return hydro_new, rad_new, cx_new, slopes_old, e_rad_new,\
       Qpsi_new, Qmom_new, Qerg_new, Qrho_new, hydro_F_left, hydro_F_right,\
@@ -803,9 +753,10 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
 #    \f$Q^{ext,\pm}\f$, \f$Q^{ext,\rho u}\f$, \f$Q^{ext,E}\f$
 #
 def computeExtraneousSources(psim_src, psip_src, mom_src, E_src, mesh, t,
-        rho_src=None):
+        rho_src=None, verbosity=2):
 
-   print "      Computing MMS sources..."
+   if verbosity > 1:
+      print "      Computing MMS sources..."
 
    # compute radiation extraneous source
    if psim_src != None and psip_src != None:

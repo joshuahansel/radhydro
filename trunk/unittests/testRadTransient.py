@@ -19,6 +19,7 @@ from utilityFunctions import computeDiscreteL1Norm
 from radiation import Radiation
 from transient import runLinearTransient
 from transientSource import computeRadiationExtraneousSource
+from radBC import RadBC
 
 ## Derived unittest class to run a transient radiation problem
 #
@@ -48,6 +49,7 @@ class TestRadTransient(unittest.TestCase):
        # boundary fluxes
        psi_left  = 2.5
        psi_right = 2.2
+       rad_BC    = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
    
        # create source function handles
        psim_src = lambda x,t: 2.4
@@ -71,8 +73,7 @@ class TestRadTransient(unittest.TestCase):
           dt_constant  = dt,
           t_start      = t_start,
           t_end        = t_end,
-          psi_left     = psi_left,
-          psi_right    = psi_right,
+          rad_BC       = rad_BC,
           cross_sects  = cross_sects,
           rad_IC       = rad_IC,
           psim_src     = psim_src,
@@ -81,8 +82,7 @@ class TestRadTransient(unittest.TestCase):
 
        # compute the steady-state solution
        Q = computeRadiationExtraneousSource(psim_src, psip_src, mesh, t_start)
-       rad_ss = radiationSolveSS(mesh, cross_sects, Q,
-          bc_psi_right = psi_right, bc_psi_left = psi_left)
+       rad_ss = radiationSolveSS(mesh, cross_sects, Q, rad_BC = rad_BC)
 
        # compute difference of transient and steady-state scalar flux
        phi_diff = [tuple(map(operator.sub, rad_new.phi[i], rad_ss.phi[i]))
