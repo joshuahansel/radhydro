@@ -18,7 +18,7 @@
 # All constants will are in units so that temperatures can just be treated as in 
 # keV.  This is confusing for specific heats, which will have units of
 #
-# C_V (energy/(temp * volume)) has units (keV/(keV*cm^3))
+# C_V (energy/(temp * volume)) has units (Jks/(keV*cm^3))
 
 ##shakes per second
 SH_PER_S = 1.E+8  
@@ -30,7 +30,7 @@ SPD_OF_LGT = 299.7924580
 BOLTZMAN_CONSTANT = 8.617343E-08 
 
 ##grey radiation constant, a, in jk/(cm^3*keV^4)
-RAD_CONSTANT = 0.01372 
+RAD_CONSTANT = 0.013720172
 
 ##jk/J ("jerks" per Joules)
 JK_PER_JOULES = 1.E-09 

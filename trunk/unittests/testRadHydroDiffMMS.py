@@ -47,8 +47,11 @@ class TestRadHydroMMS(unittest.TestCase):
       # declare symbolic variables
       x, t, alpha, c, a, mu  = symbols('x t alpha c a mu')
       
-      #Cycles for time convergence
-      n_cycles = 4
+      # number of refinement cycles
+      n_cycles = 1
+
+      # number of elements in first cycle
+      n_elems = 100
       
       # numeric values
       gamma_value = 1.4
@@ -142,11 +145,12 @@ class TestRadHydroMMS(unittest.TestCase):
          alpha_value   = alpha_value,
          display_equations = True)
 
-      n_elems = 40
+      # mesh
       width = 1.0
+      mesh = Mesh(n_elems,width)
 
       # compute hydro IC for the sake of computing initial time step size
-      mesh = Mesh(n_elems,width)
+
       hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
          rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 

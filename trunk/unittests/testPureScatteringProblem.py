@@ -15,6 +15,7 @@ from radiationSolveSS import radiationSolveSS
 from plotUtilities import plotScalarFlux, makeContinuousXPoints
 from radUtilities import computeScalarFlux, extractAngularFluxes
 from integrationUtilities import computeL1ErrorLD
+from radBC import RadBC
 
 ## Derived unittest class to run a pure scattering problem and compare to
 #  exact solution.
@@ -42,6 +43,9 @@ class TestPureScatteringProblem(unittest.TestCase):
       # mesh
       mesh = Mesh(n_elems,width,xL)
    
+      # radiation BC
+      rad_BC = RadBC(mesh, "dirichlet", psi_left=2*inc_j_plus, psi_right=2*inc_j_minus)
+
       # cross sections
       cross_sects = [(ConstantCrossSection(sig_s,sig_t),
                       ConstantCrossSection(sig_s,sig_t))
@@ -53,8 +57,7 @@ class TestPureScatteringProblem(unittest.TestCase):
       rad = radiationSolveSS(mesh,
                              cross_sects,
                              Q_src,
-                             bound_curr_lt=inc_j_plus,
-                             bound_curr_rt=inc_j_minus)
+                             rad_BC=rad_BC)
    
       # get continuous x-points
       xlist = makeContinuousXPoints(mesh)

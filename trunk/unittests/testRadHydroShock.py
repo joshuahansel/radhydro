@@ -12,13 +12,15 @@ import unittest
 from mesh import Mesh
 from hydroState import HydroState
 from radiation import Radiation
-from plotUtilities import plotHydroSolutions, plotTemperatures
+from plotUtilities import plotHydroSolutions, plotTemperatures, plotS2Erg
 from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolution
 from crossXInterface import ConstantCrossSection
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
 from radBC   import RadBC
 import globalConstants as GC
+import cProfile
+import profile
 
 ## Derived unittest class to test the radiation-hydrodynamics shock problem
 #
@@ -33,9 +35,9 @@ class TestRadHydroShock(unittest.TestCase):
       test_case = "mach1.2" # mach1.2 mach2 mach50
       
       # create uniform mesh
-      n_elems = 500
-      width = 0.02
-      x_start = -0.01
+      n_elems = 300
+      width = 0.04
+      x_start = -0.02
       mesh_center = x_start + 0.5*width
       mesh = Mesh(n_elems, width, x_start=x_start)
 
@@ -44,8 +46,8 @@ class TestRadHydroShock(unittest.TestCase):
  
       # material 1 and 2 properties: Table 6.1
       sig_a1 = 390.71164263502122
-      sig_s1 = 8.5314410158161809E+2-sig_a1
-      c_v1   = 1.2348000000000001e-01
+      sig_s1 = 853.14410158161809 -sig_a1
+      c_v1   = 0.12348
       sig_a2 = sig_a1
       sig_s2 = sig_s1
       c_v2   = c_v1
@@ -67,7 +69,7 @@ class TestRadHydroShock(unittest.TestCase):
          Erad_right = 2.7955320762182542e-06
 
          # final time
-         t_end = 0.5
+         t_end = 1.0
 
          # temperature plot filename
          test_filename = "radshock_mach1.2.pdf"
@@ -82,6 +84,7 @@ class TestRadHydroShock(unittest.TestCase):
          E1     = 3.9788000000000004e-002
          u1     = 2.3426480742954117e-001
          e1     = E1/rho1 - 0.5*u1*u1
+         T1     = e1/c_v1
          Erad_left = 1.372E-06
 
          # material 2 IC
@@ -89,7 +92,16 @@ class TestRadHydroShock(unittest.TestCase):
          E2     = 7.0649692950433357e-002
          u2     = 1.0247468599526272e-001
          e2     = E2/rho2 - 0.5*u2*u2
+         T2     = e2/c_v2
          Erad_right = 2.5560936967521927e-005
+
+         print "rho", rho1, rho2
+         print "vel", u1, u2
+         print "Temperature", T1, T2
+         print "momentum", rho1*u1, rho2*u2
+         print "E",E1, E2
+         print "E_r",Erad_left, Erad_right
+         print sig_a1, sig_s1
 
          # final time
          t_end = 1.0
@@ -128,6 +140,79 @@ class TestRadHydroShock(unittest.TestCase):
          # temperature plot exact solution filename
          exact_solution_filename = "mach50_exact_solution.csv"
 
+      elif test_case == "marcho2":
+
+         # material 1 IC
+         rho1   = 1.0
+         u1     = 0.23426480742954117
+         T1     = 1.219999999999999973e-01
+         e1     = T1*c_v2
+         E1     = 0.5*rho1*u1*u1 + e1*rho1
+         Erad_left = 3.039477120074432e-06
+
+         # material 2 IC
+         rho2   = 2.286074898930029242
+         u2     = 0.10247468599526272
+         T2     = 2.534635394302977573e-01
+         e2     = T2*c_v2
+         E2     = 0.5*rho2*u2*u2 + e2*rho2
+         Erad_right = 5.662673693907908e-05
+
+
+         print "rho", rho1, rho2
+         print "vel", u1, u2
+         print "Temperature", T1, T2
+         print "momentum", rho1*u1, rho2*u2
+         print "E",E1, E2
+         print "E_r",Erad_left, Erad_right
+
+         # final time
+         t_end = 0.10
+
+         # temperature plot filename
+         test_filename = "radshock_mach50.pdf"
+
+         # temperature plot exact solution filename
+         exact_solution_filename = "marcho2_exact_solution.csv"
+
+      elif test_case == "marcho1.05":
+
+         # material 1 IC
+         rho1   = 1.0
+         u1     = 0.1228902
+         T1     = 0.1
+         e1     = T1*c_v2
+         E1     = 0.5*rho1*u1*u1 + e1*rho1
+         Erad_left = 1.372E-06
+
+         # material 2 IC
+         rho2   = 1.0749588
+         u2     = rho1*u1/rho2
+         T2     = 0.1049454
+         e2     = T2*c_v2
+         E2     = 0.5*rho2*u2*u2 + e2*rho2
+         Erad_right = 1.664211799256650E-06
+         print "rho", rho1, rho2
+         print "vel", u1, u2
+         print "Temperature", T1, T2
+         print "momentum", rho1*u1, rho2*u2
+         print "E",E1, E2
+         print "E_r",Erad_left, Erad_right
+
+
+
+
+         # final time
+         t_end = 1.0
+
+         # temperature plot filename
+         test_filename = "radshock_mach50.pdf"
+
+         # temperature plot exact solution filename
+         exact_solution_filename = "marcho1.05_exact_solution.csv"
+         exact_solution_filename = None
+
+
       else:
          raise NotImplementedError("Invalid test case")
          
@@ -163,11 +248,46 @@ class TestRadHydroShock(unittest.TestCase):
 
             psi_IC += [psi_right for dof in range(4)]
 
+      #Smooth out the middle solution optionally, shouldnt need this
+      n_smoothed = 0
+      state_l = hydro_IC[0]
+      state_r = hydro_IC[-1]
+        
+      rho_l =  state_l.rho
+      rho_r =  state_r.rho
+      drho  = rho_r - rho_l
+      u_l   =  state_l.u
+      u_r   =  state_r.u
+      du    = u_r - u_l
+      e_l   =  state_l.e
+      e_r   =  state_r.e
+      de    = e_r-e_l
+      print "p", state_l.p, state_r.p
+      print "mach number", state_l.u/state_l.getSoundSpeed(), state_r.u/state_r.getSoundSpeed()
+
+      #Scale
+      idx = 0
+      if n_smoothed > 0:
+          for i in range(mesh.n_elems/2-n_smoothed/2-1,mesh.n_elems/2+n_smoothed/2):
+
+              rho = rho_l + drho*idx/n_smoothed
+              u   = rho_l*u_l/rho
+              e   = e_l + de*idx/n_smoothed
+
+              idx+=1
+
+              E   = 0.5*rho*u*u + rho*e
+              hydro_IC[i].updateState(rho, rho*u, E)
+
+      plotHydroSolutions(mesh, hydro_IC)
+
       rad_IC = Radiation(psi_IC)
 
       # create hydro BC
-      hydro_BC = HydroBC(bc_type='reflective', mesh=mesh)
-  
+      hydro_BC = HydroBC(bc_type='fixed', mesh=mesh, state_L = state_l,
+            state_R = state_r)
+      #hydro_BC = HydroBC(bc_type='reflective', mesh=mesh)
+
       # transient options
       t_start  = 0.0
 
@@ -184,7 +304,6 @@ class TestRadHydroShock(unittest.TestCase):
          dt_option    = 'CFL',
          CFL          = 0.6,
          use_2_cycles = True,
-         time_stepper = 'BDF2',
          t_start      = t_start,
          t_end        = t_end,
          rad_BC       = rad_BC,
@@ -206,9 +325,11 @@ class TestRadHydroShock(unittest.TestCase):
          plotHydroSolutions(mesh, hydro_new, exact=hydro_exact)
 
          # plot material and radiation temperatures
-         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=False,
-            save=True, filename=test_filename,
+         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=True,
+            save=False, filename=test_filename,
             exact_solution_filename=exact_solution_filename)
+
+         plotS2Erg(mesh, rad_new.psim, rad_new.psip)
 
 # run main function from unittest module
 if __name__ == '__main__':

@@ -14,6 +14,7 @@ from plotUtilities import plotHydroSolutions
 from radiation import Radiation
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
+from radBC   import RadBC
 
 ## Unit test class
 #
@@ -25,7 +26,7 @@ class TestHydro(unittest.TestCase):
    def test_Hydro(self):
 
       # create mesh
-      n_elems = 100
+      n_elems = 200
       width = 1.0
       mesh = Mesh(n_elems,width)
       x_diaphragm = 0.3
@@ -34,6 +35,9 @@ class TestHydro(unittest.TestCase):
       CFL     = 0.5
       t_start = 0.0
       t_end   = 0.2
+
+      # slope limiter
+      slope_limiter = "vanleer"
 
       # constant properties
       sig_s = 1.0 # arbitrary
@@ -79,9 +83,9 @@ class TestHydro(unittest.TestCase):
       hydro_BC = HydroBC(bc_type='reflective', mesh=mesh)
   
       # initialize radiation to zero solution to give pure hydrodynamics
-      psi_left  = 0.0
-      psi_right = 0.0
+      rad_BC    = RadBC(mesh, "vacuum")
       rad_IC    = Radiation([0.0 for i in range(n_elems*4)])
+      rad_BC    = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
@@ -99,13 +103,15 @@ class TestHydro(unittest.TestCase):
          use_2_cycles = True,
          t_start      = t_start,
          t_end        = t_end,
-         psi_left     = psi_left,
-         psi_right    = psi_right,
+         rad_BC       = rad_BC,
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
+         rad_BC       = rad_BC,
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
+         slope_limiter = slope_limiter,
          verbosity    = verbosity,
+         slope_limiter      = 'double-minmod',
          check_balance= True)
 
 
@@ -136,15 +142,8 @@ class TestHydro(unittest.TestCase):
          for i in range(len(x_e)):
             hydro_exact.append(HydroState(u=u_e[i],rho=rho_e[i],e=e_e[i],gamma=gam,spec_heat=c_v) )
 
-
          plotHydroSolutions(mesh, hydro_new,x_exact=x_e,exact=hydro_exact)
 
-         # print out the states
-         for i in hydro_new:
-
-             print i
-
-  
 # run main function from unittest module
 if __name__ == '__main__':
    unittest.main()

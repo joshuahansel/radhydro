@@ -67,7 +67,7 @@ class Mesh:
        cell_edges = [cell.xl for cell in self.elements]
        cell_edges += [self.elements[-1].xr]
        return cell_edges
-
+   
     ## Returns list of cell edges for plotting discontinuous data
     #
     def getCellEdgesDiscontinuous(self):

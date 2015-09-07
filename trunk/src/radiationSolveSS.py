@@ -1,6 +1,13 @@
 ## @package src.radiationSolveSS
 #  Provides functions to solve the steady-state S-2 equations. Also provides
 #  means of employing solver to be used in temporal discretizations.
+#
+#  TODO: Currently this code builds the matrix as a full matrix and then
+#  converts it over to a sparse matrix for solving (the sparse solver is much faster).
+#  It would probably be significantly more efficient to build the matrix as a CSR matrix directly.  We didn't
+#  have time to figure out the python syntax for storing rows.  A banded
+#  matrix cannot be used directly due to periodic boundary conditions, but this
+#  could be used if you do it properly.  See http://www4.ncsu.edu/~stsynkov/book_sample_material/Sections_5.4-5.5.pdf
 
 import math
 import numpy as np
@@ -11,6 +18,7 @@ from utilityFunctions import getIndex
 from radUtilities import mu, computeScalarFlux
 import globalConstants as GC
 from radiation import Radiation
+from scipy.sparse import csr_matrix, linalg
 
 ## Steady-state solve function for the S-2 equations.
 #
@@ -132,8 +140,11 @@ def radiationSolveSS(mesh, cross_x, Q, rad_BC, diag_add_term=0.0, implicit_scale
        matrix[iRplus]   = row
        rhs[iRplus]      = QRplus
 
-    # solve linear system
-    solution = np.linalg.solve(matrix, rhs)
+    # solve linear system as a sparse matrix
+    sparse_matrix = csr_matrix(matrix)
+    solution = linalg.spsolve(matrix, rhs)
+
+ #   solution = np.linalg.solve(matrix,rhs)
 
     #return solution
     return Radiation(solution)

@@ -104,12 +104,10 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, rad_BC,
 
            # Compute E_slopes
            E_slopes_star = computeTotalEnergySlopes(hydro_star, slopes_old, e_star)
-           E_slopes_old  = computeTotalEnergySlopes(hydro_old,  slopes_old, e_old)
            E_slopes_old  = slopes_old.erg_slopes
            E_slopes_older = None
            if hydro_older != None:
               E_slopes_older = computeTotalEnergySlopes(hydro_older, slopes_older, e_older)
-              E_slopes_older = slopes_older.erg_slopes
 
        #Compute E_slopes using the radiation computed values of e
        else:
@@ -203,6 +201,17 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, rad_BC,
        # check nonlinear convergence
        # TODO: compute diff of rad solution as well to add to convergence criteria
        rel_diff = computeL2RelDiff(hydro_new, hydro_prev, aux_func=lambda x: x.e)
+ #      rel_diffE = computeL2RelDiff(hydro_new, hydro_prev, aux_func=lambda x: x.E())
+ #      rel_diffMom = computeL2RelDiff(hydro_new, hydro_prev, aux_func=lambda x:
+ #            x.u*x.rho)
+ #      rel_diffEr  = computeL2RelDiff(rad_new.E, rad_prev.E, aux_func=lambda x:
+ #            0.5*(x[0]+x[1]))
+ #      rel_diffe   = computeL2RelDiff(hydro_new, hydro_prev, aux_func=lambda x: x.e)
+ #      print "Rel diff in momentum", rel_diffMom
+ #      print "Rel diff in rad erg", rel_diffEr
+ #      print "Rel diff in int erg", rel_diffe
+ #      print "Rel_diff in total energy", rel_diffE
+
        if verbosity > 1:
           print("      Iteration %d: Difference = %7.3e" % (k,rel_diff))
        if rel_diff < tol:
