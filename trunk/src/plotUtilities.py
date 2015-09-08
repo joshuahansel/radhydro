@@ -366,13 +366,13 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
    # plot the exact temperatures
    if exact_solution_filename != None:
       # read data from csv file
-      exact_data = genfromtxt(exact_solution_filename, delimiter=',')
+      exact_data = genfromtxt(exact_solution_filename)
       # get x points, 1st column
       x_exact = exact_data[:,0]
       # get exact material temperature, 2nd column
-      T_exact = exact_data[:,1] * T[0]
+      T_exact = exact_data[:,1]
       # get exact radiation temperature, 3rd column
-      Tr_exact = exact_data[:,2] * Tr[0]
+      Tr_exact = exact_data[:,2]
       # plot exact temperatures
       print T_exact, Tr_exact
       plt.plot(x_exact,T_exact,'b-',label='$T_m$, analytic')

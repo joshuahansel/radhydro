@@ -32,10 +32,10 @@ class TestRadHydroShock(unittest.TestCase):
    def test_RadHydroShock(self):
 
       # test case
-      test_case = "mach1.2" # mach1.2 mach2 mach50
+      test_case = "mach2" # mach1.2 mach2 mach50
       
       # create uniform mesh
-      n_elems = 50
+      n_elems = 300
       width = 0.04
       x_start = -0.02
       mesh_center = x_start + 0.5*width
@@ -54,6 +54,12 @@ class TestRadHydroShock(unittest.TestCase):
       sig_a2 = sig_a1
       sig_s2 = sig_s1
       c_v2   = c_v1
+
+      if test_case != "mach2":
+         
+         raise NotImplementedError("All but mach2 shock may have wrong input"\
+                 "values. Need to check Jarrod Ewards thesis, starting with Table 6.1")
+
 
       if test_case == "mach1.2": # Mach 1.2 problem: Table 6.2
 
@@ -113,7 +119,7 @@ class TestRadHydroShock(unittest.TestCase):
          test_filename = "radshock_mach2.pdf"
 
          # temperature plot exact solution filename
-         exact_solution_filename = "mach2_exact_solution.csv"
+         exact_solution_filename = "marcho2_exact_solution.csv"
 
       elif test_case == "mach50": # Mach 50 problem: Table 6.4
 
@@ -285,6 +291,7 @@ class TestRadHydroShock(unittest.TestCase):
       # create hydro BC
       hydro_BC = HydroBC(bc_type='fixed', mesh=mesh, state_L = state_l,
             state_R = state_r)
+      hydro_BC = HydroBC(mesh=mesh,bc_type='reflective')
 
       # transient options
       t_start  = 0.0

@@ -51,7 +51,7 @@ class TestRadHydroMMS(unittest.TestCase):
       n_cycles = 1
 
       # number of elements in first cycle
-      n_elems = 100
+      n_elems = 50
       
       # numeric values
       gamma_value = 1.4
