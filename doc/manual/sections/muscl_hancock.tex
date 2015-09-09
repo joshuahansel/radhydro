@@ -15,13 +15,8 @@ and $\Flux(\H)$ is the flux associated with each:
   (E+p)u\end{array}\right] \pep
 \end{equation}
 The first half of a MUSCL-Hancock step $t^n\rightarrow t^n+\dt$
-consists of constructing a linear representation of the solution
+starts by constructing a linear representation of the solution
 using slopes $\Delta_i^n$:
-\begin{equation}\label{eq:edge_hydro}
-  \H\iL^n = \H_i^n - \frac{\Delta_i^n}{2} \pec
-  \quad
-  \H\iR^n = \H_i^n + \frac{\Delta_i^n}{2} \pec
-\end{equation}
 \begin{equation}\label{eq:muscl_slopes}
   \Delta_i^n = \half\Delta\H_{i-\half}^n + \half\Delta\H_{i+\half}^n \pec
 \end{equation}
@@ -29,8 +24,25 @@ using slopes $\Delta_i^n$:
   \Delta\H_{i-\half}^n = \H_i^n - \H_{i-1}^n \pec\quad
   \Delta\H_{i+\half}^n = \H_{i+1}^n - \H_i^n \pec
 \end{equation}
-and then evolving that representation by half a time step:
+These slopes are optionally limited via slope limiters $\xi_i$:
+\begin{equation}
+  \bar{\Delta}_i = \xi_i \Delta_i \pep
+\end{equation}
+Some popular slope limiters are described in Section \ref{sec:slope_limiters};
+if no slope limiter is used, then $\xi_i=1$. The linear representation
+of the solution is built as
+\begin{equation}\label{eq:edge_hydro}
+  \H\iL^n = \H_i^n - \frac{\bar{\Delta}_i^n}{2} \pec
+  \quad
+  \H\iR^n = \H_i^n + \frac{\bar{\Delta}_i^n}{2} \pec
+\end{equation}
+This representation is then evolved by half a time step:
 \hydroPredictor{n}{n+\half}{\half}{\label{eq:muscl_predictor}}
 The second half of a MUSCL-Hancock step employs a Riemann solver
 to compute the fluxes at time $n+\half$:
 \hydroCorrector{n}{n+\half}{n+1}{}{\label{eq:muscl_corrector}}
+
+%===============================================================================
+\subsubsection{Slope Limiters}\label{sec:slope_limiters}
+%===============================================================================
+See Jarrod's memo.
