@@ -1,10 +1,14 @@
-documents:
-================================
-equationsEF.tex
-equationsS2.tex
+Files:
+===============================================================================
+manual.tex       the main document
+equationsEF.tex  Equations written in terms of Er and Fr
+codedesign.tex   standards for code development
+slopes.tex       writeup of slope confusion
+newcommands.tex  file containing user-defined macros
+references.bib   BibTeX database for references
+bibstyle.bst     BibTeX style
 
+Directories:
+===============================================================================
+sections/  contains content used by manual.tex
 
-
-supporting files:
-================================
-newcommands.tex

@@ -2,17 +2,19 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{color}
-\usepackage{listings}
+\usepackage{listings} % for listing code
 \usepackage{etoolbox} % for toggles
 \usepackage[colorlinks]{hyperref}
 
 % load list of user-defined commands
 \input{newcommands}
 
-% toggle for developer mode; otherwise paper mode
+% toggle for developer mode; otherwise paper mode - developer mode
+% contains material that is meant to help developers develop the
+% code but is not necessary/appropriate for the paper.
 \newtoggle{DEVELOPERMODE}
-\toggletrue{DEVELOPERMODE}
-%\togglefalse{DEVELOPERMODE}
+%\toggletrue{DEVELOPERMODE} % uncomment this line for developer mode
+\togglefalse{DEVELOPERMODE} % uncomment this line for paper mode
 
 \begin{document}
 
@@ -24,6 +26,10 @@
 \input{sections/discretized_equations}
 \input{sections/linearization}
 \input{sections/conservation}
-\input{sections/test_problems}
+\input{sections/results}
+
+\section{References}
+\bibliographystyle{bibstyle}
+\bibliography{references}
 
 \end{document}

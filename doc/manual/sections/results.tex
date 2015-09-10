@@ -1,0 +1,95 @@
+%===============================================================================
+\section{Results}
+%===============================================================================
+\subsection{Radiation Hydrodynamics MMS Problem}
+%-------------------------------------------------------------------------------
+To test the full radiation-hydrodynamics system, an MMS (Method of Manufactured
+Solutions) problem was designed. The original system given by Equations
+\eqref{eq:cons_mass} through \eqref{eq:cons_energy} and \eqref{eq:S2Q} is
+the following:
+\[
+   \dxdy{\rho}{t}+\dxdy{}{x}\fn{\rho u} = 0 \pec
+\] 
+\[
+   \dxdy{}{t}\fn{\rho u} + \dxdy{}{x}\fn{\rho u^2} + \dxdy{}{x}\fn{p}
+     = \frac{\sigma_t}{c} \F_0 \pec
+\]
+\[
+   \dxdy{E}{t} + \dxdy{}{x}\bracket{\fn{E+p}u}=-\sigma_a c \fn{aT^4 - \E}
+     + \frac{\sigma_t u}{c} \F_0 \pec
+\]
+\[
+  \frac{1}{c}\dydt{\Psi^\pm} + \mu^\pm\dydx{\Psi^\pm} + \sigma_t\Psi^\pm
+  = \frac{\sigma_s}{2}\phi + \Q^\pm \pep
+\]
+To execute an MMS problem, extraneous source terms are added to the
+system as follows:
+\begin{subequations}
+\begin{equation}
+   \dxdy{\rho}{t}+\dxdy{}{x}\fn{\rho u} = Q^{ext,\rho} \pec
+\end{equation} 
+\begin{equation}
+   \dxdy{}{t}\fn{\rho u} + \dxdy{}{x}\fn{\rho u^2} + \dxdy{}{x}\fn{p}
+     = \frac{\sigma_t}{c} \F_0 + Q^{ext,\rho u} \pec
+\end{equation}
+\begin{equation}
+   \dxdy{E}{t} + \dxdy{}{x}\bracket{\fn{E+p}u}=-\sigma_a c \fn{aT^4 - \E}
+     + \frac{\sigma_t u}{c} \F_0 + Q^{ext,E} \pec
+\end{equation}
+\begin{equation}
+  \frac{1}{c}\dydt{\Psi^\pm} + \mu^\pm\dydx{\Psi^\pm} + \sigma_t\Psi^\pm
+  = \frac{\sigma_s}{2}\phi + \Q^\pm + Q^{ext,\pm} \pep
+\end{equation}
+\end{subequations}
+Two MMS problems, one for the streaming limit and one for the equilibrium
+diffusion limit, were taken from \cite{mcclarren2}.
+
+For the diffusion limit problem, the following solutions were prescribed
+for the hydrodynamic solution:
+\begin{subequations}
+\begin{equation}
+  \rho = A\left(\sin(Bx - Ct) + 2\right) \pec
+\end{equation}
+\begin{equation}
+  u = A\left(\cos(Bx - Ct) + 2\right) \pec
+\end{equation}
+\begin{equation}
+  p = A\alpha\left(\cos(Bx - Ct) + 2\right) \pec
+\end{equation}
+\end{subequations}
+where $A$, $B$, and $C$ are constants to be chosen.
+As stated in \cite{mcclarren2}, the radiation energy density and flux
+are the following in the equilibrium diffusion limit:
+\begin{subequations}
+\begin{equation}
+  \E = T^4 \pec
+\end{equation}
+\begin{equation}
+  \F = \frac{1}{3\sigma}\partial_x T^4 + \frac{4}{3}\frac{u}{\mathbb{C}}T^4 \pec
+\end{equation}
+\end{subequations}
+where $\mathbb{C}$ is a non-dimensional parameter.
+Using the ideal gas equation of state relations, an expression
+for temperature $T$ can be derived and substituted into these equations,
+using a specific heat $c_v$ such that
+\begin{equation}
+  T = \frac{\gamma p}{\rho} \pep
+\end{equation}
+Symbolic manipulation can be used to derive the MMS sources
+$Q^\rho$, $Q^{\rho u}$, $Q^E$, and $Q^{\pm}$; the resulting expressions
+are omitted here due to their complexity and length. The values chosen
+for the constants/non-dimensional parameters are $A=B=C=1$, $\alpha=0.5$,
+$\gamma=\frac{5}{3}$, and $\mathbb{C}=\sigma=1000$.
+Figure \ref{fig:diffusion_limit_solution} shows the results for this
+problem.
+
+%\begin{figure}[ht]
+%   \centering
+%   \includegraphics[width=\textwidth]{diffusion_limit_solution.pdf}
+%   \caption{}
+%   \label{fig:diffusion_limit_solution}
+%\end{figure}
+
+\subsection{Radiation-Hydrodyamics Shocks}
+%-------------------------------------------------------------------------------
+blah blah \cite{edwardsthesis}.
