@@ -44,7 +44,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, rad_BC,
    converged = False
    k = 0
 
-   # Compute E_slopes in 1 of 2 ways
+   # Compute E_slopes in 1 of 2 ways explained below
    use_hydro_star_slopes = False
 
    #Compute using the values of internal energy slopes that Hydro provided

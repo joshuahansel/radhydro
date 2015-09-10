@@ -166,7 +166,7 @@ class TestRadHydroMMS(unittest.TestCase):
       err = []
 
       # run for 10 time steps of initial dt
-      t_end = 10*dt_value
+      t_end = 40*dt_value
 
       for cycle in range(n_cycles):
       
@@ -215,7 +215,7 @@ class TestRadHydroMMS(unittest.TestCase):
              verbosity = 0
 
           #slope limiter
-          limiter = 'none'
+          limiter = 'double-minmod'
           
           # run the rad-hydro transient
           rad_new, hydro_new = runNonlinearTransient(
