@@ -2,7 +2,10 @@
 *.bbl
 *.blg
 *.log
-*.pdf
+manual.pdf
+equationsEF.pdf
+slopes.pdf
+codedesign.pdf
 *.spl
 *.out
 *.toc

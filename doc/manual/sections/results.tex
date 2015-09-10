@@ -1,7 +1,7 @@
 %===============================================================================
 \section{Results}
 %===============================================================================
-\subsection{Radiation Hydrodynamics MMS Problem}
+\subsection{Radiation Hydrodynamics MMS Problems}
 %-------------------------------------------------------------------------------
 To test the full radiation-hydrodynamics system, an MMS (Method of Manufactured
 Solutions) problem was designed. The original system given by Equations
@@ -80,16 +80,74 @@ $Q^\rho$, $Q^{\rho u}$, $Q^E$, and $Q^{\pm}$; the resulting expressions
 are omitted here due to their complexity and length. The values chosen
 for the constants/non-dimensional parameters are $A=B=C=1$, $\alpha=0.5$,
 $\gamma=\frac{5}{3}$, and $\mathbb{C}=\sigma=1000$.
-Figure \ref{fig:diffusion_limit_solution} shows the results for this
-problem.
+Figure \ref{fig:MMS_diffusion_limit_solution} compares the computed hydrodynamic
+solutions with the exact solutions for this problem,
+and Figure \ref{fig:MMS_diffusion_limit_convergence} shows
+that 2nd-order convergence is achieved
+(shown here for internal energy).
 
-%\begin{figure}[ht]
-%   \centering
-%   \includegraphics[width=\textwidth]{diffusion_limit_solution.pdf}
-%   \caption{}
-%   \label{fig:diffusion_limit_solution}
-%\end{figure}
+\begin{figure}[ht]
+   \centering
+   \includegraphics[width=\textwidth]{figures/MMS_diffusion_limit_solution.pdf}
+   \caption{Hydrodynamic solution for the equilibrium diffusion limit MMS problem}
+   \label{fig:MMS_diffusion_limit_solution}
+\end{figure}
+
+\begin{figure}[ht]
+   \centering
+   \includegraphics[width=\textwidth]{figures/MMS_diffusion_limit_convergence.pdf}
+   \caption{Convergence of internal energy for the equilibrium diffusion limit MMS problem}
+   \label{fig:MMS_diffusion_limit_convergence}
+\end{figure}
+
+The second MMS problem corresponds to the streaming limit, in which the radiation
+and hydrodynamics are weakly coupled due to the high radiation energy propagation
+speed relative to the fluid speed. For this problem, the following MMS solutions
+are chosen:
+
+%\begin{subequations}
+%\end{subequations}
 
 \subsection{Radiation-Hydrodyamics Shocks}
 %-------------------------------------------------------------------------------
-blah blah \cite{edwardsthesis}.
+A Mach 2 radiative shock problem was taken from \cite{edwardsthesis}.
+The material properties are uniform and are given in Table
+\ref{tab:mach2_shock_material}. Initial conditions in the pre-shock
+and post-shock regions are given in Table \ref{tab:mach2_shock_IC}.
+Figure \ref{fig:mach2_shock_T} shows the numerical solution computed
+with 300 cells and a CFL of 0.6, using the van Leer slope limiter;
+the comparison to the reference solution shows excellent agreement.
+
+\begin{table}[ht]
+  \centering
+  \caption{Material property values for the Mach 2 radiative shock problem}
+  \label{tab:mach2_shock_material}
+  \begin{tabular}{l l}\hline
+    \emph{Parameter} & \emph{Value}\\\hline
+    $\sigma_a$ & 390.71164263502112\\
+    $\sigma_t$ & 853.14410158161809\\
+    $c_v$      & 0.12348\\\hline
+  \end{tabular}
+\end{table}
+
+\begin{table}[ht]
+  \centering
+  \caption{Initial condition values for the Mach 2 radiative shock problem}
+  \label{tab:mach2_shock_IC}
+  \begin{tabular}{l l l}\hline
+    \emph{Parameter} & \emph{Pre-shock Value} & \emph{Post-shock Value}\\\hline
+    $\rho$           & 1                      & 2.2860748989303659\\
+    $u$              & 0.23426480742954117    & 0.10247468599526272\\
+    $E$              & 3.9788000000000004e-2  & 7.0649692950433357e-2\\
+    $\E$             & 1.3720000000000002e-6  & 2.5560936967521927e-5\\
+    $\F$             & 0                      & 0\\\hline
+  \end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+   \centering
+   \includegraphics[width=\textwidth]{figures/mach2_shock_T.pdf}
+   \caption{Comparison of Mach 2 radiative shock solution to reference solution}
+   \label{fig:mach2_shock_T}
+\end{figure}
+

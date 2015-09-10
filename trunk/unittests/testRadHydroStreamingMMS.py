@@ -31,8 +31,6 @@ from radBC import RadBC
 import globalConstants as GC
 import radUtilities as RU
 
-## Derived unittest class to test the MMS source creator functions
-##
 class TestRadHydroMMS(unittest.TestCase):
    def setUp(self):
       pass
@@ -41,41 +39,57 @@ class TestRadHydroMMS(unittest.TestCase):
    def test_RadHydroMMS(self):
       
       # declare symbolic variables
-      x, t, alpha, c = symbols('x t alpha c')
+      x, t, A, B, C, Cnondim, c, cv, gamma, mu, alpha = \
+         symbols('x t A B C Cnondim c cv gamma mu alpha')
       
+      # MMS solutions
+      rho = A*(sin(B*x-C*t)+2)
+      u   = 1/(A*(sin(B*x-C*t)+2))
+      p   = A*alpha*(sin(B*x-C*t)+2)
+      Er  = alpha*(sin(B*x-Cnondim*C*t)+2)
+      Fr  = alpha*(sin(B*x-Cnondim*C*t)+2)
+      #Er = 0.5*(sin(2*pi*x - 10.*t) + 2.)/c
+      #Fr = 0.5*(sin(2*pi*x - 10.*t) + 2.)
+
+      # derived solutions
+      T = gamma*p/rho
+      e = cv * T
+      E = rho*(u*u/2 + e)
+      psip = (Er*c + Fr/mu)/2
+      psim = (Er*c - Fr/mu)/2
+
       # numeric values
-      alpha_value = 0.01
-      cv_value    = 1.0
-      gamma_value = 1.4
-      sig_s = 0.0
-      sig_a = 1.0
-      sig_t = sig_s + sig_a
+      A_value = 1.0
+      B_value = 1.0
+      C_value = 1.0
+      alpha_value = 1.0
+      gamma_value = 5.0/3.0
+      Cnondim_value = 10.0
+      sig_s_value = 0.0
+      sig_a_value = 1.0
+      P_value = 0.001
+      cv_value = 1.0
 
-      # create solution for thermodynamic state and flow field
- #     rho = sympify('4.0')
- #     u   = sympify('1.0')
- #     E   = sympify('10.0')
-      rho = 2. + sin(2*pi*x-t)
-      u   = 1./rho
-      p   = 0.5*(2. + cos(2*pi*x-t))
-      e = p/(rho*(gamma_value-1.))
-      E = 0.5*rho*u*u + rho*e
-      
-      # create solution for radiation field based on solution for F 
-      # that is the leading order diffusion limit solution
-      a = GC.RAD_CONSTANT
-      c = GC.SPD_OF_LGT
-      mu = RU.mu["+"]
+      # create list of substitutions
+      substitutions = dict()
+      substitutions['A']     = A_value
+      substitutions['B']     = B_value
+      substitutions['C']     = C_value
+      substitutions['Cnondim'] = Cnondim_value
+      substitutions['c']     = GC.SPD_OF_LGT
+      substitutions['cv']    = cv_value
+      substitutions['gamma'] = gamma_value
+      substitutions['mu']    = RU.mu["+"]
+      substitutions['alpha'] = alpha_value
 
-      #Equilibrium diffusion solution
-      T = e/cv_value
-      Er = 0.5*(sin(2*pi*x - 10.*t) + 2.)/c
-      Fr = 0.5*(sin(2*pi*x - 10.*t) + 2.)
+      # make substitutions
+      rho  = rho.subs(substitutions)
+      u    = u.subs(substitutions)
+      mom  = rho*u
+      E    = E.subs(substitutions)
+      psim = psim.subs(substitutions)
+      psip = psip.subs(substitutions)
 
-      #Form psi+ and psi- from Fr and Er
-      psip = (Er*c*mu + Fr)/(2.*mu)
-      psim = (Er*c*mu - Fr)/(2.*mu)
-      
       # create MMS source functions
       rho_src, mom_src, E_src, psim_src, psip_src = createMMSSourceFunctionsRadHydro(
          rho           = rho,
@@ -83,23 +97,14 @@ class TestRadHydroMMS(unittest.TestCase):
          E             = E,
          psim          = psim,
          psip          = psip,
-         sigma_s_value = sig_s,
-         sigma_a_value = sig_a,
+         sigma_s_value = sig_s_value,
+         sigma_a_value = sig_a_value,
          gamma_value   = gamma_value,
          cv_value      = cv_value,
          alpha_value   = alpha_value,
          display_equations = True)
 
       # create functions for exact solutions
-      substitutions = dict()
-      substitutions['alpha'] = alpha_value
-      substitutions['c']     = GC.SPD_OF_LGT
-      rho = rho.subs(substitutions)
-      u   = u.subs(substitutions)
-      mom = rho*u
-      E   = E.subs(substitutions)
-      psim = psim.subs(substitutions)
-      psip = psip.subs(substitutions)
       rho_f  = lambdify((symbols('x'),symbols('t')), rho,  "numpy")
       u_f    = lambdify((symbols('x'),symbols('t')), u,    "numpy")
       mom_f  = lambdify((symbols('x'),symbols('t')), mom,  "numpy")
@@ -109,7 +114,7 @@ class TestRadHydroMMS(unittest.TestCase):
       
       # create uniform mesh
       n_elems = 50
-      width = 1.0
+      width = 2.0*math.pi
       mesh = Mesh(n_elems, width)
 
       # compute radiation IC
@@ -127,8 +132,8 @@ class TestRadHydroMMS(unittest.TestCase):
       hydro_BC = HydroBC(bc_type='periodic', mesh=mesh)
   
       # create cross sections
-      cross_sects = [(ConstantCrossSection(sig_s, sig_s+sig_a),
-                      ConstantCrossSection(sig_s, sig_s+sig_a))
+      cross_sects = [(ConstantCrossSection(sig_s_value, sig_s_value+sig_a_value),
+                      ConstantCrossSection(sig_s_value, sig_s_value+sig_a_value))
                       for i in xrange(mesh.n_elems)]
 
       # transient options
@@ -150,8 +155,6 @@ class TestRadHydroMMS(unittest.TestCase):
          problem_type = 'rad_hydro',
          dt_option    = 'CFL',
          CFL          = 0.5,
-       #  dt_option    = 'constant',
-       #  dt_constant  = 0.0002,
          slope_limiter = limiter,
          time_stepper = 'BDF2',
          use_2_cycles = True,
@@ -168,37 +171,34 @@ class TestRadHydroMMS(unittest.TestCase):
          psim_src     = psim_src,
          psip_src     = psip_src,
          verbosity    = verbosity,
-         rho_f =rho_f,
-         u_f = u_f,
-         E_f = E_f,
-         gamma_value = gamma_value,
-         cv_value = cv_value,
-         check_balance = True)
+         rho_f        = rho_f,
+         u_f          = u_f,
+         E_f          = E_f,
+         gamma_value  = gamma_value,
+         cv_value     = cv_value,
+         check_balance = False)
 
       # plot
       if __name__ == '__main__':
-
-         # plot radiation solution
 
          # compute exact hydro solution
          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,
             rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
          # plot hydro solution
-         plotHydroSolutions(mesh, hydro_new, x_exact=mesh.getCellCenters(),exact=hydro_exact)
+         plotHydroSolutions(\
+            mesh, hydro_new, x_exact=mesh.getCellCenters(), exact=hydro_exact)
 
-         #plot exact and our E_r
+         # plot Er solution against exact Er
          Er_exact_fn = 1./GC.SPD_OF_LGT*(psim + psip)
          Fr_exact_fn = (psip - psim)*RU.mu["+"]
          Er_exact = []
          Fr_exact = []
          x = mesh.getCellCenters()
          for xi in x:
-             
              substitutions = {'x':xi, 't':t_end}
              Er_exact.append(Er_exact_fn.subs(substitutions))
              Fr_exact.append(Fr_exact_fn.subs(substitutions))
-
          plotRadErg(mesh, rad_new.E, rad_new.F, exact_Er=Er_exact, exact_Fr =
                Fr_exact)
 

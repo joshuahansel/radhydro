@@ -11,4 +11,5 @@ bibstyle.bst     BibTeX style
 Directories:
 ===============================================================================
 sections/  contains content used by manual.tex
+figures/   contains figures used by manual.tex
 
