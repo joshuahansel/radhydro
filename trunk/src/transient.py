@@ -124,7 +124,7 @@ def runNonlinearTransient(mesh, problem_type,
    time_stepper='BE', dt_option='constant', dt_constant=None, CFL=0.5,
    slope_limiter="vanleer", t_start=0.0, t_end=1.0, use_2_cycles=False,
    rho_f=None,u_f=None,E_f=None,gamma_value=None,cv_value=None,
-   verbosity=2, check_balance=False):
+   verbosity=2, check_balance=False,time_stepper_predictor='CN'):
 
    # check input arguments
    if dt_option == 'constant':
@@ -462,7 +462,7 @@ def runNonlinearTransient(mesh, problem_type,
                 slopes_older   = slopes_older,
                 e_rad_old   = e_rad_old,
                 e_rad_older = e_rad_older,
-                time_stepper_predictor='CN',
+                time_stepper_predictor=time_stepper_predictor,
                 time_stepper_corrector=time_stepper_corrector,
                 psim_src     = psim_src,
                 psip_src     = psip_src,
@@ -492,6 +492,24 @@ def runNonlinearTransient(mesh, problem_type,
                    hydro_F_right=hydro_F_right, hydro_F_left=hydro_F_left, 
                    src_totals=src_totals, cx_new=cx_new,write=True)
 
+       #Check if in Steady State
+       end_at_SS = False
+       if end_at_SS:
+
+           if use_2_cycles and time_index > 5:
+               
+               trans_change = computeL2RelDiff(hydro_new, hydro_older, aux_func=lambda i:i.E())
+               trans_change2 = computeL2RelDiff(hydro_new, hydro_old, aux_func=lambda i:i.E())
+               trans_tol = 1.0e-6
+               if trans_change < trans_tol:
+                   #Check if the change between iterations was the same
+                   if (abs(trans_change - trans_change2)< 1.E-13*abs(trans_change)):
+                      print("Exiting transient because steady-state detected: L2 " \
+                         "relative difference between old and new\ntotal energy was "  \
+                         "less than steady-state tolerance: %0.4e < %0.4e" %
+                         (trans_change, trans_tol))
+                      break
+
        # save older solutions
        cx_older  = deepcopy(cx_old)
        rad_older = deepcopy(rad_old)
@@ -514,19 +532,6 @@ def runNonlinearTransient(mesh, problem_type,
        Qmom_old = deepcopy(Qmom_new)
        Qerg_old = deepcopy(Qerg_new)
 
-       #Check if in Steady State
-       end_at_SS = True
-       if end_at_SS:
-
-           trans_change = computeL2RelDiff(hydro_new, hydro_older, aux_func=lambda i:i.E())
-           trans_tol = 1.0e-7
-           if trans_change < trans_tol:
-               if verbosity > 1:
-                  print("Exiting transient because steady-state detected: L2 " +
-                     "relative difference between old and new\ntotal energy was " +
-                     "less than steady-state tolerance: %0.4e < %0.4e" %
-                     (trans_change, trans_tol))
-               break
 
    # return final solutions
    return rad_new, hydro_new

@@ -32,17 +32,17 @@ class TestRadHydroShock(unittest.TestCase):
    def test_RadHydroShock(self):
 
       # test case
-      test_case = "mach2" # mach1.2 mach2 mach50
+      test_case = "marcho3" # mach1.2 mach2 mach50
       
       # create uniform mesh
-      n_elems = 300
+      n_elems = 1000
       width = 0.04
       x_start = -0.02
       mesh_center = x_start + 0.5*width
       mesh = Mesh(n_elems, width, x_start=x_start)
 
       # slope limiter
-      slope_limiter = "vanleer"
+      slope_limiter = "double-minmod"
 
       # gamma constant
       gam = 5.0/3.0
@@ -55,9 +55,9 @@ class TestRadHydroShock(unittest.TestCase):
       sig_s2 = sig_s1
       c_v2   = c_v1
 
-      if test_case != "mach2":
+      if not (test_case == "mach2" or test_case == "marcho3"):
          
-         raise NotImplementedError("All but mach2 shock may have wrong input"\
+         raise NotImplementedError("All but mach2 and marcho3 shock may have wrong input"\
                  "values. Need to check Jarrod Ewards thesis, starting with Table 6.1")
 
 
@@ -218,6 +218,50 @@ class TestRadHydroShock(unittest.TestCase):
          exact_solution_filename = "marcho1.05_exact_solution.csv"
          exact_solution_filename = None
 
+      elif test_case == "marcho3":
+
+         #new c_v and pure absorber cross sections
+         c_v1 = 0.221804
+         c_v2 = c_v1
+         sig_a1 = 577.3502692
+         sig_s1 = 0.
+         sig_a2 = sig_a1
+         sig_s2 = sig_s1
+
+         # material 1 IC
+         rho1   = 1.0
+         mom1   = 0.5192549757
+         u1     = mom1/rho1
+         T1     = 0.1215601363
+         e1     = T1*c_v1
+         E1     = 0.5*rho1*u1*u1 + e1*rho1
+         Erad_left = 2.995841442e-06
+
+         # material 2 IC
+         rho2   = 3.002167609
+         u2     = rho1*u1/rho2
+         T2     = 0.4451426103
+         e2     = T2*c_v2
+         E2     = 0.5*rho2*u2*u2 + e2*rho2
+         Erad_right = 0.0005387047241
+
+         print "rho", rho1, rho2
+         print "vel", u1, u2
+         print "Temperature", T1, T2
+         print "momentum", rho1*u1, rho2*u2
+         print "E",E1, E2
+         print "E_r",Erad_left, Erad_right
+
+         # final time
+         t_end = 1.0
+
+         # temperature plot filename
+         test_filename = "radshock_marcho3.pdf"
+
+         # temperature plot exact solution filename
+         exact_solution_filename = None
+
+
       else:
          raise NotImplementedError("Invalid test case")
          
@@ -330,8 +374,8 @@ class TestRadHydroShock(unittest.TestCase):
          plotHydroSolutions(mesh, hydro_new, exact=hydro_exact)
 
          # plot material and radiation temperatures
-         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=False,
-            save=False, filename=test_filename,
+         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=True,
+            save=True, filename=test_filename,
             exact_solution_filename=exact_solution_filename)
 
          # plot angular fluxes
