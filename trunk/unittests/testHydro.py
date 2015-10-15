@@ -26,7 +26,7 @@ class TestHydro(unittest.TestCase):
    def test_Hydro(self):
 
       # create mesh
-      n_elems = 200
+      n_elems = 100
       width = 1.0
       mesh = Mesh(n_elems,width)
       x_diaphragm = 0.3
@@ -83,8 +83,9 @@ class TestHydro(unittest.TestCase):
       hydro_BC = HydroBC(bc_type='reflective', mesh=mesh)
   
       # initialize radiation to zero solution to give pure hydrodynamics
-      rad_BC    = RadBC(mesh, "vacuum")
       rad_IC    = Radiation([0.0 for i in range(n_elems*4)])
+      psi_left  = 0.0
+      psi_right = 0.0
       rad_BC    = RadBC(mesh, "dirichlet", psi_left=psi_left, psi_right=psi_right)
 
       # if run standalone, then be verbose
@@ -106,12 +107,10 @@ class TestHydro(unittest.TestCase):
          rad_BC       = rad_BC,
          cross_sects  = cross_sects,
          rad_IC       = rad_IC,
-         rad_BC       = rad_BC,
          hydro_IC     = hydro_IC,
          hydro_BC     = hydro_BC,
          slope_limiter = slope_limiter,
          verbosity    = verbosity,
-         slope_limiter      = 'double-minmod',
          check_balance= True)
 
 
