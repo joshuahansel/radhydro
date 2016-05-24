@@ -80,6 +80,8 @@ class TestRadHydroMMS(unittest.TestCase):
       p_inf = alpha_value*rho_inf*a_inf**2
       p_inf = alpha_value*rho_inf*a_inf/M*a_inf
       cv_value = a_inf**2/(T_inf*gamma_value*(gamma_value-1.))
+      print("BIG C in front of t needs to be 10")
+      exit()
 
       # create solution for thermodynamic state and flow field
       rho = rho_inf*(2. + sin(2*pi*x-t))

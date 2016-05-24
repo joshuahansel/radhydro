@@ -338,7 +338,7 @@ def plotRadErg(mesh, Er_edge, Fr_edge=None, exact_Fr=None, save=False,
 #
 def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
         hydro_states=None, exact_Er=None, print_values=False,
-        exact_solution_filename=None):
+        exact_solution_filename=None, pickle_dic=None):
 
    # create new figure
    plt.figure()
@@ -375,6 +375,18 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
       Tr_exact = exact_data[:,2]
       # plot exact temperatures
       print T_exact, Tr_exact
+      plt.plot(x_exact,T_exact,'b-',label='$T_m$, analytic')
+      plt.plot(x_exact,Tr_exact,'r-',label='$T_r$, analytic')
+
+   if pickle_dic != None:
+
+      x_exact = pickle_dic['x']
+      T_exact = pickle_dic['Tm']
+      Er_exact = pickle_dic['Er']
+
+      #Convert Er_exact to Tr_exact
+      #TODO
+      Tr_exact = [pow(i/a,0.25) for i in Er_exact]
       plt.plot(x_exact,T_exact,'b-',label='$T_m$, analytic')
       plt.plot(x_exact,Tr_exact,'r-',label='$T_r$, analytic')
 
@@ -492,7 +504,7 @@ def computeLRValues(tuple_list):
 ## Plots hydro solution
 #
 def plotHydroSolutions(mesh, states, slopes=None, x_exact=None, exact=None,
-    save_plot=False, filename='hydro_solution.pdf'):
+    pickle_dic=None, save_plot=False, filename='hydro_solution.pdf'):
 
     # create 11" x 8.5" figure
     plt.figure(figsize=(11,8.5))
@@ -567,6 +579,11 @@ def plotHydroSolutions(mesh, states, slopes=None, x_exact=None, exact=None,
            E_exact.append(i.e*i.rho + 0.5*i.u*i.u*i.rho)
            mom_exact.append(i.u*i.rho)
 
+    if pickle_dic != None:
+       x_exact   = pickle_dic['x']
+       u_exact   = pickle_dic['Speed']
+       rho_exact = pickle_dic['Density']
+
     # plot each quantity
     plotSingle(x_num=x_num, x_exact=x_exact, y=rho, y_label=r"$\rho$", exact=rho_exact) 
     plotSingle(x_num=x_num, x_exact=x_exact, y=p,   y_label=r"$p$",    exact=p_exact)
@@ -585,7 +602,6 @@ def plotHydroSolutions(mesh, states, slopes=None, x_exact=None, exact=None,
     #raw_input("Press anything to continue...")
     plt.show()
     plotSingle.fig_num=0
-
 
 ## Plots a single plot in a 4x4 subplot array
 #

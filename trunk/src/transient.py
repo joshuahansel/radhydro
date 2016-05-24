@@ -493,7 +493,7 @@ def runNonlinearTransient(mesh, problem_type,
                    src_totals=src_totals, cx_new=cx_new,write=True)
 
        #Check if in Steady State
-       end_at_SS = False
+       end_at_SS = True
        if end_at_SS:
 
            if use_2_cycles and time_index > 5:
