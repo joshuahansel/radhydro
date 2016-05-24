@@ -54,39 +54,39 @@ class TestRadHydroMMS(unittest.TestCase):
       n_elems = 50
       
       # numeric values
-      gamma_value = 1.4
-      cv_value = 1.0
+      gamma_value = 5./3.
+      cv_value = 0.14472799784454
       sig_s = 0.0
       sig_a = 100000.0
       sig_t = sig_s + sig_a
 
       #Want material speeed to be a small fraction of speed of light
       #and radiation to be small relative to kinetic energy
-      C = 1000.
-      P = 0.001
+      C = 1000.   # c/a_inf
+      P = 0.001   # a_r T_inf^4/(rho_inf*u_inf^2)
 
       #Arbitrary ratio of pressure to density
       alpha_value = 0.5 
 
-      #Arbitrary mach number well below the sound speed
+      #Arbitrary mach number well below the sound speed.  The choice of gamma and
+      #the cv value, as well as C and P constrain all other material reference
+      #parameters, but we are free to choose the material velocity below the sound
+      #speed to ensure no shocks are formed
       M = 0.8
 
-      #Arbitrary choice of rho_inf
-      rho_inf = 1.0
-
       a_inf = GC.SPD_OF_LGT/C
-      #rho_inf = GC.RAD_CONSTANT*T_inf**4/(P*a_inf**2)   #to set rho_inf based on T_inf
-      T_inf = pow(rho_inf*P*a_inf**2/GC.RAD_CONSTANT,0.25)  #to set T_inf based on rho_inf
-      p_inf = alpha_value*rho_inf*a_inf**2
-      p_inf = alpha_value*rho_inf*a_inf/M*a_inf
-      cv_value = a_inf**2/(T_inf*gamma_value*(gamma_value-1.))
+      T_inf = a_inf**2/(gamma_value*(1.-gamma_value)*cv_value)
+      rho_inf = GC.RAD_CONSTANT*T_inf**4/(P*a_inf**2)
+      #T_inf = pow(rho_inf*P*a_inf**2/GC.RAD_CONSTANT,0.25)  #to set T_inf based on rho_inf,
+      #cv_value = a_inf**2/(T_inf*gamma_value*(gamma_value-1.)) # to set c_v, if rho specified
+      p_inf = rho_inf*a_inf*a_inf
       print("BIG C in front of t needs to be 10")
       exit()
 
       # create solution for thermodynamic state and flow field
       rho = rho_inf*(2. + sin(2*pi*x-t))
-      u   = a_inf*M*(2. + cos(2*pi*x-t))
-      p   = p_inf*(2. + cos(2*pi*x-t))
+      u   = a_inf*M*0.5*(2. + cos(2*pi*x-t))
+      p   = alpha_value*p_inf*(2. + cos(2*pi*x-t))
       e = p/(rho*(gamma_value-1.))
       E = 0.5*rho*u*u + rho*e
       

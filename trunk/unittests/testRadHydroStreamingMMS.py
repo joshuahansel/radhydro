@@ -42,6 +42,33 @@ class TestRadHydroMMS(unittest.TestCase):
       x, t, A, B, C, Cnondim, c, cv, gamma, mu, alpha = \
          symbols('x t A B C Cnondim c cv gamma mu alpha')
       
+      #These constants, as well as cross sections and C_v, rho_ref
+      #will set the material 
+      #and radiation to be small relative to kinetic energy
+      C = 1000.
+      P = 0.001
+
+      #Arbitrary ratio of pressure to density
+      alpha_value = 0.5 
+
+      #Arbitrary mach number well below the sound speed
+      M = 0.8
+
+      #Arbitrary mach number well below the sound speed.  The choice of gamma and
+      #the cv value, as well as C and P constrain all other material reference
+      #parameters, but we are free to choose the material velocity below the sound
+      #speed to ensure no shocks are formed
+      M = 0.8
+
+      a_inf = GC.SPD_OF_LGT/C
+      T_inf = a_inf**2/(gamma_value*(1.-gamma_value)*cv_value)
+      rho_inf = GC.RAD_CONSTANT*T_inf**4/(P*a_inf**2)
+      #T_inf = pow(rho_inf*P*a_inf**2/GC.RAD_CONSTANT,0.25)  #to set T_inf based on rho_inf,
+      #cv_value = a_inf**2/(T_inf*gamma_value*(gamma_value-1.)) # to set c_v, if rho specified
+      p_inf = rho_inf*a_inf*a_inf
+
+      #Arbitrary choice of rho_inf
+      rho_inf = 1.0
       # MMS solutions
       rho = A*(sin(B*x-C*t)+2)
       u   = 1/(A*(sin(B*x-C*t)+2))

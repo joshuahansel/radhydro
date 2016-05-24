@@ -259,16 +259,7 @@ class TestRadHydroShock(unittest.TestCase):
 
 #-------------------------------------------------------------------------------------------
 #
-# From non-dimensional unshocked parameters, compute the post and pre shock
-# parameters in dimensional form
-def computeShockParams(nond_params):
-
-   #Unpack necessary nondimensional parameters
-   return None
-
-#-------------------------------------------------------------------------------------------
-#
-# Takes non-dimensional parameters, assuming ideal gas, and computes reference
+# Takes reference temperature and other parameters, assuming ideal gas, and computes reference
 # parameters that can be used to convert the non-dimensional parameters into the
 # appropriate values, using an ideal gas equation of state, with a defined C_v, 
 # reference temperature and density
