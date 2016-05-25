@@ -39,20 +39,14 @@ class TestRadHydroMMS(unittest.TestCase):
    def test_RadHydroMMS(self):
       
       # declare symbolic variables
-      x, t, A, B, C, Cnondim, c, cv, gamma, mu, alpha = \
-         symbols('x t A B C Cnondim c cv gamma mu alpha')
+      x, t, A, B, C,  c, cv, gamma, mu, alpha = \
+         symbols('x t A B C c cv gamma mu alpha')
       
       #These constants, as well as cross sections and C_v, rho_ref
       #will set the material 
       #and radiation to be small relative to kinetic energy
-      C = 1000.
-      P = 0.001
-
-      #Arbitrary ratio of pressure to density
-      alpha_value = 0.5 
-
-      #Arbitrary mach number well below the sound speed
-      M = 0.8
+      Ctilde = 10.
+      P = 0.1
 
       #Arbitrary mach number well below the sound speed.  The choice of gamma and
       #the cv value, as well as C and P constrain all other material reference
@@ -60,21 +54,32 @@ class TestRadHydroMMS(unittest.TestCase):
       #speed to ensure no shocks are formed
       M = 0.8
 
-      a_inf = GC.SPD_OF_LGT/C
-      T_inf = a_inf**2/(gamma_value*(1.-gamma_value)*cv_value)
+      # numeric values
+      A_value = 1.0
+      B_value = 1.0
+      C_value = 1.0
+      alpha_value = 0.5
+      gamma_value = 5.0/3.0
+      sig_s_value = 0.0
+      sig_a_value = 1.0
+    
+      # numeric values
+      gamma_value = 5./3.
+      cv_value = 0.14472799784454
+      a_inf = GC.SPD_OF_LGT/Ctilde
+      T_inf = a_inf**2/(gamma_value*(gamma_value - 1.)*cv_value)
       rho_inf = GC.RAD_CONSTANT*T_inf**4/(P*a_inf**2)
       #T_inf = pow(rho_inf*P*a_inf**2/GC.RAD_CONSTANT,0.25)  #to set T_inf based on rho_inf,
       #cv_value = a_inf**2/(T_inf*gamma_value*(gamma_value-1.)) # to set c_v, if rho specified
       p_inf = rho_inf*a_inf*a_inf
+      Er_inf = GC.RAD_CONSTANT*T_inf**4
 
-      #Arbitrary choice of rho_inf
-      rho_inf = 1.0
       # MMS solutions
-      rho = A*(sin(B*x-C*t)+2)
-      u   = 1/(A*(sin(B*x-C*t)+2))
-      p   = A*alpha*(sin(B*x-C*t)+2)
-      Er  = alpha*(sin(B*x-Cnondim*C*t)+2)
-      Fr  = alpha*(sin(B*x-Cnondim*C*t)+2)
+      rho = rho_inf*(sin(B*x-C*t)+2)
+      u   = M*a_inf*1/(A*(sin(B*x-C*t)+2))
+      p   = p_inf*A*alpha*(sin(B*x-C*t)+2)
+      Er  = alpha*(sin(B*x-Ctilde*C*t)+2)*Er_inf
+      Fr  = alpha*(sin(B*x-Ctilde*C*t)+2)*c*Er_inf
       #Er = 0.5*(sin(2*pi*x - 10.*t) + 2.)/c
       #Fr = 0.5*(sin(2*pi*x - 10.*t) + 2.)
 
@@ -85,24 +90,12 @@ class TestRadHydroMMS(unittest.TestCase):
       psip = (Er*c + Fr/mu)/2
       psim = (Er*c - Fr/mu)/2
 
-      # numeric values
-      A_value = 1.0
-      B_value = 1.0
-      C_value = 1.0
-      alpha_value = 1.0
-      gamma_value = 5.0/3.0
-      Cnondim_value = 10.0
-      sig_s_value = 0.0
-      sig_a_value = 1.0
-      P_value = 0.001
-      cv_value = 1.0
 
       # create list of substitutions
       substitutions = dict()
       substitutions['A']     = A_value
       substitutions['B']     = B_value
       substitutions['C']     = C_value
-      substitutions['Cnondim'] = Cnondim_value
       substitutions['c']     = GC.SPD_OF_LGT
       substitutions['cv']    = cv_value
       substitutions['gamma'] = gamma_value
@@ -165,7 +158,7 @@ class TestRadHydroMMS(unittest.TestCase):
 
       # transient options
       t_start  = 0.0
-      t_end = 0.1*math.pi
+      t_end = 0.00001*math.pi
 
       # if run standalone, then be verbose
       if __name__ == '__main__':
