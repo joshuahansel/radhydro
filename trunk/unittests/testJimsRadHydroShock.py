@@ -58,7 +58,7 @@ class TestRadHydroShock(unittest.TestCase):
       c_v2   = c_v1
 
       #Read in Jim's nondimensional results to set preshock and postshock dimensional
-      mach_number = "1.2" #Choices are 2.0, 1.2, 3.0, 5.0
+      mach_number = "5.0" #Choices are 2.0, 1.2, 3.0, 5.0
       filename = 'analytic_shock_solutions/data_for_M%s.pickle' % mach_number
       f = open(filename,'r')
       data = pickle.load(f)
@@ -95,7 +95,7 @@ class TestRadHydroShock(unittest.TestCase):
       # material 1 IC
  
       # final time
-      t_end = 0.3
+      t_end = 0.01
  
       # temperature plot filename
       test_filename = "radshock_mach_"+re.search("M(\d\.\d)",filename).group(1)+".pdf"
@@ -211,7 +211,7 @@ class TestRadHydroShock(unittest.TestCase):
       hydro_BC = HydroBC(bc_type='fixed', mesh=mesh, state_L = state_l,
             state_R = state_r)
       #Forcing to reflective? Maybe this is the problem
-      hydro_BC = HydroBC(mesh=mesh,bc_type='reflective')
+      #hydro_BC = HydroBC(mesh=mesh,bc_type='reflective')
 
       # transient options
       t_start  = 0.0
@@ -250,9 +250,9 @@ class TestRadHydroShock(unittest.TestCase):
          plotHydroSolutions(mesh, hydro_new, exact=hydro_exact, pickle_dic=data)
 
          # plot material and radiation temperatures
-         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=True,
+         Tr_exact, Tm_exact = plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=True,
             save=True, filename=test_filename,
-            exact_solution_filename=None, pickle_dic=data)
+             pickle_dic=data)
 
          # plot angular fluxes
          plotS2Erg(mesh, rad_new.psim, rad_new.psip)
@@ -262,8 +262,11 @@ class TestRadHydroShock(unittest.TestCase):
 
          #Create dictionary of all the data
          big_dic = { }
-         big_dic["dt"] =  dt
-         big_dic["Errors"] = err
+         big_dic["hydro"] =  hydro_new
+         big_dic["hydro_exact"] = hydro_exact
+         big_dic["rad"] = rad_new
+         big_dic["Tr_exact"] = Tr_exact
+         big_dic["Tm_exact"] = Tm_exact
          pickle.dump( big_dic, open( pickname, "w") )
 
 #-------------------------------------------------------------------------------------------

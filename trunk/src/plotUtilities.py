@@ -355,14 +355,6 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
    plt.rc('text', usetex=True)         # use tex to generate text
    plt.rc('font', family='sans-serif') # use sans-serif font family
 
-   # plot material temperature
-   if hydro_states != None:
-       T = [state.getTemperature() for state in hydro_states]
-       plt.plot(x,T,'bx', label='$T_m$')
-    
-   # plot radiation temperature
-   plt.plot(x, Tr, 'r+', label='$T_r$')
-
    # plot the exact temperatures
    if exact_solution_filename != None:
       # read data from csv file
@@ -375,8 +367,8 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
       Tr_exact = exact_data[:,2]
       # plot exact temperatures
       print T_exact, Tr_exact
-      plt.plot(x_exact,T_exact,'b-',label='$T_m$, analytic')
-      plt.plot(x_exact,Tr_exact,'r-',label='$T_r$, analytic')
+      plt.plot(x_exact,T_exact,'b--',label='$T_m$, reference',linewidth=1.0)
+      plt.plot(x_exact,Tr_exact,'r--',label='$T_r$, analytic',)
 
    if pickle_dic != None:
 
@@ -387,8 +379,17 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
       #Convert Er_exact to Tr_exact
       #TODO
       Tr_exact = [pow(i/a,0.25) for i in Er_exact]
-      plt.plot(x_exact,T_exact,'b-',label='$T_m$, analytic')
-      plt.plot(x_exact,Tr_exact,'r-',label='$T_r$, analytic')
+      plt.plot(x_exact,T_exact,'b-',label='$T_m$, semi-analytic', linewidth=1.6)
+      plt.plot(x_exact,Tr_exact,'r-',label='$T_r$, semi-analytic', linewidth=1.6)
+
+   # plot material temperature
+   if hydro_states != None:
+       T = [state.getTemperature() for state in hydro_states]
+       plt.plot(x,T,'b--', label='$T_m$ numerical', linewidth=4.4)
+    
+   # plot radiation temperature
+   plt.plot(x, Tr, 'r--', label='$T_r$ numerical', linewidth=4.4)
+
 
    # annotations
    plt.xlabel('$x$')
@@ -419,6 +420,9 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
       plt.savefig(filename)
    else:
       plt.show()
+
+   #return Tr and Tm exact
+   return Tr_exact, T_exact
 
    
 ## Function to transform mesh into discontinuous x-points for plotting.
