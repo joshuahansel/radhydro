@@ -62,7 +62,7 @@ class TestRadHydroMMS(unittest.TestCase):
       cv_value = 0.14472799784454
       
       # run for a fixed amount of time 
-      t_end = 1
+      t_end = 2.*pi
       sig_s = 0.0
 
       #Want material speeed to be a small fraction of speed of light
@@ -96,10 +96,16 @@ class TestRadHydroMMS(unittest.TestCase):
           #cv_value = a_inf**2/(T_inf*gamma_value*(gamma_value-1.)) # to set c_v, if rho specified
           p_inf = rho_inf*a_inf*a_inf
 
+          print "The dimensionalization parameters are: "
+          print "   a_inf : ", a_inf
+          print "   T_inf : ", T_inf
+          print " rho_inf : ", rho_inf
+          print "   p_inf : ", p_inf
+
           # create solution for thermodynamic state and flow field
-          rho = rho_inf*(2. + sin(2*pi*x-t))
-          u   = a_inf*M*0.5*(2. + cos(2*pi*x-t))
-          p   = alpha_value*p_inf*(2. + cos(2*pi*x-t))
+          rho = rho_inf*(2. + sin(x-t))
+          u   = a_inf*M*0.5*(2. + cos(x-t))
+          p   = alpha_value*p_inf*(2. + cos(x-t))
           e = p/(rho*(gamma_value-1.))
           E = 0.5*rho*u*u + rho*e
           
@@ -169,15 +175,25 @@ class TestRadHydroMMS(unittest.TestCase):
           hydro_IC = computeAnalyticHydroSolution(mesh,t=0.0,
              rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
 
-          # compute time step size according to CFL (actually half).  These may not
-          # be the actual time step sizes that are used, but hopefuly the scaling
-          # of nondimensional C and sigma keep this guy constant for all simulation
-          sound_speed = [sqrt(i.p * i.gamma / i.rho) + abs(i.u) for i in hydro_IC]
-          dt_vals = [cfl_value*(mesh.elements[i].dx)/sound_speed[i]
-             for i in xrange(len(hydro_IC))]
-          dt_value = min(dt_vals)
+          # compute the initial time step size according to CFL conditon (actually
+          # half). We will then decrease this time step by the same factor as DX each
+          # cycle
+          if cycle == 0:
 
-          print "initial dt_value", dt_value
+              sound_speed = [sqrt(i.p * i.gamma / i.rho) + abs(i.u) for i in hydro_IC]
+              dt_vals = [cfl_value*(mesh.elements[i].dx)/sound_speed[i]
+                 for i in xrange(len(hydro_IC))]
+              dt_value = min(dt_vals)
+            
+              print "initial dt_value", dt_value
+
+              #Adjust the end time to be an exact increment of dt_values
+              print "old t_end: ", t_end
+              nsteps = int(t_end/dt_value)
+              t_end  = float(nsteps)*dt_value
+              print "new t_end: ", t_end
+
+          print "This cycle's dt value: ", dt_value
 
           # create uniform mesh
           mesh = Mesh(n_elems, width)
@@ -230,8 +246,8 @@ class TestRadHydroMMS(unittest.TestCase):
           rad_new, hydro_new = runNonlinearTransient(
              mesh         = mesh,
              problem_type = 'rad_hydro',
-             dt_option    = 'CFL',
-             CFL          = cfl_value,
+             dt_option    = 'constant',
+             dt_constant  = dt_value,
              slope_limiter = limiter,
              time_stepper = 'BDF2',
              use_2_cycles = True,
@@ -262,7 +278,8 @@ class TestRadHydroMMS(unittest.TestCase):
           #Compute error
           err.append(computeHydroL2Error(hydro_new, hydro_exact))
 
-          n_elems *= 2
+          n_elems  *= 2
+          dt_value *= 0.5
 
           # compute convergence rates
           rates_dx = computeHydroConvergenceRates(dx,err)
@@ -277,11 +294,6 @@ class TestRadHydroMMS(unittest.TestCase):
 
       # plot
       if __name__ == '__main__':
-
-         print dt
-         exit()
-
-         # plot radiation solution
 
          # compute exact hydro solution
          hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,
