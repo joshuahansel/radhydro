@@ -222,6 +222,19 @@ class TestRadHydroMMS(unittest.TestCase):
          plotRadErg(mesh, rad_new.E, rad_new.F, exact_Er=Er_exact, exact_Fr =
                Fr_exact)
 
+         #Make a pickle to save the error tables
+         from sys import argv
+         pickname = "results/testRadHydroStreamingMMS.pickle"
+         if len(argv) > 2:
+            if argv[1] == "-o":
+               pickname = argv[2].strip()
+
+         #Create dictionary of all the data
+         big_dic = {"dx": dx}
+         big_dic["dt"] =  dt
+         big_dic["Errors"] = err
+         pickle.dump( big_dic, open( pickname, "w") )
+
 # run main function from unittest module
 if __name__ == '__main__':
    unittest.main()

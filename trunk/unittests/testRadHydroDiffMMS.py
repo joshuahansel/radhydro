@@ -11,6 +11,8 @@ from sympy import symbols, exp, sin, sympify, cos, diff
 from math import pi
 from sympy.utilities.lambdify import lambdify
 
+import pickle
+
 from scipy.optimize import fmin
 
 # numpy
@@ -325,7 +327,24 @@ class TestRadHydroMMS(unittest.TestCase):
          plotS2Erg(mesh, rad_new.psim, rad_new.psip, exact_psim=psim_exact,
                  exact_psip=psip_exact)
 
-         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=False)
+         plotTemperatures(mesh, rad_new.E, hydro_states=hydro_new, print_values=True)
+
+         #Make a pickle to save the error tables
+         from sys import argv
+         pickname = "results/testRadHydroDiffMMS.pickle"
+         if len(argv) > 2:
+            if argv[1] == "-o":
+               pickname = argv[2].strip()
+
+         #Create dictionary of all the data
+         big_dic = {"dx": dx}
+         big_dic["dt"] =  dt
+         big_dic["Errors"] = err
+         pickle.dump( big_dic, open( pickname, "w") )
+         
+               
+               
+         
 
 # run main function from unittest module
 if __name__ == '__main__':

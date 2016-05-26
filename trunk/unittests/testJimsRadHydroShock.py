@@ -48,7 +48,7 @@ class TestRadHydroShock(unittest.TestCase):
       gam = 5.0/3.0
  
       # material 1 and 2 properties;
-      t_ref = 0.5 #keV reference unshocked, upstream, ambient, equilibrium
+      T_ref = 0.1 #keV reference unshocked, upstream, ambient, equilibrium
       
       sig_a1 = 577.35
       sig_s1 = 0.0
@@ -58,13 +58,14 @@ class TestRadHydroShock(unittest.TestCase):
       c_v2   = c_v1
 
       #Read in Jim's nondimensional results to set preshock and postshock dimensional
-      filename = 'analytic_shock_solutions/data_for_M2.0.pickle'
+      mach_number = "1.2" #Choices are 2.0, 1.2, 3.0, 5.0
+      filename = 'analytic_shock_solutions/data_for_M%s.pickle' % mach_number
       f = open(filename,'r')
       data = pickle.load(f)
       f.close()
 
       #compute scalings based on an assumed density and reference temperature
-      dp =getDimensParams(T_ref=t_ref, rho_ref=1.0, C_v=c_v1, gamma=gam)
+      dp =getDimensParams(T_ref=T_ref, rho_ref=1.0, C_v=c_v1, gamma=gam)
       
       print data
 
@@ -72,7 +73,7 @@ class TestRadHydroShock(unittest.TestCase):
       rho1   = data['Density'][0]*dp['rho']
       u1     = data['Speed'][0]*dp['a']   #velocity times reference sound speed
       Erad1  = data['Er'][0]*dp['Er']
-      T1     = data['Tm'][0]*t_ref
+      T1     = data['Tm'][0]*T_ref
       e1     = T1*c_v1
       E1     = rho1*(e1 + 0.5*u1*u1)
 
@@ -80,7 +81,7 @@ class TestRadHydroShock(unittest.TestCase):
       rho2   = data['Density'][-1]*dp['rho']
       u2     = data['Speed'][-1]*dp['a']   #velocity times reference sound speed
       Erad2  = data['Er'][-1]*dp['Er']
-      T2     = data['Tm'][-1]*t_ref
+      T2     = data['Tm'][-1]*T_ref
       e2     = T2*c_v2
       E2     = rho2*(e2 + 0.5*u2*u2)
  
@@ -94,7 +95,7 @@ class TestRadHydroShock(unittest.TestCase):
       # material 1 IC
  
       # final time
-      t_end = 0.1
+      t_end = 0.3
  
       # temperature plot filename
       test_filename = "radshock_mach_"+re.search("M(\d\.\d)",filename).group(1)+".pdf"
@@ -256,6 +257,14 @@ class TestRadHydroShock(unittest.TestCase):
          # plot angular fluxes
          plotS2Erg(mesh, rad_new.psim, rad_new.psip)
 
+         #Make a pickle to save the error tables
+         pickname = "results/testJimsShock_M%s_%ielems.pickle" % (mach_number,n_elems)
+
+         #Create dictionary of all the data
+         big_dic = { }
+         big_dic["dt"] =  dt
+         big_dic["Errors"] = err
+         pickle.dump( big_dic, open( pickname, "w") )
 
 #-------------------------------------------------------------------------------------------
 #
