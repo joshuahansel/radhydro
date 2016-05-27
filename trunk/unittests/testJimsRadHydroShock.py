@@ -35,7 +35,7 @@ class TestRadHydroShock(unittest.TestCase):
    def test_RadHydroShock(self):
 
       # create uniform mesh
-      n_elems = 500
+      n_elems = 1000
       width = 0.04
       x_start = -0.02
       mesh_center = x_start + 0.5*width
