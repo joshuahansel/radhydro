@@ -6,6 +6,7 @@ import numpy as np
 import globalConstants as GC
 from crossXInterface import CrossXInterface
 from hydroState import HydroState
+from radiation import Radiation
 from scipy.integrate import quad
 
 QUAD_REL_TOL = 1.0E-10
@@ -107,6 +108,36 @@ def computeHydroConvergenceRates(dx,err):
 
    return rates
 
+#-----------------------------------------------------------------------------------
+## Compute convergence rates for radiation variables
+#
+#  @param[in] dx   list of mesh sizes or time step sizes for each cycle
+#  @param[in] err  list of dictionaries of errors for each cycle and quantity
+#
+#  @return  list of dictionaries of convergence rates for each quantity.
+#     The size of this list will be the number of cycles minus one.
+#
+def computeRadiationConvergenceRates(dx,err):
+
+   # determine number of refinement cycles from length of lists
+   n_cycles = len(dx)
+
+   # initialize list of rates
+   rates = list()
+
+   # loop over cycles
+   for cycle in xrange(n_cycles):
+      # compute convergence rate
+      if cycle > 0:
+         # loop over keys of dictionary to compute rate for each quantity
+         rate_dict = dict()
+         for key in err[cycle]:
+            rate_dict[key] = log(err[cycle][key]/err[cycle-1][key]) / \
+               log(dx[cycle]/dx[cycle-1])
+         # add rate dictionary to list
+         rates.append(rate_dict)
+
+   return rates
 #-----------------------------------------------------------------------------------
 ## Prints convergence table and convergence rates
 #
@@ -221,9 +252,18 @@ def computeHydroError(hydro, hydro_exact):
    return err
 
 ## Function to compute the L-2 error for the hydro solution
-#  for a number of different quantities.
+#  for a number of different quantities.   Optionally
+#  you can add in the radiation stuff
 #
-def computeHydroL2Error(hydro, hydro_exact):
+def computeHydroL2Error(hydro, hydro_exact, rad=None, rad_exact=None):
+
+
+   print "WARNING: there is an assumption of uniform mesh spacing in this computation\n"
+   #WARNING: basically the way we compute the error is we compute the exact cell
+   #averages and just compare the L2 difference between our computed averages and
+   #the exact cell averages (at the end time).  This is not the same as computing a true L2 error
+   #over space. 
+
 
    # dictionary of quantities to their function
    funcs = {'rho':   lambda state: state.rho,
@@ -237,6 +277,10 @@ def computeHydroL2Error(hydro, hydro_exact):
    err = dict()
    for key in funcs:
       err[key] = computeL2RelDiff(hydro, hydro_exact, aux_func=funcs[key])
+
+   if rad != None:
+       err['Er'] = computeL2RelDiff(rad.E, rad_exact.E, aux_func=lambda x: 0.5*(x[0]+x[1]))
+       err['Fr'] = computeL2RelDiff(rad.F, rad_exact.F, aux_func=lambda x: 0.5*(x[0]+x[1]))
 
    return err
 
@@ -290,12 +334,11 @@ def computeL2RelDiff(values1, values2, aux_func=None):
    vals1 = np.array([f(i) for i in values1])
    vals2 = np.array([f(i) for i in values2])
 
-   #compute norms
+   #compute norm of the first value
    norm1 = np.linalg.norm(vals1)
-   norm2 = np.linalg.norm(vals2)
    norm_diff = np.linalg.norm(vals1 - vals2)
 
-   return norm_diff/(max(norm1,norm2))
+   return norm_diff/(norm1)
 
 ## Computes effective scattering fraction \f$\nu^k\f$ in linearization
 #
@@ -536,6 +579,34 @@ def printTupleList(tuple_list):
 
             print j
 
+## Construct analytic rad objects from the analytic functions of (x,t)
+#
+#  @param[in] mesh  mesh
+#  @param[in] t     time value
+#  @param[in] psim    analytic function for psi_minus
+#  @param[in] psip    analytic function for psi_plus 
+#
+#  @return rad object that has analytic moments of psi
+#
+def computeAnalyticRadSolution(mesh,t,psim,psip):
+
+   psi_vec = np.zeros(4*mesh.n_elems)
+   for i in xrange(mesh.n_elems):
+
+      # evaluate exact cell-average moments
+      x_l = mesh.getElement(i).xl
+      x_r = mesh.getElement(i).xr
+      psim_lr = evalEdgeSource(psim,x_l,x_r,t)
+      psip_lr = evalEdgeSource(psip,x_l,x_r,t)
+
+      # add hydro state for cell
+      psi_vec[getIndex(i,"L","-")] = psim_lr[0]
+      psi_vec[getIndex(i,"R","-")] = psim_lr[1]
+      psi_vec[getIndex(i,"L","+")] = psip_lr[0]
+      psi_vec[getIndex(i,"R","+")] = psip_lr[1]
+
+   return Radiation(psi_vec)
+
 
 ## Computes hydro states from analytic functions of (x,t)
 #
@@ -588,6 +659,7 @@ def evalEdgeSource(func, x_l, x_r,t):
     Q_R_m = quad(f_R, x_l, x_r, epsrel=QUAD_REL_TOL)[0]
 
     #Now compute the edge values based on exact moments
+    #This is for the lumped expression of sources
     Q_L = Q_L_m
     Q_R = Q_R_m
 

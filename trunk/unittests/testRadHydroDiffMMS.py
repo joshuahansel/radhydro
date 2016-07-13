@@ -30,7 +30,8 @@ from hydroState import HydroState, getIntErg
 from radiation import Radiation
 from plotUtilities import plotHydroSolutions, plotTemperatures, plotRadErg, plotS2Erg
 from utilityFunctions import computeRadiationVector, computeAnalyticHydroSolution,\
-   computeHydroL2Error, computeHydroConvergenceRates, printHydroConvergenceTable
+   computeHydroL2Error, computeHydroConvergenceRates, printHydroConvergenceTable,\
+   computeAnalyticRadSolution
 from crossXInterface import ConstantCrossSection
 from transient import runNonlinearTransient
 from hydroBC import HydroBC
@@ -51,7 +52,7 @@ class TestRadHydroMMS(unittest.TestCase):
       x, t, alpha, c, a, mu  = symbols('x t alpha c a mu')
       
       # number of refinement cycles
-      n_cycles = 4
+      n_cycles = 5
 
       # number of elements in first cycle
       n_elems = 20
@@ -78,7 +79,7 @@ class TestRadHydroMMS(unittest.TestCase):
       #the cv value, as well as C and P constrain all other material reference
       #parameters, but we are free to choose the material velocity below the sound
       #speed to ensure no shocks are formed
-      M = 0.8
+      M = 0.9
       cfl_value = 0.6  #but 2 time steps, so really like a CFL of 0.3
 
       dt = []
@@ -88,14 +89,26 @@ class TestRadHydroMMS(unittest.TestCase):
       for cycle in range(n_cycles):
       
           #Keep ratio of  and sig_a*dx constant, staying in diffusion limit
-          C = sig_a = 1000./20*n_elems   # c/a_inf
+          C = sig_a = 100000./20*n_elems   # c/a_inf
           sig_t = sig_s + sig_a
 
           a_inf = GC.SPD_OF_LGT/C
+
+          #These lines of code assume specified C_v
           T_inf = a_inf**2/(gamma_value*(gamma_value-1.)*cv_value)
           rho_inf = GC.RAD_CONSTANT*T_inf**4/(P*a_inf**2)
-          #T_inf = pow(rho_inf*P*a_inf**2/GC.RAD_CONSTANT,0.25)  #to set T_inf based on rho_inf,
-          #cv_value = a_inf**2/(T_inf*gamma_value*(gamma_value-1.)) # to set c_v, if rho specified
+
+          #Specify rho_inf and determine T_inf and Cv_value
+          rho_inf = 1.0  #If we don't choose a reference density, then the specific heat values get ridiculous
+          T_inf = pow(rho_inf*P*a_inf**2/GC.RAD_CONSTANT,0.25)  #to set T_inf based on rho_inf,
+          cv_value = a_inf**2/(T_inf*gamma_value*(gamma_value-1.)) # to set c_v, if rho specified
+
+          #Specify T_inf and solve for rho_inf and C_v value
+    #      T_inf = 1
+     #     rho_inf = GC.RAD_CONSTANT*T_inf**4/(P*a_inf**2)
+     #     cv_value = a_inf**2/(T_inf*gamma_value*(gamma_value-1.)) # to set c_v, if rho specified
+
+          #Same for all approachs
           p_inf = rho_inf*a_inf*a_inf
 
           print "The dimensionalization parameters are: "
@@ -103,6 +116,8 @@ class TestRadHydroMMS(unittest.TestCase):
           print "   T_inf : ", T_inf
           print " rho_inf : ", rho_inf
           print "   p_inf : ", p_inf
+          print "     C_v : ", cv_value
+          print "   gamma : ", gamma_value
 
           # create solution for thermodynamic state and flow field
           rho = rho_inf*(2. + sin(x-t))
@@ -185,14 +200,12 @@ class TestRadHydroMMS(unittest.TestCase):
               sound_speed = [sqrt(i.p * i.gamma / i.rho) + abs(i.u) for i in hydro_IC]
               dt_vals = [cfl_value*(mesh.elements[i].dx)/sound_speed[i]
                  for i in xrange(len(hydro_IC))]
-              dt_value = min(dt_vals)
+              dt_value = min(min(dt_vals),0.5) #don't take too big of time step
             
               print "initial dt_value", dt_value
 
               #Adjust the end time to be an exact increment of dt_values
               print "old t_end: ", t_end
-              nsteps = int(t_end/dt_value)
-              t_end  = float(nsteps)*dt_value
               print "new t_end: ", t_end
 
           print "This cycle's dt value: ", dt_value
@@ -276,9 +289,11 @@ class TestRadHydroMMS(unittest.TestCase):
           # compute exact hydro solution
           hydro_exact = computeAnalyticHydroSolution(mesh, t=t_end,
              rho=rho_f, u=u_f, E=E_f, cv=cv_value, gamma=gamma_value)
+
+          rad_exact = computeAnalyticRadSolution(mesh, t_end,psim=psim_f,psip=psip_f)
  
           #Compute error
-          err.append(computeHydroL2Error(hydro_new, hydro_exact))
+          err.append(computeHydroL2Error(hydro_new, hydro_exact, rad_new, rad_exact ))
 
           n_elems  *= 2
           dt_value *= 0.5

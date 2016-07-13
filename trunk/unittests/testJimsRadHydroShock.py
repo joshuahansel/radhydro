@@ -35,7 +35,7 @@ class TestRadHydroShock(unittest.TestCase):
    def test_RadHydroShock(self):
 
       # create uniform mesh
-      n_elems = 1000
+      n_elems = 500
       width = 0.04
       x_start = -0.02
       mesh_center = x_start + 0.5*width
@@ -58,7 +58,7 @@ class TestRadHydroShock(unittest.TestCase):
       c_v2   = c_v1
 
       #Read in Jim's nondimensional results to set preshock and postshock dimensional
-      mach_number = "5.0" #Choices are 2.0, 1.2, 3.0, 5.0
+      mach_number = "1.2" #Choices are 2.0, 1.2, 3.0, 5.0
       filename = 'analytic_shock_solutions/data_for_M%s.pickle' % mach_number
       f = open(filename,'r')
       data = pickle.load(f)
@@ -73,7 +73,7 @@ class TestRadHydroShock(unittest.TestCase):
       rho1   = data['Density'][0]*dp['rho']
       u1     = data['Speed'][0]*dp['a']   #velocity times reference sound speed
       Erad1  = data['Er'][0]*dp['Er']
-      T1     = data['Tm'][0]*T_ref
+      T1     = data['Tm'][0]*dp["Tm"]
       e1     = T1*c_v1
       E1     = rho1*(e1 + 0.5*u1*u1)
 
@@ -85,17 +85,23 @@ class TestRadHydroShock(unittest.TestCase):
       e2     = T2*c_v2
       E2     = rho2*(e2 + 0.5*u2*u2)
  
-      print "rho", rho1, rho2
-      print "vel", u1, u2
-      print "Temperature", T1, T2
-      print "momentum", rho1*u1, rho2*u2
-      print "E",E1, E2
-      print "E_r",Erad1, Erad2
+      print r"$\rho$ & %0.8e & %0.8e & g cm$^{-3}$ \\" % (rho1, rho2)
+      print r"$u$ & %0.8e & %0.8e & cm sh$^{-1}$ \\" % (u1, u2)
+      print r"$T$ & %0.8e & %0.8e & keV \\" % (T1,T2)
+      print r"$E$ & %0.8e & %0.8e & Jks cm$^{-3}$\\" % (E1,E2)
+      print r"$E_r$ & %0.8e & %0.8e & Jks cm$^{-3}$ \\" % (Erad1, Erad2)
+      print r"$F_r$ & %0.8e & %0.8e & Jks cm$^{-2}$ s$^{-1}$ \\" %(0.0,0.0)
+      print r"vel", u1, "&", u2
+      print "Temperature", T1,"&",  T2
+      print "momentum", rho1*u1,"&",  rho2*u2
+      print "E",E1,"&",  E2
+      print "E_r",Erad1, "&", Erad2
       print sig_a1, sig_s1
+      exit()
       # material 1 IC
  
       # final time
-      t_end = 0.01
+      t_end = 0.8
  
       # temperature plot filename
       test_filename = "radshock_mach_"+re.search("M(\d\.\d)",filename).group(1)+".pdf"
@@ -139,7 +145,7 @@ class TestRadHydroShock(unittest.TestCase):
       x_anal = data['x']
 
       #If desired initialize the solutions to analytic result (ish)
-      analytic_IC = True
+      analytic_IC = False
       if analytic_IC:
 
          hydro_IC = list()
@@ -211,7 +217,7 @@ class TestRadHydroShock(unittest.TestCase):
       hydro_BC = HydroBC(bc_type='fixed', mesh=mesh, state_L = state_l,
             state_R = state_r)
       #Forcing to reflective? Maybe this is the problem
-      #hydro_BC = HydroBC(mesh=mesh,bc_type='reflective')
+      hydro_BC = HydroBC(mesh=mesh,bc_type='reflective')
 
       # transient options
       t_start  = 0.0

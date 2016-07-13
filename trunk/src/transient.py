@@ -124,7 +124,7 @@ def runNonlinearTransient(mesh, problem_type,
    time_stepper='BE', dt_option='constant', dt_constant=None, CFL=0.5,
    slope_limiter="vanleer", t_start=0.0, t_end=1.0, use_2_cycles=False,
    rho_f=None,u_f=None,E_f=None,gamma_value=None,cv_value=None,
-   verbosity=2, check_balance=False,time_stepper_predictor='CN'):
+   verbosity=2, check_balance=False,time_stepper_predictor='BE'):
 
    # check input arguments
    if dt_option == 'constant':
@@ -725,6 +725,7 @@ def takeTimeStepMUSCLHancock(mesh, dt, rad_BC,
       Qrho_older   = Qrho_older,
       Qmom_older   = Qmom_older,
       Qerg_older   = Qerg_older,
+      e_rad_save   = e_rad_half,
       verbosity    = verbosity)
 
    # add up sources for entire time step for balance checker

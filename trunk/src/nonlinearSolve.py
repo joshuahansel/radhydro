@@ -21,7 +21,7 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, rad_BC,
    Qpsi_new, Qmom_new, Qerg_new, Qpsi_old, Qmom_old, Qerg_old, Qpsi_older,
    Qmom_older, Qerg_older, Qrho_new=None, Qrho_old=None, Qrho_older=None,
    rad_older=None, cx_older=None, hydro_older=None, slopes_older=None,
-   e_rad_older=None, tol=1.0e-13, verbosity=2):
+   e_rad_older=None, e_rad_save=None, tol=1.0e-12, verbosity=2):
 
    # assert that that older arguments were passed if using BDF2
    if time_stepper == 'BDF2':
@@ -47,7 +47,10 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, rad_BC,
    # Compute E_slopes in 1 of 2 ways explained below
    use_hydro_star_slopes = False
 
-   #Compute using the values of internal energy slopes that Hydro provided
+   #Compute using the values of internal energy slopes that Hydro provided. 
+   #Optionally, we can use e_rad_save. This is an option because e_rad_old
+   #will be used by source computations independent of slope reconstruction,
+   #so on corrector steps need a way to pass in e_rad slopes from predictor
    if use_hydro_star_slopes:
 
       e_star = []
@@ -71,6 +74,13 @@ def nonlinearSolve(mesh, time_stepper, problem_type, dt, rad_BC,
 
    #Compute E_slopes using the radiation computed values of e
    else:
+
+      #Use e_rad_old if no save available
+      if e_rad_save == None:
+          e_rad_save = deepcopy(e_rad_old)
+      else:
+          print "HELLO DOLLY!"
+
     
       E_slopes_star  = computeTotalEnergySlopes(hydro_star, slopes_old,
                e_rad_old)

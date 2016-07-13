@@ -370,7 +370,7 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
       plt.plot(x_exact,T_exact,'b--',label='$T_m$, reference',linewidth=1.0)
       plt.plot(x_exact,Tr_exact,'r--',label='$T_r$, analytic',)
 
-   if pickle_dic != None:
+   elif pickle_dic != None:
 
       x_exact = pickle_dic['x']
       T_exact = pickle_dic['Tm']
@@ -381,6 +381,11 @@ def plotTemperatures(mesh, Er_edge, save=False, filename='Temperatures.pdf',
       Tr_exact = [pow(i/a,0.25) for i in Er_exact]
       plt.plot(x_exact,T_exact,'b-',label='$T_m$, semi-analytic', linewidth=1.6)
       plt.plot(x_exact,Tr_exact,'r-',label='$T_r$, semi-analytic', linewidth=1.6)
+
+   else:
+
+      Tr_exact = None
+      T_exact = None
 
    # plot material temperature
    if hydro_states != None:
